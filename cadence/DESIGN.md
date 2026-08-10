@@ -6,7 +6,7 @@
 
 ## What it is
 
-A **methodology engine**, not a toolchain and not a single opinionated workflow. It ships an invariant *skeleton* — vision → roadmap → epics → tickets → gates, worked in bounded sessions with cross-session memory — and then reads two layers of project-specific configuration:
+A **methodology engine**, not a toolchain and not a single opinionated workflow. It ships an invariant *skeleton* — vision → roadmap → epics → tickets → gates, worked in bounded sessions with cross-session state — and then reads two layers of project-specific configuration:
 
 - **Bindings** — *where and with what* you work: issue tracker, VCS, doc system, execution skill. Resolved through **adapters**.
 - **Flow** — *how* you work: the process posture (solo vs team, pre-release vs live), the states, the gates, the cadence, the priority policy, the decision rights. Resolved through a **flow spec**.
@@ -18,15 +18,15 @@ Change the bindings and the same skills drive a different toolchain. Change the 
 1. **Environment-agnostic.** No skill assumes Linear, Diversion, a `domains/` system, GitHub, or any MCP. Everything tool-specific comes from bindings/adapters. `/session` assumes *nothing*.
 2. **Process-agnostic.** No skill hardcodes a workflow. Solo-continuous, team-sprints, kanban, live-incident-first are all *flows*, not code paths. The methodology skeleton is invariant; the policies inside it are configured.
 3. **Decision-support scales inversely to autonomy.** The more people and the more live the product, the more the plugin shifts from *making* decisions to *preparing and recording* them. A solo greenfield dev lets the skill propose goals and break down epics; a team lets it prepare the planning pack and record what the meeting decided. **It never tries to run the meeting or override human prioritization.**
-4. **It owns neither execution nor the commit.** No bundled "work-on-a-ticket" skill; no bundled VCS commit logic. Both are the project's, reached via bindings.
-5. **Detect, then confirm — never assume.** Init inspects the repo and *proposes*; the user confirms or corrects.
+4. **It owns neither execution nor the commit.** No bundled "work-on-a-ticket" skill; no bundled VCS commit logic. Both are the project's, reached via bindings. **Session state is the one exception** (Layer 1) — the only part of the skeleton with no external tool behind it, so the plugin owns that file and nothing else; everything else it touches, it reaches through an adapter.
+5. **Detect, then confirm — never assume.** Init inspects the repo and *proposes*; the user confirms or corrects. This holds for the **whole lifecycle, not just init**: a binding that is missing or unset when a skill needs it is a question for the user, never a gap to fill by inference — then offer to write the answer into config so the next session doesn't re-ask. ⚠️ The specific failure to guard is **cross-project substitution**. Skills are installed once and serve every project, so another project's config is often already in context, and its values will look entirely plausible in this one — a ticket prefix, a DoD doc, an MCP namespace. Nothing is stored wrongly; the substitution happens in the *reasoning*, which is what makes it silent and confident. No project's configuration is ever a default for another's.
 6. **Everything specific is data, and everything shipped is just a filled-in instance.** Adapters, flows, presets, DoD gates — the plugin ships instances of open contracts; users author their own against the same contracts. There is no "built-in vs custom" divide at the mechanism level.
 
 ## Generic vs project-specific
 
 | Layer | Invariant (plugin ships) | Project-specific |
 |---|---|---|
-| Methodology skeleton | vision → roadmap → epics → tickets → gates; bounded sessions; memory | — |
+| Methodology skeleton | vision → roadmap → epics → tickets → gates; bounded sessions; session state | — |
 | Templates | epic, ticket, spike, gate skeletons | which gates apply |
 | Skills | `/session`, `/plan`, `/roadmap`, `/init` as *interpreters* | the flow they interpret + the ops they call |
 | Bindings | adapter *contracts* | tracker/VCS/docs/execution + IDs + namespaces |
@@ -45,14 +45,18 @@ tracker:   { kind: linear, mcp_namespace: linear-uft, team_id: ..., project_id: 
 vcs:       { kind: diversion, checkpoint: skill:/commit, gotchas: "dv add for new files" }
 execution: { skill: /work-on, owns: [domains, implement, test, docs, commit] }
 doc_system:{ kind: domains, index: domains/INDEX.md, ticket_to_docs: "labels == domain names" }
-memory:    { location: project-memory, format: markdown }
+session_state: { file: .claude/cadence/SESSION.local.md, format: markdown, vcs_ignored: true }
 models:    { mechanical: haiku, reasoning: inherit }   # 3rd binding: which model tier does which work
-flow:      solo-greenfield            # a shipped preset, OR ./cadence/my-flow.flow.md
+flow:      solo-greenfield            # a shipped preset, OR .claude/cadence/my-flow.flow.md
 ```
+
+**Session state is the one store Cadence owns, and it owns nothing else.** `/session start` reads `session_state.file`; `/session end` writes it. It is **local, not committed** — hence `.local.md` plus an entry in the project's ignore file, added through the VCS adapter's `ignore()` so it lands in `.gitignore` / `.dvignore` / whatever the `kind` implies. Rationale: it is a working scratchpad of goal, milestone state and per-ticket hooks — high-churn, single-author, and a guaranteed merge conflict on any shared branch.
+
+⚠️ **Do not assume, read, or write a project's own memory files.** Some projects keep an always-loaded convention file (a `CLAUDE.md`, an agent `MEMORY.md`); that is the *project's*, not Cadence's, and the plugin must not touch it or depend on it existing. If a project wants a pointer from its own memory to the session-state file, the project writes that pointer once, by hand. Cadence never reaches outside `.claude/cadence/`.
 
 An **adapter** is an instruction doc a skill loads based on `kind`. The plugin ships only the **contracts** plus the near-universal **fallbacks** (`markdown`/`git`/`none`); environment adapters (`linear`, `diversion`, a `domains` doc-system, …) are **project-local, generated by `/cadence init`** from the tool actually present — the plugin assumes no environment (see `adapters/ADAPTERS.md`). Contracts:
 - **Tracker:** `list_open(milestone)` · `get(id)` · `create(fields)` · `comment(id,text)` · `set_status(id,status)` + epic/milestone/label mapping.
-- **VCS:** `status()` · `diff()` · `checkpoint(msg, ticket_ref)` · `add_untracked(paths)`.
+- **VCS:** `status()` · `diff()` · `checkpoint(msg, ticket_ref)` · `add_untracked(paths)` · `ignore(paths)` — appends to the ignore file the `kind` implies (`.gitignore`, `.dvignore`, …), idempotently; used at init to keep the session-state file out of the repo.
 - **Doc system:** `locate(topics)` · `record(gotcha)`.
 - **Execution integration** is not implemented by the plugin — it's a pointer to the project's skill plus `execution.owns`, the contract that tells `/session end` what to *verify* rather than repeat.
 - **Adapters are the cheap tier.** Their operations are mechanical, so skills delegate *batchy* adapter work to the `mechanical` subagent running on `config.models.mechanical` (default `haiku`). Model tiers are a third binding — config, never hardcoded, since available models differ per user.
@@ -94,7 +98,8 @@ The skills expose named **hooks** — the seams where behavior can be overridden
 | Hook | Fires when | Input → Output contract |
 |---|---|---|
 | `session.select_goal` | `/session start`, after context load | {backlog, sprint, incident queue, priority policy, roadmap} → {chosen goal, rationale} |
-| `session.start` / `session.end` | session open / close | {config, flow, memory} → {session frame} / {close actions} |
+| `session.start` / `session.end` | session open / close | {config, flow, session state} → {session frame} / {close actions} |
+| `session_state.prune` | `/session end`, before writing session state | {session state, tracker} → {pruned session state} |
 | `intake.classify` | a new item arrives | {raw item} → {type, severity, lane} |
 | `intake.prioritize` | queue needs ordering | {queue, policy} → {ordered queue} |
 | `bug.triage` | a bug is found mid-session | {bug, context, flow} → {defer \| file \| preempt} |
@@ -106,6 +111,15 @@ The skills expose named **hooks** — the seams where behavior can be overridden
 | `checkpoint` / `release` | work is committed / released | {changes, ticket, vcs adapter} → {commit/release actions} |
 
 That table *is* the extension API. A custom flow can override one hook (e.g. a bespoke `session.select_goal`) and inherit everything else from a preset.
+
+**`session_state.prune` — default across all presets.** Session state is a scratchpad for what the *tracker cannot tell you*; left unpruned it silently becomes a stale second copy of the backlog. The default checks item state **against the tracker adapter, never from what the file itself claims**, then deletes:
+
+- any entry whose item is closed, unless a *non-obvious trap* survives it — the shape that earns a keep is "the shipped work deliberately departs from the ticket text, and restoring it to the ticket would reintroduce the bug";
+- any note that restates its item's title — the title is one `tracker.get()` away;
+- any cross-reference to another part of the same file;
+- any bare item ID carrying no note at all. A list of IDs is a tracker query, not a memory.
+
+The tracker check is the load-bearing step, not a nicety: in the first project to run this, two entries sat in the open list as live work while a paragraph three lines above already recorded them closed. Pruning from what the file asserts would have preserved both. Flows may tune how aggressively this runs — a scratchpad in solo-continuous, a shared record under team-sprints — by overriding the hook.
 
 ### Coherence & portability
 
@@ -179,6 +193,8 @@ A custom flow lives with the project (e.g. `.claude/cadence/my-flow.flow.md` + `
 - `domains/PROJECT.md` becomes the config; `flow: solo-greenfield`.
 - Bindings: `tracker: linear` (linear-uft, MACH) · `vcs: diversion` (delegates to `/commit`) · `doc_system: domains` · `execution: /work-on` (owns implement/test/docs/commit).
 - The current hardcoded `/session` is replaced by the interpreter reading config+flow. Your recent seam fix (verify, don't repeat the commit) becomes the general `session.end` behaviour driven by `execution.owns`. Your bug-batch rule is just the Solo/Greenfield `bug.triage` default.
+  - ⚠️ **Delete the consumer's own `/session` skill at cutover** — a same-named skill at user or project scope collides with this plugin's, and which one wins is not worth discovering mid-dogfood. MachineGame's copy lives at `~/.claude/skills/session/`. Its substance is already captured here (the `session_state` binding, the `session_state.prune` hook and its default, Principles 4 and 5), so deleting it loses no reasoning.
+  - MachineGame's existing session-state file moves to `.claude/cadence/SESSION.local.md` and gets ignored via `vcs.ignore()`. Any pointer to it from the project's own memory file is updated **by the project, by hand, once** — the plugin does not perform that migration and must not read the project's memory.
 - Nothing game-side changes; MachineGame becomes the reference implementation. A second, deliberately different consumer (GitHub + git + no docs, Team/Sprints flow) proves both layers generalize.
 
 ---
