@@ -1,0 +1,14 @@
+{
+  "name": "cadence-marketplace",
+  "owner": { "name": "Lee" },
+  "metadata": {
+    "description": "Plugins by Lee. Currently home to Cadence, a configurable project-management methodology."
+  },
+  "plugins": [
+    {
+      "name": "cadence",
+      "source": "./cadence",
+      "description": "A configurable project-management methodology: vision -> roadmap -> epics -> tickets -> gates, worked in bounded sessions. Binds to your tracker/VCS/docs via adapters and to your team's process via a flow spec (solo, team-sprints, live-oncall, or your own)."
+    }
+  ]
+}
