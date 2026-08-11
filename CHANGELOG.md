@@ -11,7 +11,60 @@ changing a hook's Input/Output, removing an adapter operation, or changing the
 meaning of a config key is a *major* change. Adding an optional hook, operation,
 field, or config key is *minor*.
 
-## [0.3.5] — pending verification
+## [0.3.6] — 2026-08-11
+
+Closes the hosted-tracker work. A full kanban loop ran against a live Linear
+board with no new broken behaviour — the two findings below are a missing rule
+and a diagnosis, not failures.
+
+### Fixed
+
+- **Goal selection could return a container.** `FLOW-SPEC.md` has always said the
+  last entry in `hierarchy.levels` is the unit a session works on; the session
+  skill never implemented it. Every earlier run hid this because candidates were
+  chosen by judgment, which naturally skips epics. A mechanical token has no
+  judgment: `oldest-open` returned the epic, and the framing step would have
+  written "by end of session this epic is Done" — a promise no session can keep.
+  Candidates are now filtered to the working level before ranking.
+
+  Worth recording as a pattern: **automating a step removes the human judgment
+  that was silently compensating for a missing rule.**
+
+- **Switching flows can strand an item** in a status the new flow maps to no lane.
+  Observed moving a board from `team-sprints` to a kanban flow. Harmless when
+  moving forward, and `/cadence:doctor` already flags it, but the session now says
+  so rather than proceeding as if the item's position were known.
+
+### Added
+
+- **`oldest-open` priority token** — the only one that can always be evaluated,
+  since every tracker knows creation order. Every other token needs a field the
+  board may lack (`order`, `milestone`, `cycle`) or an item already in flight to
+  anchor against, so a policy built only from those can select nothing at all on a
+  fresh board. Two shipped presets did exactly that on a real team with five open
+  items in it.
+
+  It is **opt-in and absent from every shipped preset**, by design: appending it
+  everywhere would be the "arbitrary pick dressed as a decision" that 0.3.2
+  forbids, and would have masked the signal that found two defects in this
+  session. For a sprint team "nothing is committed" is the right answer.
+
+### Verified against a live Linear board
+
+A full kanban loop: `ai-proposes` presented three candidates and waited; the
+working-level filter excluded the epic; both gates on a path through an *unmapped*
+`In Review` ran; `gate.code_review` (`human`) held and was not auto-cleared;
+`gate.dod` (`ai-proposes`) reported a recommendation rather than a clearance; the
+held gate did not cost the work — committed, tree clean, commit naming the gate.
+
+### Known gaps, recorded not glossed
+
+- **A cycle actually running.** Scope commitment is verified; a session drawing
+  from a live cycle is not. Linear will not backdate a cycle's start date.
+- **A gate that fails outright**, as opposed to being held by a human approver.
+- The ceremony layer remains documented and deliberately not invokable.
+
+## [0.3.5] — superseded
 
 ### Fixed
 

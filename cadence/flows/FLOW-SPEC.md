@@ -148,6 +148,22 @@ skipped with a note rather than guessed at**:
 | `backlog-by-rank` | `order` | highest-ranked open item |
 | `active-incident` | `incident_lanes` | an item in an incident lane |
 | `customer-bug-by-severity` | `severity` | most severe open customer bug |
+| `oldest-open` | — | the least recently created open item |
+
+**`oldest-open` is the only token that can always be evaluated**, because every
+tracker knows creation order. Every other token needs either a field the board may
+not have (`order`, `milestone`, `cycle`) or an item already in flight to anchor
+against (`blocker-for-current-ticket`, `current-epic`). A policy built only from
+those can select nothing at all on a fresh board — which is not a hypothetical:
+two shipped presets did exactly that on a real Linear team with five open items
+sitting in it.
+
+Ending a policy with `oldest-open` guarantees it never exhausts. That is a
+**trade-off the flow author makes, not a fallback the skill applies**: it means
+"when nothing better applies, just take the oldest thing" — reasonable for solo
+and kanban work, wrong for a sprint team, where "nothing is committed" is the
+correct answer and picking anyway breaks the process. The shipped presets
+deliberately omit it; add it if your process wants it.
 
 An unlisted token is legal — it is interpreted as prose — but the validator
 warns, because a token nothing understands silently does nothing.

@@ -47,7 +47,18 @@ is a known unknown; the point is that it is *visible*.
 | Flow source | shipped preset | `reduced-lane`, `execution-owns-commit` |
 | | project-local + authored hooks | `intermediate-gate` |
 | Cadence model | continuous | all fixtures |
-| | sprint / cycles | **not covered** — a cycles-enabled team exists; no run yet |
+| | kanban | §8, project-local `kanban-review` flow |
+| | sprint / cycles | partial — scope committed to a cycle; **no run with a cycle actually running** (Linear will not backdate a cycle's start date) |
+| Goal selection | `ai` (skill picks) | `reduced-lane`, early runs |
+| | `ai-proposes` (presents, human picks) | §8 |
+| | policy exhausts — a *gap* | §8, `solo-greenfield` on Linear |
+| | policy answers "not yet" | §8, `team-sprints` before its cycle starts |
+| Scope commitment | `commit_scope: ai` | markdown fixtures |
+| | `commit_scope: human` → planning pack | §8, nothing created |
+| Gate approver | `ai` | `reduced-lane` |
+| | `ai-proposes` | §8 |
+| | `human`, holds | `intermediate-gate`, §8 |
+| | **fails outright** | **not covered** |
 | Status names | unique | the markdown fallback, by construction |
 | | duplicated across categories | §8 — a live board with two `Queued` states |
 | Terminal states | only what the flow models | every markdown run |
