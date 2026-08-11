@@ -11,7 +11,7 @@ changing a hook's Input/Output, removing an adapter operation, or changing the
 meaning of a config key is a *major* change. Adding an optional hook, operation,
 field, or config key is *minor*.
 
-## [0.4.1] — pending verification
+## [0.4.1] — 2026-08-11
 
 ### Changed
 
@@ -40,6 +40,15 @@ field, or config key is *minor*.
   leaves nothing depending on the original. The rule now says dependency and
   ownership rather than reading. `/cadence:session` keeps the run-time
   prohibition unchanged.
+
+### Not yet exercised
+
+Both changes were verified by review and by the payload validator, **not by a run
+against a real project**. The docs-first adapter path especially: it has never run
+where there was actual project prose to read, which is the only case that
+motivated it. Released, but unproven on that axis — and the honest failure mode
+is silent, since an init that ignores an existing project config and re-interviews
+from scratch produces a plausible config rather than an error.
 
 ## [0.4.0] — superseded
 
