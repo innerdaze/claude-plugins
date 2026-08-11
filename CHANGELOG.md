@@ -11,7 +11,32 @@ changing a hook's Input/Output, removing an adapter operation, or changing the
 meaning of a config key is a *major* change. Adding an optional hook, operation,
 field, or config key is *minor*.
 
-## [0.3.3] — pending verification
+## [0.3.4] — pending verification
+
+### Added
+
+- **`/cadence:init` drafts a `status_map` from the tracker's own categories.**
+  Most trackers already classify their statuses — Linear's
+  `backlog`/`unstarted`/`started`/`completed`/`canceled`, and equivalents
+  elsewhere. Init now reads that classification, drafts a starting map, and puts
+  it up for correction, rather than making the user hand-write one.
+
+  This is **detection, not inference**: it reads a classification the tool already
+  made and asks. Nothing is written unconfirmed, the draft is explicitly a hint
+  with no authority — a category says how the tool files a status, not what the
+  team means by it — and duplicate names are always asked about, never drafted.
+  Where a tool has no categories there is nothing to read, so init asks rather
+  than manufacturing a proposal from lane names that look similar.
+
+  Checked against the board this was built on: the draft reproduces the map that
+  was hand-written for it, and additionally catches `abandoned` (`Dropped`,
+  `Duplicate`) — which the hand-written version missed.
+
+- The `markdown` tracker is documented as the case that inverts: there is no
+  board to read, so the user is *defining* columns rather than mapping to them,
+  and init offers the flow's lanes as a starting set to cut down.
+
+## [0.3.3] — superseded
 
 ### Fixed
 

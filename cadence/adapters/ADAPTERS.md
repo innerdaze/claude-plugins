@@ -78,6 +78,8 @@ A tracker adapter manages work items. Required:
 
 - **`statuses()`** → the statuses this tracker **actually accepts**. Return `{name, id?, category?, terminal?}` per status — `id` and `category` wherever the tool has them, because **a name is not guaranteed to be unique**. This is the primitive the whole status layering rests on: `/cadence:init` builds `config.tracker.status_map` from it, `/cadence:doctor` re-checks the map against it, and `set_status` validates against it. If a tool genuinely cannot enumerate its statuses, declare `statuses` unsupported — init then asks the user once and records the list in config.
 
+  **Report `category` faithfully where the tool has one.** It is how `/cadence:init` drafts a starting `status_map` for the user to correct, and how `list_open` knows a status is terminal without being told. Pass through the tool's own classification rather than a tidied-up version of it: a board with two `started` states should report two, because that irregularity is exactly what the user needs to see before confirming a mapping.
+
   **Duplicate names are normal and must be handled, not assumed away.** Linear, Jira and GitHub Projects all let two states share a display name across different categories — a real board was observed with two states both called `Queued`, one `backlog` and one `unstarted`. A `status_map` entry must therefore resolve to **exactly one** status. Where a bare name is ambiguous, the entry carries a qualified form the adapter can resolve unambiguously:
 
   ```yaml

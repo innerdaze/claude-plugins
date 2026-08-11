@@ -55,11 +55,32 @@ Summarize each, let the user pick, then offer to tweak any axis. Say plainly whi
 The flow's lanes are **process vocabulary**. Your tracker has whatever columns it has. `config.tracker.status_map` is the only place the two meet, and it is built from what the tool reports, never from the preset:
 
 1. Call the tracker adapter's **`statuses()`**. If the adapter declares `statuses` unsupported, ask the user to list their columns once.
-2. Show the tool's **real** statuses beside the flow's lanes and have the user map them.
-   **Check for duplicate names first.** Real boards have them — two states called `Queued`, one `backlog` and one `unstarted`, is a configuration Linear permits and a live board was observed using. Where a name is ambiguous, say so and ask which one the lane means, then write the qualified form (`{name, category}`). Never pick one silently: the two halves of an ambiguity are different columns, and choosing wrong puts work somewhere the user didn't ask for.
-3. **Lanes with no counterpart are left unmapped — not invented.** Say what that disables, concretely: *"no column for `In Progress`, so sessions won't mark work in flight."* That is a normal outcome on a two-column board.
-4. Confirm the **roles**: which lane is `backlog`, which is `done`, and — only if the user says so — which is `active` and which is `review`. Never infer a role from a lane's name; whether picking up work means `Todo` or `In Progress` is a process decision. If the user doesn't want an `active` role, write it absent.
-5. **Never create a column in their tracker.** Cadence adapts to the board; the board does not adapt to Cadence.
+
+2. **Draft a proposal from the tool's own categories, then put it up for correction.** Most trackers classify their statuses — Linear's `backlog` / `unstarted` / `started` / `completed` / `canceled`, Jira's `To Do` / `In Progress` / `Done`, GitHub Projects' column kinds. Where a category exists, use it to draft a starting map:
+
+   | Tracker category | Draft it as |
+   |---|---|
+   | backlog | the `backlog` role's lane |
+   | unstarted | the `committed` role's lane, if the flow has one |
+   | started | the `active` role's lane |
+   | completed | the `done` role's lane |
+   | canceled, duplicate, and similar | the `abandoned` list |
+
+   This is **detection, not inference**: you are reading a classification the tool already made, showing it, and asking. Present it as *"here is what your board's own categories suggest — correct anything wrong"*, never as a decision already taken. Nothing is written until the user says so.
+
+   Where the tool has no categories, there is nothing to draft from. Skip straight to asking; do not manufacture a proposal from lane names that happen to look similar.
+
+3. **The proposal is a hint with no authority.** A category tells you how the tool files a status, not what the team means by it. A board can use `unstarted` for "triaged but not planned", or keep two `started` states where only one means "someone is working on this". Where the draft looks thin or odd — several statuses in one category, a category with none — say so rather than presenting a tidy map that quietly guesses.
+
+   **Duplicate names always get asked, never drafted.** Two states called `Queued`, one `backlog` and one `unstarted`, is a configuration Linear permits and a live board was observed using. Show both, ask which the lane means, and write the qualified form (`{name, category}`). The two halves of an ambiguity are different columns; choosing wrong puts work somewhere the user didn't ask for.
+
+4. **Lanes with no counterpart are left unmapped — not invented.** Say what that disables, concretely: *"no column for `In Progress`, so sessions won't mark work in flight."* That is a normal outcome on a two-column board.
+
+5. Confirm the **roles**. The draft above proposes them; the user disposes. Never settle a role from a lane's *name* — whether picking up work means `Todo` or `In Progress` is a process decision, and no amount of reading the board reveals it. If the user doesn't want an `active` role, write it absent.
+
+6. **Never create a column in their tracker.** Cadence adapts to the board; the board does not adapt to Cadence.
+
+**The `markdown` tracker is the one case that inverts.** There is no existing board to read: its `statuses()` returns the values of `status_map`, which at init time is empty. The user is *defining* columns rather than mapping to them, so offer the flow's lanes as a starting set and let them cut it down — a solo builder who wants two columns should end with two, not five. Everything after that behaves identically; the map is just authored rather than discovered.
 
 **Definition of Done:** present a multi-select, always ending in "define your own" — `tests` · `docs` · `no-warnings` · `accessibility` · `perf-budget` · `persistence` · `changelog` · `security-review` · *define your own…* The selection becomes `config.dod_gates`, which **adds to** the flow's `gates.dod.checks` rather than replacing it. Keep the shipped menu domain-neutral; a project's own bar arrives through "define your own."
 
