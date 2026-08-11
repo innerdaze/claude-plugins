@@ -29,18 +29,31 @@ against a project you care about: init writes files and makes a commit.
 
 ---
 
-## 1. Install
+## 1. Install — from the local path
+
+The repository has no remote yet, so install from disk. This is the *whole*
+point of a local-path marketplace: you can verify a plugin before publishing it,
+which is the right order.
 
 ```
-/plugin marketplace add innerdaze/claude-plugins
+/plugin marketplace add C:\Users\Lee\Projects\claude-plugins
 /plugin install cadence@claude-plugins
 ```
 
+A local marketplace reads the working tree, so whatever branch is checked out is
+what you are testing. Confirm you are on the branch you mean to verify.
+
 - [ ] The marketplace resolves and the plugin installs.
-- [ ] `/plugin` lists Cadence with its version and description.
+- [ ] `/plugin` lists Cadence with its version (`0.2.0`) and description.
 
 **If the marketplace name is rejected**, that is finding #1 — the manifest says
 `claude-plugins`, and the install command must match.
+
+> The published form — `/plugin marketplace add innerdaze/claude-plugins` — only
+> works once the repo exists on GitHub. It resolves that shorthand over SSH, so
+> it also needs working GitHub SSH keys (or an explicit HTTPS URL). Verifying
+> that path belongs in **section 10**, after publishing; do not treat its failure
+> now as a plugin defect.
 
 ## 2. Command and skill registration
 
@@ -127,6 +140,27 @@ rather than working around it.
 
 ---
 
+## 10. After publishing — the remote install path
+
+Only once the repository exists on GitHub. Everything above is verifiable from a
+local path; this section verifies distribution, which is a separate thing.
+
+```
+/plugin marketplace remove claude-plugins      # drop the local one first
+/plugin marketplace add innerdaze/claude-plugins
+/plugin install cadence@claude-plugins
+```
+
+- [ ] The shorthand resolves. It clones over **SSH** — if you get
+      `Permission denied (publickey)`, that is your GitHub SSH config, not the
+      plugin. Either add a key or use the explicit HTTPS URL
+      `https://github.com/innerdaze/claude-plugins.git`.
+- [ ] `source: "./cadence"` resolves correctly from a cloned marketplace, not
+      just from a local directory.
+- [ ] The manifests validate as fetched (no field the local path tolerated but
+      the remote rejects).
+- [ ] The `homepage` and `repository` URLs in `plugin.json` actually load.
+
 ## Recording results
 
 For each failure note: the step, what you expected from the docs, what actually
@@ -136,5 +170,6 @@ mismatch means one of the two is wrong and it is not always the code.
 File findings at <https://github.com/innerdaze/claude-plugins/issues>.
 
 **Do not tag a release until sections 1–7 pass.** Sections 8 and 9 depend on
-optional infrastructure; if you skip them, say so in the release notes rather
-than implying they passed.
+optional infrastructure (a tracker MCP, a second model tier); if you skip them,
+say so in the release notes rather than implying they passed. Section 10 can
+only run after publishing, so it gates the *announcement*, not the tag.

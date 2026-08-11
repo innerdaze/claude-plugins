@@ -37,6 +37,8 @@ Install the plugin:
 /plugin install cadence@claude-plugins
 ```
 
+(Or `/plugin marketplace add /path/to/claude-plugins` from a local clone.)
+
 Then, in your project:
 
 ```
