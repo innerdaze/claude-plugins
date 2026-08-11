@@ -154,6 +154,11 @@ def check_skills_and_commands() -> set[str]:
             # Directory and name must match so the skill resolves the same way
             # however the harness looks it up.
             err("skill", f"{rel(sk)} declares name {name!r} but lives in {d.name!r}")
+        elif name.startswith("cadence-") or name.startswith("cadence_"):
+            # The plugin namespace already prefixes everything with `cadence:`,
+            # so a prefixed name registers as /cadence:cadence-<n>.
+            err("skill", f"{rel(sk)} name {name!r} repeats the plugin namespace - "
+                         f"it would register as /cadence:{name}. Use the bare name.")
         else:
             skills.add(name)
         if not fm.get("description"):
@@ -161,19 +166,14 @@ def check_skills_and_commands() -> set[str]:
         elif len(fm["description"]) < 80:
             warn("skill", f"{name}: description is short; it is the only dispatch surface")
 
-    cmd_dir = PLUGIN / "commands"
-    if cmd_dir.exists():
-        for c in sorted(cmd_dir.glob("*.md")):
-            body = read(c)
-            fm = frontmatter(body)
-            if fm is None or not fm.get("description"):
-                err("command", f"{rel(c)} needs frontmatter with a 'description'")
-            targets = re.findall(r"skills/([a-z0-9-]+)/SKILL\.md", body)
-            if not targets:
-                err("command", f"{rel(c)} does not point at any skill")
-            for t in targets:
-                if t not in skills:
-                    err("command", f"{rel(c)} points at unknown skill {t!r}")
+    # A commands/ directory would double the registered surface: a plugin skill
+    # is already typeable as /cadence:<name>, so a command wrapper adds a second
+    # entry for the same capability. This shipped once and was only visible on a
+    # real install.
+    if (PLUGIN / "commands").exists():
+        err("command", "cadence/commands/ exists - plugin skills are already typeable as "
+                       "/cadence:<name>, so a command wrapper registers every capability "
+                       "twice. Delete it and rely on the skill.")
     return skills
 
 
@@ -399,7 +399,7 @@ def check_hooks() -> tuple[set[str], list[str]]:
         site = m.group(1).strip()
         if "deferred" in site.lower():
             continue
-        skill = re.search(r"`(cadence-[a-z]+)`", site)
+        skill = re.search(r"`([a-z][a-z0-9-]*)`", site)
         if not skill:
             err("hook", f"HOOKS.md: `{name}` Fired-by does not name a skill: {site[:60]!r}")
         elif not (PLUGIN / "skills" / skill.group(1) / "SKILL.md").exists():

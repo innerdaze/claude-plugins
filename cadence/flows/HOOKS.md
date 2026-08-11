@@ -35,35 +35,35 @@ the validator holds that line.
 ### Session
 
 **`session.start`** — fires at the top of `/cadence:session start`, after config + session state are loaded.
-*Fired by:* `cadence-session`, start step 1.
+*Fired by:* `session`, start step 1.
 Input: `{config, flow, session_state, current_milestone}` → Output: `{session_frame}` (what to show the user; any setup notes).
 
 **`session.select_goal`** — chooses the session's one goal. The heart of how flows differ.
-*Fired by:* `cadence-session`, start step 2.
+*Fired by:* `session`, start step 2.
 Input: `{backlog, cycle, incident_queue, priority_policy, roadmap}` → Output: `{goal_item, rationale, session_type}`.
 Defaults: *solo-greenfield* → next roadmap ticket; *team-sprints* → top committed cycle item; *live-oncall* → highest incident, else cycle, else roadmap.
 
 **`session.end`** — the wrap sequence.
-*Fired by:* `cadence-session`, end step 6 (write state).
+*Fired by:* `session`, end step 6 (write state).
 Input: `{active_item, execution_owns, dod_result}` → Output: `{ordered close actions}`. Must *verify* work the execution skill owns rather than repeat it — except where `execution.skill` is `none`, in which case there is nothing to verify and the session performs the checkpoint itself.
 
 **`session_state.prune`** — fires at `/cadence:session end`, before session state is written. Keeps the local scratchpad from silently becoming a stale second copy of the backlog.
-*Fired by:* `cadence-session`, end step 3 (prune).
+*Fired by:* `session`, end step 3 (prune).
 Input: `{session_state, tracker}` → Output: `{pruned_session_state}`.
 Default (all presets): check each entry's item state via the **tracker adapter** — never from what the file itself claims — then delete: entries whose item is closed (unless a *non-obvious trap* survives — the shipped work deliberately departs from the ticket text and restoring it would reintroduce a bug), notes that merely restate their item's title, cross-references within the file, and bare item IDs carrying no note (a list of IDs is a tracker query, not a memory). Flows may tune how aggressively this runs by overriding the hook. The file's schema is in `${CLAUDE_PLUGIN_ROOT}/adapters/ADAPTERS.md`.
 
 ### Intake & triage
 
 **`intake.classify`** — a new work item arrives mid-session and its type/severity/lane must be decided.
-*Fired by:* `cadence-session`, on any new item raised during a session.
+*Fired by:* `session`, on any new item raised during a session.
 Input: `{raw_item}` → Output: `{type, severity, lane}`.
 
 **`intake.prioritize`** — order a queue of candidates.
-*Fired by:* `cadence-session`, start step 2, when `priority_policy` yields more than one candidate.
+*Fired by:* `session`, start step 2, when `priority_policy` yields more than one candidate.
 Input: `{queue, priority_policy}` → Output: `{ordered_queue}`.
 
 **`bug.triage`** — a bug is found *mid-session*. The rule that flips solo↔live.
-*Fired by:* `cadence-session`, whenever a bug surfaces while a session is open.
+*Fired by:* `session`, whenever a bug surfaces while a session is open.
 Input: `{bug, current_goal, flow}` → Output: `{decision: defer | file | preempt, target}`.
 Defaults: *solo* → `defer` (file it, keep going); *live* → `preempt` if customer-impacting.
 This hook is the difference between a bug rule that is *stated* and one that is *applied* — the flow's `intake.bug_triage` value is its default, not a substitute for firing it.
@@ -71,28 +71,28 @@ This hook is the difference between a bug rule that is *stated* and one that is 
 ### Planning
 
 **`plan.breakdown`** — turn a milestone into the levels below it.
-*Fired by:* `cadence-plan`, step 2.
+*Fired by:* `plan`, step 2.
 Input: `{milestone, templates, tracker_shape}` → Output: `{proposed_items}` (not yet created — the skill creates them via the tracker adapter, respecting decision rights).
 
 **`plan.estimate`** *(optional)* — attach estimates/sizing.
-*Fired by:* `cadence-plan`, step 3, when the flow uses estimates.
+*Fired by:* `plan`, step 3, when the flow uses estimates.
 Input: `{items}` → Output: `{items_with_estimates}`.
 
 **`plan.commit_scope`** — decide what actually enters a cycle.
-*Fired by:* `cadence-plan`, step 4.
+*Fired by:* `plan`, step 4.
 Input: `{proposal, decision_rights}` → Output: `{committed_set}` **or** `{defer_to: "planning ceremony"}` when the approver is `human` — in which case the skill writes a planning pack for the meeting rather than deciding scope.
 
 ### Roadmap
 
 **`roadmap.milestone_progress`** — decide whether a milestone's exit criteria have advanced, and how to say so.
-*Fired by:* `cadence-roadmap`, Mode C.
+*Fired by:* `roadmap`, Mode C.
 Input: `{milestone, open_items, closed_items, exit_criteria}` → Output: `{progress_note, met_criteria, milestone_complete}`.
 Vision drafting deliberately has **no** hook: Principle 3 reserves it for the human, and a hook there would invite automating the one thing the design says not to automate.
 
 ### Gates
 
 **`gate.<name>.check`** — evaluate a gate on a gated transition. Names are flow-defined: `dod`, `code_review`, `qa`, `release_approval`, ….
-*Fired by:* `cadence-session`, end step 1 (gates), for every gate whose transition ends at the `done` lane - matched by destination, so an unmapped intermediate lane cannot skip a gate.
+*Fired by:* `session`, end step 1 (gates), for every gate whose transition ends at the `done` lane - matched by destination, so an unmapped intermediate lane cannot skip a gate.
 Input: `{item, context, checks}` → Output: `{result: pass | fail | needs-human, notes}`.
 `gate.dod` default: verify the **effective DoD** is satisfied or explicitly N/A'd. The effective DoD is `flow.gates.dod.checks` ∪ `config.dod_gates` — a union, so a project may raise the bar above the flow's baseline and can never silently lower it. (`dod_gates` is a **config** key; `checks` is the flow's.)
 
@@ -118,11 +118,11 @@ Input: `{decisions}` → Output: `{recorded changes}`.
 ### Transitions & release
 
 **`transition.<from>_to_<to>`** — side-effects/guards when an item changes state. Lane names are used verbatim, including spaces: `transition.Backlog_to_In Progress`.
-*Fired by:* `cadence-session`, on every status change it makes (start's move to `roles.active`, end's move to `roles.done`).
+*Fired by:* `session`, on every status change it makes (start's move to `roles.active`, end's move to `roles.done`).
 Input: `{item, from, to}` → Output: `{side_effects}`.
 
 **`checkpoint`** — how work is committed. Delegates to the VCS adapter; the hook can add changelog/version steps.
-*Fired by:* `cadence-session`, end step 5 (checkpoint - the last repo write).
+*Fired by:* `session`, end step 5 (checkpoint - the last repo write).
 Input: `{changes, item_ref, vcs_adapter}` → Output: `{commit actions}`.
 
 **`release`** — a gated release (mostly for live-product flows).

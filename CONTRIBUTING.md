@@ -54,7 +54,7 @@ Change it there, and make the other files *point* rather than restate:
   documenting its default.
 - **An adapter-contract change** → `adapters/ADAPTERS.md`, every shipped
   fallback (`trackers/markdown.md`, `vcs/git.md`, `docs/none.md`) either
-  implementing it or declaring it unsupported, and `skills/cadence-init/` which
+  implementing it or declaring it unsupported, and `skills/init/` which
   generates adapters against the contract.
 - **A config-shape change** → `config.example.md` and every skill reading that key.
 - **A flow-vocabulary change** → `flows/FLOW-SPEC.md`, all three presets, the

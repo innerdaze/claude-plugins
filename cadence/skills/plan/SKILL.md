@@ -1,5 +1,5 @@
 ---
-name: cadence-plan
+name: plan
 description: Break a roadmap milestone into epics and tickets in a project already configured with Cadence, using the feature-process templates and the flow's decision rights. Under a solo flow it creates the work directly; under a team flow it writes a planning pack and defers the commitment to the team. Use when the user runs /cadence:plan, or asks to break a milestone, epic, or sprint into tracked work items. Not for ad-hoc planning of a single task — this writes to the project's tracker.
 ---
 
@@ -46,7 +46,7 @@ Turns a milestone from the roadmap into concrete items in the tracker. Uses `${C
 - **Creates (or proposes) work items; does not implement.** Working an item is the execution skill, entered via `/cadence:session`.
 - **Does not set vision.** Milestones and their exit criteria come from `/cadence:roadmap`.
 - **Honours decision rights.** Never commits team scope the flow reserves for a human.
-- **Surfaces gaps instead of filling them.** If the config, flow, tracker, or doc adapter doesn't resolve, stop and say which link broke — see "When something doesn't resolve" in `${CLAUDE_PLUGIN_ROOT}/skills/cadence-session/SKILL.md`. Creating items against a guessed tracker or a substituted flow is the expensive failure here, because the items persist.
+- **Surfaces gaps instead of filling them.** If the config, flow, tracker, or doc adapter doesn't resolve, stop and say which link broke — see "When something doesn't resolve" in `${CLAUDE_PLUGIN_ROOT}/skills/session/SKILL.md`. Creating items against a guessed tracker or a substituted flow is the expensive failure here, because the items persist.
 
 ## Next
 

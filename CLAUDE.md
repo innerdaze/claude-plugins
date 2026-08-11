@@ -33,7 +33,7 @@ The one thing worth understanding before editing anything. Cadence ships an inva
 - **Bindings** (`config.example.md`) — *where and with what* you work: tracker, VCS, doc system, execution skill, **and model tiers**. Resolved through **adapters** (`adapters/ADAPTERS.md`). Change these → same process, different toolchain.
 - **Flow** (`flows/*.flow.md`) — *how* you work: hierarchy, states, gates, cadence/ceremonies, intake & priority policy, decision rights, session definition. Change this → same tools, different process.
 
-The five skills (`skills/cadence-{init,session,plan,roadmap,doctor}/SKILL.md`) are **interpreters** of those two layers. Only `cadence-init` writes configuration; `cadence-doctor` is strictly read-only, which is what makes it safe to run anywhere. They must never hardcode a tool or a workflow. Where a step can vary, it is a named **hook** (`flows/HOOKS.md`): unset → the skill's built-in default; set → the skill loads the project's instruction doc and follows it instead.
+The five skills (`skills/{init,session,plan,roadmap,doctor}/SKILL.md`) are **interpreters** of those two layers. Only `init` writes configuration; `doctor` is strictly read-only, which is what makes it safe to run anywhere. They must never hardcode a tool or a workflow. Where a step can vary, it is a named **hook** (`flows/HOOKS.md`): unset → the skill's built-in default; set → the skill loads the project's instruction doc and follows it instead.
 
 Division of labour, in one line: **hooks decide and describe; adapters perform side-effects; skills orchestrate and own the writes.** A hook returns "create these three tickets"; the skill calls the tracker adapter's `create`.
 
@@ -70,7 +70,7 @@ Two more, load-bearing in practice:
 The same facts are stated in several places by design (spec, contract, skill, README). A behavioural change usually has to land in more than one of them, or the docs start contradicting each other. Known coupling:
 
 - A hook change → `flows/HOOKS.md` **and** the skill that fires it **and** any preset flow that documents its default **and** DESIGN's hook table.
-- An adapter-contract change → `adapters/ADAPTERS.md` **and** the shipped fallback implementing it (`adapters/trackers/markdown.md`, `adapters/vcs/git.md`, `adapters/docs/none.md`) **and** `skills/cadence-init/SKILL.md`, which generates adapters against the contract.
+- An adapter-contract change → `adapters/ADAPTERS.md` **and** the shipped fallback implementing it (`adapters/trackers/markdown.md`, `adapters/vcs/git.md`, `adapters/docs/none.md`) **and** `skills/init/SKILL.md`, which generates adapters against the contract.
 - A config-shape change → `config.example.md` **and** every skill that reads that key **and** DESIGN's Layer 1 block.
 - A new default behaviour → the skill, the relevant preset flow, and `flows/CEREMONIES.md` if it is a ceremony.
 
@@ -78,8 +78,8 @@ The same facts are stated in several places by design (spec, contract, skill, RE
 
 ## Conventions
 
-- **Two surfaces, one behaviour.** `commands/*.md` are thin typed entry points (`/cadence:init`, `/cadence:session start`) that load the matching skill and pass `$ARGUMENTS` through; `skills/cadence-*/SKILL.md` hold all the behaviour and are what Claude selects on its own from a description match. Edit the skill; touch the command only if the argument shape changes.
-- **Everything is namespaced `cadence-`.** Skill directory names match their frontmatter `name` exactly (`skills/cadence-session/` ↔ `name: cadence-session`). The prefix exists so installing the plugin can never shadow a skill the adopter already has — `session`, `plan`, and `roadmap` are all names a project might already use.
+- **One skill, one surface. There is no `commands/` directory.** A plugin skill is *both* typeable as `/cadence:<name>` and selectable by Claude from its description, so a command wrapper adds nothing but a duplicate entry. Learned the hard way: an earlier version shipped both, and every capability registered twice.
+- **Skill names are bare** — `init`, `session`, `plan`, `roadmap`, `doctor` — with the directory name matching the frontmatter `name` exactly. Do **not** prefix them `cadence-`: the plugin namespace already prefixes everything with `cadence:`, so a prefix yields `/cadence:cadence-session`. That namespacing is also what stops a bare `session` here from shadowing an adopter's own `session` skill.
 - **Bundled-file references need `${CLAUDE_PLUGIN_ROOT}`.** A skill's working directory is the *consumer's* repo, so `flows/HOOKS.md` resolves to nothing there. Any path from a skill into the plugin must be written `${CLAUDE_PLUGIN_ROOT}/flows/HOOKS.md`. The failure mode is silent — the model improvises rather than erroring — so this is easy to reintroduce and hard to notice.
 - **Descriptions are the dispatch surface.** Each SKILL.md `description` must name the trigger phrases; that is how the skill gets selected.
 - Flow specs and configs are **Markdown with a YAML block**, read as prose by the skills — human-editable, not machine-validated. Keep them readable over strict.

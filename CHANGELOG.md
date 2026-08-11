@@ -35,9 +35,10 @@ in throwaway repos — found ~45 verified defects. This release fixes them.
   mapping. How a tool models an epic is a fact about the tool.
 - **`/cadence:session end` reorders**: gates → set status → checkpoint. Any hook
   or authored flow that assumed the commit came first must be updated.
-- **All skills renamed with a `cadence-` prefix** and their directories renamed to
-  match. A project referring to the old `session` / `plan` / `roadmap` skill names
-  must update.
+- **Skills renamed**, with directories matching. They are addressed
+  `/cadence:init`, `/cadence:session`, and so on — the plugin namespace supplies
+  the `cadence:` prefix, so the skill names themselves stay bare. A project
+  referring to them by any other name must update.
 - **Flow specs now require `meta.cadence_version` and `states.roles`.** An
   existing custom flow will not validate until both are added.
 - **`session_state.vcs_ignored` is removed.** Ignoring is an action init takes,
@@ -51,9 +52,11 @@ in throwaway repos — found ~45 verified defects. This release fixes them.
 - **Lane roles** (`states.roles`). Skills ask for a role, never a literal status.
   Roles are declared by a human and never inferred; an absent `active` role means
   sessions don't touch status, which is a valid process rather than a gap.
-- `commands/` — `/cadence:init`, `:session`, `:plan`, `:roadmap`, `:doctor`.
-  Plugin skills are addressed `plugin:skill`, so the previously documented
-  `/cadence init` was never a form Claude Code could parse.
+- **Five working commands** — `/cadence:init`, `:session`, `:plan`, `:roadmap`,
+  `:doctor`. Plugin skills are addressed `plugin:skill`, so the previously
+  documented `/cadence init` was never a form Claude Code could parse. The skills
+  provide these directly; a `commands/` wrapper directory was tried first and
+  removed once a real install showed it registered every capability twice.
 - **`/cadence:doctor`** — read-only diagnosis of a project's setup: unknown config
   keys, flow validity, adapter coverage, tracker reachability *and whether its
   workspace belongs to this repo*, whether mapped statuses still exist, live data

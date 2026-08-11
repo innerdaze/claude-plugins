@@ -1,5 +1,5 @@
 ---
-name: cadence-roadmap
+name: roadmap
 description: Create or update a project's vision & roadmap — the north star. Drafts the pitch, pillars, and milestones (each with one goal + concrete exit criteria), and revisits them at milestone boundaries. Defines milestones; does not break them into tickets (that's /cadence:plan) or implement. Use when the user runs /cadence:roadmap, asks to draft or update a vision or roadmap doc, wants to define or re-cut milestones, or asks what the project should aim at next at a milestone boundary.
 ---
 

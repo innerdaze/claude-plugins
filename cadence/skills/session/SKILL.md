@@ -1,9 +1,14 @@
 ---
-name: cadence-session
+name: session
 description: Start or end a bounded work session in a project configured with Cadence. Start loads context, picks one goal per the flow's priority policy, and hands off to the project's execution skill; end runs the flow's gates, advances the item, verifies or performs the checkpoint, prunes the session scratchpad, and sets the next goal. Environment- and process-agnostic. Use when the user runs /cadence:session, says "start a session", "begin a work session", "wrap up", "end my session", "what should I work on next", or asks to close out the ticket they were working on.
 ---
 
 # /cadence:session — Cadence session interpreter
+
+Invoked as `/cadence:session start` or `/cadence:session end`. If no argument is
+given: start a session when the session-state file records no open goal, end one
+when it does — and say which you inferred before acting, so a wrong guess costs a
+sentence rather than a mis-run ritual.
 
 This skill assumes **nothing** about the environment or the process. It reads the project's **config** (bindings: tracker, VCS, docs, execution skill) and its **flow** (methodology: states, roles, gates, priority, decision rights), and executes the session ritual by interpreting them. Where the flow sets a **hook**, run that instruction doc; otherwise use the default described here.
 

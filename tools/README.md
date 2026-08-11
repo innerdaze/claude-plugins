@@ -32,13 +32,14 @@ the CHANGELOG knows about the current version. *Why:* the repo shipped for two
 commits with a marketplace name that made the documented install command fail,
 and with no changelog at all.
 
-**Skills and commands** — a skill's directory name equals its frontmatter `name`;
-every skill has a name and description; every command points at a skill that
-exists. *Why:* skills are addressed `plugin:skill`, and a mismatch between the
-directory and the declared name makes resolution depend on which one the harness
-happens to use. The `cadence-` prefix also exists so installing can never shadow
-a `session` or `plan` skill an adopter already has — a check that the names stay
-namespaced protects that.
+**Skills** — a skill's directory name equals its frontmatter `name`; every skill
+has a name and description; no skill name is prefixed `cadence-`; and there is no
+`commands/` directory. *Why:* skills are addressed `plugin:skill`, so a mismatch between the directory
+and the declared name makes resolution depend on which one the harness uses. The
+prefix and command rules come from a real install: the plugin namespace already
+supplies `cadence:`, so a `cadence-` prefix registered `/cadence:cadence-session`,
+and a `commands/` wrapper registered every capability a second time. Neither was
+visible from the source — only from installing it.
 
 **`${CLAUDE_PLUGIN_ROOT}` paths** — every anchored path resolves to a real file,
 and a skill may not reference a bundled file *without* anchoring it. *Why:* this

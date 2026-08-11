@@ -154,16 +154,12 @@ Not shipped: a ticket-execution skill, a VCS-specific commit skill.
 ```
 cadence/
   .claude-plugin/plugin.json
-  commands/                        # the typed surface: /cadence:init, :session, :plan, :roadmap
-    init.md                        # each is a thin wrapper that loads the matching skill
-    session.md
-    plan.md
-    roadmap.md
-  skills/                          # the behaviour; all prefixed `cadence-` so they can't shadow
-    cadence-init/SKILL.md          #   a skill the adopter already has
-    cadence-session/SKILL.md
-    cadence-plan/SKILL.md
-    cadence-roadmap/SKILL.md
+  skills/                          # one entry per capability; typed AND model-selected
+    init/SKILL.md                  #   -> /cadence:init
+    session/SKILL.md               #   -> /cadence:session start|end
+    plan/SKILL.md                  #   -> /cadence:plan
+    roadmap/SKILL.md               #   -> /cadence:roadmap
+    doctor/SKILL.md                #   -> /cadence:doctor
   agents/
     mechanical.md                  # cheap-tier subagent (model: haiku) for mechanical work
   adapters/
@@ -186,7 +182,9 @@ cadence/
 
 A custom flow lives with the project (e.g. `.claude/cadence/my-flow.flow.md` + `hooks/*.md`) and is referenced from `config.flow`.
 
-**Why commands *and* skills.** They are two different doors to the same room. A **skill** is selected by the model from its description — that's what makes "wrap up the session" work without the user knowing a command exists. A **command** is typed by the user and is the stable, discoverable name — `/cadence:init`. Shipping only skills would mean nothing to type; shipping only commands would mean Cadence never engages unless invoked explicitly. Each command file is therefore a few lines that point at its skill and pass `$ARGUMENTS` through; all behaviour stays in the skill, so there is exactly one place to edit.
+**Why there is no `commands/` directory.** A first attempt shipped one, on the assumption that skills could only be model-selected and a command was needed to give users something to type. That assumption was wrong: a plugin skill is *both* typeable as `/cadence:<name>` and selectable from its description. Shipping both registered every capability twice — `/cadence:init` from the command and `/cadence:cadence-init` from the skill — which only became visible on a real install.
+
+Two lessons worth keeping. **The plugin namespace is the namespace**: everything is already `cadence:<name>`, so prefixing skill names `cadence-` produces a stutter, and a bare `session` inside this plugin cannot shadow an adopter's own `session` skill. And **the surface a plugin presents is not verifiable from its source** — nothing in the repo could have shown the doubling. That is the argument for `docs/VERIFICATION.md` existing at all.
 
 **Referring to bundled files.** A skill runs with the *consumer project* as its working directory, so a bare path like `flows/HOOKS.md` resolves into the user's repo, where it doesn't exist. Every reference from a skill to a file shipped inside the plugin must be written `${CLAUDE_PLUGIN_ROOT}/flows/HOOKS.md`. This is not cosmetic: adapter resolution and hook resolution both depend on the skill actually finding those docs, and the failure is silent — the model guesses instead of erroring.
 

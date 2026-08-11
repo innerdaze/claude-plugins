@@ -1,9 +1,12 @@
 ---
-name: cadence-init
+name: init
 description: Set up Cadence in a project. Detects the project's conventions (doc system, VCS, execution skill, issue tracker), confirms them, and GENERATES a project-local adapter for each non-fallback tool it finds; then helps you pick or author a flow, maps your tracker's real statuses to the flow's lanes, writes the config, and scaffolds your roadmap. Use when the user runs /cadence:init, says "set up Cadence", "initialize Cadence", or asks to put a project-management process, a roadmap-and-tickets workflow, or goal-driven work sessions in place for a project.
 ---
 
 # /cadence:init — set up Cadence in a project
+
+Invoked as `/cadence:init`, or `/cadence:init --defaults` for the non-interactive
+zero-dependency setup described at the end of this file.
 
 Produce: a **config** (bindings), a **flow** selection (methodology), any **project-local adapters** the environment needs, and the starter docs. The governing rule is **detect, then confirm — never assume.** Nothing is written until the user approves.
 

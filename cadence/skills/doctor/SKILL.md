@@ -1,5 +1,5 @@
 ---
-name: cadence-doctor
+name: doctor
 description: Check a project's Cadence setup and report what is broken, drifted, or disabled — config keys, flow validity, adapter coverage, tracker reachability, whether the flow's lanes still match the tracker's real columns, and whether session state is being ignored. Read-only; it never fixes anything. Use when the user runs /cadence:doctor, says Cadence is behaving oddly, asks why a session or plan step was skipped, asks whether their setup is correct, or after upgrading the plugin.
 ---
 
