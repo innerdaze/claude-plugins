@@ -1,14 +1,24 @@
 {
   "name": "claude-plugins",
-  "owner": { "name": "Lee" },
+  "owner": {
+    "name": "Lee Driscoll",
+    "url": "https://github.com/innerdaze/claude-plugins/issues"
+  },
   "metadata": {
-    "description": "Plugins by Lee. Currently home to Cadence, a configurable project-management methodology."
+    "description": "Plugins by Lee Driscoll. Currently home to Cadence, a configurable project-management methodology.",
+    "version": "0.1.0"
   },
   "plugins": [
     {
       "name": "cadence",
       "source": "./cadence",
-      "description": "A configurable project-management methodology: vision -> roadmap -> epics -> tickets -> gates, worked in bounded sessions. Binds to your tracker/VCS/docs via adapters and to your team's process via a flow spec (solo, team-sprints, live-oncall, or your own)."
+      "version": "0.1.0",
+      "description": "A configurable project-management methodology: vision -> roadmap -> epics -> tickets -> gates, worked in bounded sessions. Binds to your tracker/VCS/docs via adapters and to your team's process via a flow spec (solo, team-sprints, live-oncall, or your own).",
+      "author": { "name": "Lee Driscoll" },
+      "homepage": "https://github.com/innerdaze/claude-plugins/tree/main/cadence",
+      "repository": "https://github.com/innerdaze/claude-plugins",
+      "license": "Apache-2.0",
+      "keywords": ["methodology", "project-management", "workflow", "sessions", "planning", "sprints"]
     }
   ]
 }

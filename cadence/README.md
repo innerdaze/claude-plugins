@@ -4,7 +4,7 @@
 
 Cadence gives an AI-assisted project a **spine**: a vision and roadmap, broken into epics and tickets, worked in bounded **sessions** that each have one concrete goal — so "what do I do now?" always has a better answer than "fix more bugs." It carries the *method* and adapts to *your* tools and *your* team's process, rather than forcing one workflow.
 
-> Status: **early / work in progress** (`0.1.0`). The architecture is settled (see `DESIGN.md`); skills are being built against it.
+> Status: **early** (`0.1.0`). The four skills and three preset flows are implemented; `team-sprints` and `live-oncall` depend on tracker capabilities not every adapter provides, and the ceremony layer is documented but not yet invokable — see `flows/CEREMONIES.md`.
 
 ## The idea in one picture
 
@@ -33,7 +33,7 @@ Neither is hardcoded. A solo builder on Linear + git and a live-product team on 
 Install the plugin:
 
 ```
-/plugin marketplace add <this-repo-url-or-path>
+/plugin marketplace add innerdaze/claude-plugins
 /plugin install cadence@claude-plugins
 ```
 
@@ -47,15 +47,18 @@ It detects your conventions (tracker, VCS, doc system, an existing execution ski
 
 ## Docs
 
-- `DESIGN.md` — architecture & rationale (the spec).
+- `flows/FLOW-SPEC.md` — the flow-spec schema: every key, its type, and which skill reads it.
 - `config.example.md` — the bindings config, annotated.
-- `flows/solo-greenfield.flow.md` — a preset, and the flow-spec schema by example.
+- `flows/solo-greenfield.flow.md` — a preset; a worked instance of the schema.
 - `flows/HOOKS.md` — the hook surface and each hook's contract.
+- `flows/CEREMONIES.md` — ceremony defaults (documented; not yet invokable).
+
+## Contributing and bugs
+
+Issues and pull requests: <https://github.com/innerdaze/claude-plugins/issues>.
+
+The contracts — `adapters/ADAPTERS.md`, `flows/HOOKS.md`, `flows/FLOW-SPEC.md` — are treated as public API. Renaming a hook, changing its Input/Output, removing an adapter operation, or changing a config key's meaning is a breaking change. See `CONTRIBUTING.md` at the repository root before proposing one.
 
 ## License
 
-Apache-2.0 (recommended for a platform others build on; change before first publish if you prefer MIT).
-
----
-
-*Author: Lee — complete author/repository/homepage fields before publishing.*
+Apache-2.0 — see `LICENSE`. Copyright 2026 Lee Driscoll.

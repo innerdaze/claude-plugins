@@ -4,9 +4,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this repo is
 
-A Claude Code / Cowork **plugin marketplace** containing one plugin, **Cadence** (`cadence/`). Everything here is Markdown — there is no source code, no build system, no dependencies, and no test suite. The "programs" are skill/adapter/flow/hook instruction docs that a Claude agent loads and follows at run time; a change to a doc *is* a change to behaviour.
+A Claude Code / Cowork **plugin marketplace** containing one plugin, **Cadence** (`cadence/`). The shipped payload is entirely Markdown — the "programs" are skill/adapter/flow/hook instruction docs that a Claude agent loads and follows at run time, so a change to a doc *is* a change to behaviour.
 
-There are therefore no build/lint/test commands. The only exercise loop is installing and running it:
+Two things at the repo root are **not** part of the payload and must never move into `cadence/`:
+
+- **`DESIGN.md`** — architecture, rationale, and history. Internal notes. No shipped file may cite it; anything an adopter needs belongs in the contracts.
+- **`tools/`** — the repo's own validator and CI. This is the only executable code in the repo, and it exists to enforce the invariants below mechanically. Keeping it outside `cadence/` is what lets the shipped plugin stay pure Markdown.
+
+Run the validator before committing (it is what CI runs):
+
+```
+python tools/validate_cadence.py
+```
+
+Beyond that there is no build or test suite. The only full exercise loop is installing and running the plugin:
 
 ```
 /plugin marketplace add C:\Users\Lee\Projects\claude-plugins
@@ -40,7 +51,7 @@ Renaming a hook, or changing an Input/Output shape or an adapter operation, is a
 
 ## Editing rules (these are what actually constrain work here)
 
-`cadence/DESIGN.md` is the spec and the arbiter; read it before any non-trivial change. Its six principles are the standing constraints:
+`DESIGN.md` (repo root, not shipped) carries the rationale; read it before any non-trivial change. Its six principles are the standing constraints:
 
 1. **Environment-agnostic.** Nothing in `cadence/` may assume Linear, Diversion, GitHub, a `domains/` doc system, or any MCP. Tool specifics arrive only via bindings/adapters.
 2. **Process-agnostic.** Solo, sprints, kanban, incident-first are *flows*, never code paths.
@@ -63,7 +74,7 @@ The same facts are stated in several places by design (spec, contract, skill, RE
 - A config-shape change → `config.example.md` **and** every skill that reads that key **and** DESIGN's Layer 1 block.
 - A new default behaviour → the skill, the relevant preset flow, and `flows/CEREMONIES.md` if it is a ceremony.
 
-Cadence's own `DESIGN.md` build plan (phases 1–8) tracks project status; the README states `0.1.0`, "architecture settled, skills being built against it."
+`CHANGELOG.md` is the release record and the place a breaking change must be declared — and under this project's rule, *the contracts are the public API*: renaming a hook, changing its Input/Output, removing an adapter operation, or changing a config key's meaning are all major changes.
 
 ## Conventions
 

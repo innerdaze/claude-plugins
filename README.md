@@ -13,7 +13,7 @@ Gives an AI-assisted project a spine: vision → roadmap → epics → tickets �
 Add it in Claude Code, then install a plugin from it:
 
 ```
-/plugin marketplace add <this-repo-url-or-path>
+/plugin marketplace add innerdaze/claude-plugins
 /plugin install cadence@claude-plugins
 ```
 
