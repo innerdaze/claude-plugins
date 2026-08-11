@@ -58,9 +58,30 @@ manifest, not the repo.
 > that path belongs in **section 10**, after publishing; do not treat its failure
 > now as a plugin defect.
 
+### Re-testing after a change
+
+The cache is keyed by version, so a fix only reaches you if the version changed:
+
+```
+git push                                  # with a bumped version in both manifests
+/plugin marketplace update innerdaze      # refreshes the clone
+/plugin                                   # should now offer an upgrade
+```
+
+If it says *"already at the latest version"* after you pushed a fix, the version
+wasn't bumped — the clone updated but the installed payload didn't. Confirm by
+comparing the two:
+
+```
+ls ~/.claude/plugins/marketplaces/innerdaze/cadence/skills   # the fetched clone
+ls ~/.claude/plugins/cache/innerdaze/cadence/*/skills        # what is installed
+```
+
+They must match. If they don't, that is the version-bump trap, not a plugin bug.
+
 ## 2. Command and skill registration
 
-- [ ] Typing `/cadence:` offers **five** commands: `init`, `session`, `plan`, `roadmap`, `doctor`.
+- [ ] Typing `/cadence:` offers **exactly five** entries: `init`, `session`, `plan`, `roadmap`, `doctor` — and no `cadence:cadence-*` duplicates. Ten entries means a stale cache (see above) or a `commands/` directory has come back.
 - [ ] Each shows its `description`, and `session` shows the `start | end` argument hint.
 - [ ] **Nothing shadows an existing skill.** If you have your own `/session`, confirm it still resolves to yours and Cadence's is separately `/cadence:session`. This is what the `cadence-` prefix exists for.
 - [ ] Ask, in plain language, *"what should I work on next?"* in the scratch project. Does `cadence-session` engage on its own? Skill descriptions are the only dispatch surface, and they have never been measured.

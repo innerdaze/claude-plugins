@@ -11,11 +11,21 @@ changing a hook's Input/Output, removing an adapter operation, or changing the
 meaning of a config key is a *major* change. Adding an optional hook, operation,
 field, or config key is *minor*.
 
-## [0.2.0] — pending verification
+## [0.2.1] — pending verification
 
-> **Not yet tagged.** This release is complete in the tree but has never been
-> installed as a plugin. `docs/VERIFICATION.md` is the checklist that gates the
-> tag; sections 1–7 must pass first.
+> **Supersedes 0.2.0**, which was published for about twenty minutes and is
+> superseded rather than listed separately. It registered every capability twice
+> (`/cadence:init` *and* `/cadence:cadence-init`) because it shipped both a
+> `commands/` directory and `cadence-`-prefixed skills. Both are removed here.
+>
+> The version bump is also what makes the fix *reach* anyone: the plugin cache is
+> keyed by version, so republishing the same number leaves installed copies on the
+> old payload. **Any change to the payload needs a version bump.**
+
+> **Not yet tagged.** Installation is now verified — the plugin loads,
+> `${CLAUDE_PLUGIN_ROOT}` resolves inside skill bodies, the `mechanical` subagent
+> registers, and `/cadence:doctor` runs correctly. The rest of
+> `docs/VERIFICATION.md` gates the tag; sections 1–7 must pass first.
 
 The plugin was well-designed on paper and could not actually be installed as
 documented. Three rounds of audit — static review, then six live evaluation runs

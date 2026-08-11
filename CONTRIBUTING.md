@@ -19,6 +19,15 @@ operation, or changing what a config key means are all **breaking** changes and
 need a major version bump plus a `CHANGELOG.md` entry under a `BREAKING`
 heading. Adding an optional hook, operation, field, or config key is minor.
 
+## Any payload change needs a version bump
+
+The plugin cache is keyed by version: `~/.claude/plugins/cache/<marketplace>/cadence/<version>/`.
+Push a change without bumping `version` in **both** manifests and every installed
+copy stays on the old payload — `/plugin marketplace update` refreshes the clone,
+then the installer reports "already at the latest version" and copies nothing.
+
+It looks exactly like a change that didn't take. Bump the version.
+
 ## Before you open a PR
 
 ```
