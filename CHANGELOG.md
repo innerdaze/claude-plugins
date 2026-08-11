@@ -11,7 +11,20 @@ changing a hook's Input/Output, removing an adapter operation, or changing the
 meaning of a config key is a *major* change. Adding an optional hook, operation,
 field, or config key is *minor*.
 
-## [0.2.4] — pending verification
+## [0.2.5] — pending verification
+
+### Fixed
+
+- `tools/make_fixture.py` generated configs whose YAML did not parse — the
+  status_map block was spliced into an indented template that was then dedented,
+  leaving the first mapped lane at a different depth from the rest. All three
+  fixtures were affected, so a verification run against them would have "found" a
+  config-parse failure in the plugin that was really in the harness. The config
+  is now built flat, and **the generator self-checks**: it parses the config, every
+  item's front-matter, and any project-local flow's hook references, and refuses
+  to report success if the fixture is not the shape it claims.
+
+## [0.2.4] — superseded
 
 ### Fixed
 

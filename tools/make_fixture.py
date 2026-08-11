@@ -51,47 +51,56 @@ def init_repo(root: Path, message: str) -> None:
 
 
 def config(**kw: str) -> str:
-    """Assemble a config from the pieces a fixture varies."""
-    return f"""
-    # Cadence config — {kw['name']}
+    """Assemble a config from the pieces a fixture varies.
 
-    ```yaml
-    project:
-      name: {kw['name']}
-      ticket_prefix: {kw['prefix']}
-
-    tracker:
-      kind: markdown
-      path: .claude/cadence/backlog
-      status_map:
-    {textwrap.indent(kw['status_map'].strip(), '    ' * 2)}
-
-    vcs:
-      kind: git
-      checkpoint: commands
-
-    execution:
-      skill: {kw['exec_skill']}
-      owns: {kw['exec_owns']}
-
-    doc_system:
-      kind: none
-      notes: .claude/cadence/notes.md
-      roadmap: docs/ROADMAP.md
-
-    session_state:
-      file: .claude/cadence/SESSION.local.md
-      format: markdown
-
-    models:
-      mechanical: haiku
-      reasoning: inherit
-
-    flow: {kw['flow']}
-
-    dod_gates: {kw['dod']}
-    ```
+    Built flat, with no leading indentation on any line. An earlier version was
+    an indented template run through textwrap.dedent, with the status_map block
+    spliced in via textwrap.indent — which left the first mapped lane at a
+    different depth from the rest and produced YAML that would not parse. The
+    fixture then tested nothing except the config loader's error path.
     """
+    lanes = "\n".join("    " + line.strip()
+                      for line in kw["status_map"].strip().splitlines())
+    return (
+        f"# Cadence config — {kw['name']}\n"
+        "\n"
+        "```yaml\n"
+        "project:\n"
+        f"  name: {kw['name']}\n"
+        f"  ticket_prefix: {kw['prefix']}\n"
+        "\n"
+        "tracker:\n"
+        "  kind: markdown\n"
+        "  path: .claude/cadence/backlog\n"
+        "  status_map:\n"
+        f"{lanes}\n"
+        "\n"
+        "vcs:\n"
+        "  kind: git\n"
+        "  checkpoint: commands\n"
+        "\n"
+        "execution:\n"
+        f"  skill: {kw['exec_skill']}\n"
+        f"  owns: {kw['exec_owns']}\n"
+        "\n"
+        "doc_system:\n"
+        "  kind: none\n"
+        "  notes: .claude/cadence/notes.md\n"
+        "  roadmap: docs/ROADMAP.md\n"
+        "\n"
+        "session_state:\n"
+        "  file: .claude/cadence/SESSION.local.md\n"
+        "  format: markdown\n"
+        "\n"
+        "models:\n"
+        "  mechanical: haiku\n"
+        "  reasoning: inherit\n"
+        "\n"
+        f"flow: {kw['flow']}\n"
+        "\n"
+        f"dod_gates: {kw['dod']}\n"
+        "```\n"
+    )
 
 
 SESSION_STATE = """
@@ -335,6 +344,66 @@ FIXTURES = {
 }
 
 
+def self_check(root: Path) -> bool:
+    """Confirm the fixture is the shape it claims, before anything tests it."""
+    import re
+
+    try:
+        import yaml
+    except ImportError:
+        print("note: PyYAML not installed; skipping fixture self-check",
+              file=sys.stderr)
+        return True
+
+    ok = True
+    cfg_path = root / ".claude/cadence/config.md"
+    if not cfg_path.exists():
+        print(f"FIXTURE BROKEN: no config at {cfg_path}", file=sys.stderr)
+        return False
+
+    m = re.search(r"```yaml\n(.*?)```", cfg_path.read_text(encoding="utf-8"), re.S)
+    if not m:
+        print("FIXTURE BROKEN: config has no yaml block", file=sys.stderr)
+        return False
+    try:
+        cfg = yaml.safe_load(m.group(1))
+    except yaml.YAMLError as e:
+        print(f"FIXTURE BROKEN: config yaml does not parse: {e}", file=sys.stderr)
+        return False
+
+    if not (cfg.get("tracker") or {}).get("status_map"):
+        print("FIXTURE BROKEN: no tracker.status_map", file=sys.stderr)
+        ok = False
+
+    # Every backlog item's front-matter must parse, or the tracker is unreadable.
+    for item in (root / ".claude/cadence/backlog").glob("*.md"):
+        fm = re.match(r"^---\n(.*?)\n---\n", item.read_text(encoding="utf-8"), re.S)
+        if not fm:
+            print(f"FIXTURE BROKEN: {item.name} has no front-matter", file=sys.stderr)
+            ok = False
+            continue
+        try:
+            yaml.safe_load(fm.group(1))
+        except yaml.YAMLError as e:
+            print(f"FIXTURE BROKEN: {item.name} front-matter: {e}", file=sys.stderr)
+            ok = False
+
+    # A project-local flow must actually be there, with any hooks it names.
+    flow = str(cfg.get("flow", ""))
+    if flow.endswith(".flow.md"):
+        fp = root / flow
+        if not fp.exists():
+            print(f"FIXTURE BROKEN: flow {flow} missing", file=sys.stderr)
+            ok = False
+        else:
+            fm = re.search(r"```yaml\n(.*?)```", fp.read_text(encoding="utf-8"), re.S)
+            for hook_doc in re.findall(r":\s*(\./hooks/\S+\.md)", fm.group(1) if fm else ""):
+                if not (fp.parent / hook_doc).exists():
+                    print(f"FIXTURE BROKEN: hook {hook_doc} missing", file=sys.stderr)
+                    ok = False
+    return ok
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -358,6 +427,13 @@ def main() -> int:
     root.mkdir(parents=True)
 
     note = FIXTURES[args.fixture](root)
+
+    # Check the fixture is the shape it claims before anyone tests against it.
+    # A fixture that silently fails to apply produces a run that "finds" defects
+    # in the harness rather than the plugin - which has happened here twice.
+    if not self_check(root):
+        return 1
+
     print(f"\n{root}\n")
     print(textwrap.indent(note, "  "))
     print("\n  Run the skills against it, then delete it.")
