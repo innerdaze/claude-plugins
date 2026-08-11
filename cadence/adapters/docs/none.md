@@ -1,14 +1,26 @@
 # Doc-system adapter: `none`
 
-*For projects without a structured knowledge-doc system. Implements the doc-system contract from `ADAPTERS.md` with the lightest possible footprint — so durable lessons still aren't lost.*
+*For projects without a structured knowledge-doc system. Implements the doc-system contract from the plugin's `adapters/ADAPTERS.md` with the lightest possible footprint — so durable lessons still aren't lost.*
+
+## Capabilities
+
+```
+supports:    record
+unsupported: locate, taxonomy   # there is no doc structure to map
+```
 
 ## Config
 
 ```yaml
 doc_system:
   kind: none
-  notes: .claude/cadence/notes.md       # where record() appends (default)
+  notes: .claude/cadence/notes.md       # where record() appends
+  roadmap: docs/ROADMAP.md              # where /cadence:roadmap reads and writes
 ```
+
+`roadmap` is here even under `none` because a roadmap is a *project* document,
+not Cadence state — it belongs where a person would look for it, not buried in
+`.claude/cadence/`.
 
 ## Operations
 

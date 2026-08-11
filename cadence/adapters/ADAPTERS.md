@@ -21,21 +21,81 @@ So the plugin stays portable and small: it carries the **method** and the **cont
 
 *(A distribution MAY include clearly-marked **reference examples** under `adapters/examples/`, used only as seeds when `init` detects a matching tool. They are documentation, never the active binding. The base plugin ships none.)*
 
+## The item record
+
+Every tracker speaks in items. These are the fields a skill may ask for:
+
+| Field | Required | Used by |
+|---|---|---|
+| `id` | **yes** | everything |
+| `title` | **yes** | everything |
+| `type` | **yes** | `hierarchy.levels`, `bug.triage` |
+| `status` | **yes** | the state machine |
+| `epic` | no | `current-epic` priority token |
+| `milestone` | no | `next-roadmap-ticket`, roadmap progress |
+| `labels` | no | context loading via the doc adapter's `taxonomy()` |
+| `assignee` | no | ceremonies *(deferred)* |
+| `cycle` | no | `committed-sprint` token; sprint flows |
+| `order` | no | `backlog-by-rank` token |
+| `depends_on` | no | `blocker-for-current-ticket` token |
+| `severity` | no | `customer-bug-by-severity` token |
+| `updated_at` | no | `updated_since` filters, roadmap progress |
+
+**An optional field a tracker cannot store is not an error.** The adapter
+declares it unsupported, and any step needing it is skipped with a note — the
+priority policy degrades one token at a time rather than guessing. What is
+forbidden is inventing the data.
+
+## Capability declaration
+
+Every adapter states, near the top, which optional operations and fields it
+supports. This is what makes degradation *visible* instead of silent, and it is
+the first thing `/cadence:doctor` reads:
+
+```markdown
+## Capabilities
+supports:   list_closed, update, statuses, order, depends_on
+unsupported: cycle, assignee, severity   # this tool has no such concept
+```
+
+A skill that needs an unsupported capability says so once and continues without
+it. A skill must never work around a missing capability by writing the data
+somewhere the tool doesn't model.
+
 ## Tracker contract
 
-A tracker adapter manages work items. It must implement:
+A tracker adapter manages work items. Required:
 
-- **`list_open(milestone?)`** → the open items (optionally scoped to a milestone), each as `{id, title, type, status, epic, milestone, labels}`.
+- **`statuses()`** → the status names this tracker **actually accepts**, each flagged terminal where the tool knows. This is the primitive the whole status layering rests on: `/cadence:init` builds `config.tracker.status_map` from it, `/cadence:doctor` re-checks the map against it, and `set_status` validates against it. If a tool genuinely cannot enumerate its statuses, declare `statuses` unsupported — init then asks the user once and records the list in config.
+- **`list_open(filter?)`** → items not in the terminal set. `filter` may carry `{milestone, epic, assignee, cycle, type, status_in, status_not_in, updated_since, limit}`; ignore filter keys for fields you don't support, and say which you ignored.
 - **`get(id)`** → one item's full record (fields + description + comments).
-- **`create(fields)`** → create an item from `{title, type, description, epic?, milestone?, labels?}`; return its new `id`.
+- **`create(fields)`** → create an item; return its new `id`.
 - **`comment(id, text)`** → append a comment.
-- **`set_status(id, status)`** → move an item to a status.
-- **Concept mapping** — how this tracker represents `epic`, `milestone`, `label`, and the `status` names (from `config.tracker.statuses` / the flow's `states.lanes`).
+- **`update(id, fields)`** → change any writable field. **`set_status(id, status)`** is documented sugar for `update(id, {status})`.
+- **Concept mapping** — how this tracker represents `epic`, `milestone`, and `label`. This is also where `epic_convention` lives: how a tool models an epic is a fact about the *tool*, not about your project, so it belongs in the adapter and not in config.
+
+Optional:
+
+- **`list_closed(filter?)`** → terminal items. Needed by `session_state.prune` (to tell what's really finished) and by roadmap milestone progress.
+- **`list_cycles()` / `current_cycle()`** → for sprint flows. Unsupported degrades to milestone scope.
+
+**`set_status` must reject an unknown status.** If the target is not in
+`statuses()`, stop and report it — never approximate to a similarly-named column,
+and never create one. Cadence does not modify the shape of your board. This is
+the direct guard against the failure where a preset's lane names are used as if
+they were the tool's columns.
+
+*Reserved, deliberately not in the contract yet:* a general history/audit
+operation. Its only consumer is the postmortem timeline inside the deferred
+ceremony layer, most trackers cannot answer it uniformly, and a contract
+obligation with no caller is exactly the kind of dead weight this contract is
+being cleaned of.
 
 ## VCS contract
 
 - **`status()`** → the working-tree state (clean / list of changed files).
 - **`diff(paths?)`** → the diff for review / message-drafting.
+- **`log(n?, paths?)`** → the last `n` checkpoints as `{ref, message, item_refs}`. Needed to verify that a checkpoint referencing a given item exists — which `/cadence:session end` requires and previously had no way to do.
 - **`add_untracked(paths)`** → stage new/untracked files (some VCS need this explicitly).
 - **`checkpoint(message, item_ref)`** → create a commit whose message references `item_ref`. Never push unless asked.
 - **`ignore(paths)`** → append paths to the ignore file the `kind` implies (`.gitignore` / `.dvignore` / …), idempotently. Used at init to keep Cadence's local session-state file out of the repo.

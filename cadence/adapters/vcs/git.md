@@ -1,6 +1,13 @@
 # VCS adapter: `git`
 
-*The default VCS adapter. Implements the vcs contract from `ADAPTERS.md` via the `git` CLI.*
+*The default VCS adapter. Implements the vcs contract from the plugin's `adapters/ADAPTERS.md` via the `git` CLI.*
+
+## Capabilities
+
+```
+supports:    status, diff, log, add_untracked, checkpoint, ignore
+unsupported: —
+```
 
 ## Config
 
@@ -15,6 +22,7 @@ vcs:
 
 - **`status()`** — `git status --porcelain`. Empty output = clean tree. Parse lines for changed/untracked paths.
 - **`diff(paths?)`** — `git diff` (unstaged) and `git diff --staged` (staged); scope to `paths` when given. Use to review changes and draft a message.
+- **`log(n?, paths?)`** — `git log -n <n|10> --format='%h %s'`, scoped to `paths` when given. Return `{ref, message, item_refs}` per entry, where `item_refs` are the `<PREFIX>-<n>` tokens found in the subject. This is how `/cadence:session end` confirms a checkpoint referencing the item exists.
 - **`add_untracked(paths)`** — `git add -- <paths>` (git needs new files staged before they commit).
 - **`checkpoint(message, item_ref)`** — stage the intended changes (`git add -A`, or specific paths), then `git commit -m "<item_ref>: <message>"`. Confirm with `git log -1 --oneline`. **Do not `git push`** unless the user asks.
 - **`ignore(paths)`** — append each path to `.gitignore` if not already present (idempotent; create the file if missing). Used at init to keep Cadence's session-state file (`.claude/cadence/SESSION.local.md`) out of the repo.
