@@ -11,7 +11,26 @@ changing a hook's Input/Output, removing an adapter operation, or changing the
 meaning of a config key is a *major* change. Adding an optional hook, operation,
 field, or config key is *minor*.
 
-## [0.2.2] — pending verification
+## [0.2.3] — pending verification
+
+### Fixed
+
+- **A held gate abandoned the session's work.** `/cadence:session end` stopped
+  dead when a gate didn't clear, so the prune, next-goal and checkpoint steps
+  never ran — leaving real work uncommitted and, under a file-based tracker, the
+  tree dirty. That poisons the `status()`-clean check the next session depends
+  on, which is the exact failure the checkpoint-ordering fix existed to prevent,
+  reached through a different door. Gates decide whether the **item** advances,
+  not whether the **work** is saved: end now skips only the status change and
+  still records why the gate held, still checkpoints, and says in the commit
+  message which gate is holding the item.
+- **A session could move an item backwards.** `session start` moved the goal to
+  `roles.active` unconditionally. In a flow whose lanes are a pipeline rather
+  than a single in-flight state, an item already downstream of the active lane
+  got dragged back up it. Transitions now only ever move forward along the
+  declared path.
+
+## [0.2.2] — superseded
 
 > **Not yet tagged.** Installation is now verified — the plugin loads,
 > `${CLAUDE_PLUGIN_ROOT}` resolves inside skill bodies, the `mechanical` subagent

@@ -53,7 +53,7 @@ with the work in limbo.
    - `ai-proposes` → present the top 1–3 and let the user choose.
    - `human` → present the board; the user decides; don't pre-empt.
 3. **Frame the goal** in one sentence ("By end of session, `<id> <title>` is `<done role>`") and name the **session type**. If it can't be said in one sentence, it's too big — offer to split it first.
-4. **Move the item to `roles.active`**, per the resolution rules above, and fire **`transition.<from>_to_<to>`**. If the role or its mapping is absent, skip this and note it once. Check `states.wip_limit`: if the active lane already holds more than the limit, say so before adding to it.
+4. **Move the item to `roles.active`**, per the resolution rules above, and fire **`transition.<from>_to_<to>`**. Skip and note once if the role or its mapping is absent — **or if the item is already past that lane on the declared path**, which happens in any flow whose lanes are a pipeline rather than a single in-flight state. Never move an item backwards to satisfy a role. Check `states.wip_limit`: if the active lane already holds more than the limit, say so before adding to it.
 5. **Record the goal** via the tracker adapter (`comment`) as the anti-drift anchor.
 6. **State the bug rule** for this session (`flow.intake.bug_triage`), and mean it: if a bug surfaces later, fire **`bug.triage`** rather than deciding on impulse. New work arriving mid-session goes through **`intake.classify`** first.
 7. **Hand off** to `config.execution.skill`. Do not implement here.
@@ -74,8 +74,16 @@ checkpoint is the last thing that touches the repo.**
 
    Matching only the *final* transition is not enough: gates on intermediate hops (a citations check on the way to review, a postmortem before an incident closes) are precisely the ones an unmapped lane would drop.
 
-   The **effective DoD** is `flow.gates.dod.checks` ∪ `config.dod_gates` — a union; a project may raise the flow's bar, never lower it. Honour each gate's approver: a `human` gate is never auto-cleared. If any gate fails, leave the item where it is, record an honest note, and stop here.
-2. **Advance the item** to `roles.done` (via `roles.review` first if the flow declares that transition *and* the lane is mapped), firing `transition.<from>_to_<to>`.
+   The **effective DoD** is `flow.gates.dod.checks` ∪ `config.dod_gates` — a union; a project may raise the flow's bar, never lower it. Honour each gate's approver: a `human` gate is **never** auto-cleared — `needs-human` is not a pass.
+
+   **If a gate does not clear, the item does not advance — but the work is still saved.** Skip step 2, then carry on through the rest of end: record why the gate held (step 4), and **still checkpoint** (step 5). Gates govern whether the *item* moves, not whether the *work* survives.
+
+   Stopping dead here would leave real work uncommitted and, under a file-based tracker, the tree dirty — which poisons the `status()`-clean check the next session depends on, and leaves the work one careless `git add -A` from landing in someone else's commit. A held gate is a normal outcome of a session, not a crash.
+
+   Say plainly in the commit message and the session state that the item is *not* done and which gate is holding it.
+2. **Advance the item** to `roles.done` (via `roles.review` first if the flow declares that transition *and* the lane is mapped), firing `transition.<from>_to_<to>`. Skip this step entirely if a gate held.
+
+   Only move **forward** along the declared path. If the item already sits past the lane you were going to move it to — an `active` role naming a lane the item left three transitions ago — do not move it backwards; say so once and leave it. A status that walks backwards misrepresents the board more than a status that stands still.
 3. **Prune the session state** — run `session_state.prune`. The default rule lives in `${CLAUDE_PLUGIN_ROOT}/flows/HOOKS.md`; in short, reconcile the scratchpad **against the tracker** (not against what the file claims) and drop anything the tracker already tells you, keeping only non-obvious traps.
 4. **Decide the next goal and record it** via the tracker adapter (`comment`), and record any durable gotcha through the doc adapter's `record()`. Both of these write files that may be under version control, which is why they come *before* the checkpoint.
 5. **Checkpoint — the last repo write.** First call `status()` and look at what is actually there: running the gates may have produced artefacts the gates themselves created (`__pycache__`, coverage output, a build directory). Ignore or remove those before committing rather than attributing them to this item — the tree being clean afterwards is only meaningful if you didn't commit rubbish to achieve it.
