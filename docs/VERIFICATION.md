@@ -30,8 +30,8 @@ is a known unknown; the point is that it is *visible*.
 
 | Axis | Values | Covered by |
 |---|---|---|
-| Tracker storage | items in the repo | every run so far |
-| | hosted (MCP) | **not covered** — needs §8 |
+| Tracker storage | items in the repo | `reduced-lane`, `intermediate-gate` |
+| | hosted (MCP) | §8, against a live Linear team |
 | Board vs flow lanes | fully mapped | early eval runs |
 | | fewer columns than lanes | `reduced-lane`, `intermediate-gate` |
 | Lane shape | one in-flight lane | `solo-greenfield` fixtures |
@@ -47,7 +47,11 @@ is a known unknown; the point is that it is *visible*.
 | Flow source | shipped preset | `reduced-lane`, `execution-owns-commit` |
 | | project-local + authored hooks | `intermediate-gate` |
 | Cadence model | continuous | all fixtures |
-| | sprint / cycles | **not covered** — needs a tracker with `cycle` |
+| | sprint / cycles | **not covered** — a cycles-enabled team exists; no run yet |
+| Status names | unique | the markdown fallback, by construction |
+| | duplicated across categories | §8 — a live board with two `Queued` states |
+| Terminal states | only what the flow models | every markdown run |
+| | tracker has its own (`canceled`, `duplicate`) | §8 |
 
 **Building a shape.** These are scripted so a run is repeatable rather than
 reassembled by hand:

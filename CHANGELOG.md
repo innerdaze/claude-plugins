@@ -11,6 +11,53 @@ changing a hook's Input/Output, removing an adapter operation, or changing the
 meaning of a config key is a *major* change. Adding an optional hook, operation,
 field, or config key is *minor*.
 
+## [0.3.0] — pending verification
+
+First run against a **hosted tracker**. Three defects that the `markdown`
+fallback structurally could not expose, because its statuses are the values of
+`status_map` and therefore unique, complete and non-terminal by construction.
+
+### BREAKING
+
+- **`statuses()` returns records, not names.** `{name, id?, category?, terminal?}`
+  per status. A name is not a unique key on a real board.
+
+### Fixed
+
+- **A status name can be ambiguous.** A live Linear board had two states both
+  called `Queued`, one `backlog` and one `unstarted` — a configuration Linear,
+  Jira and GitHub Projects all permit. `status_map` mapped lanes to statuses by
+  name and `set_status` only had to reject a name matching *nothing*; neither
+  handled a name matching *two*. `status_map` now accepts a qualified
+  `{name, category}` form, `set_status` must refuse an ambiguous target rather
+  than pick one, init asks which is meant, and doctor reports the ambiguity.
+- **A tracker's own terminal states were ignored.** The terminal set came only
+  from the flow's `done` + `abandoned` roles, so a board's `canceled` and
+  `duplicate` states — which `solo-greenfield` does not model — counted as
+  **open**, and cancelled work would resurface as a candidate goal forever. The
+  terminal set is now the union of what the flow declares and what the tracker
+  knows.
+- **Capability declaration was binary; real adapters are not.** Linear accepts
+  `blockedBy` on a write but returns no relations from its list query, so
+  `depends_on` is writable and readable only one item at a time. Added a
+  **`costly`** tier so a skill narrows the set or delegates the sweep, rather
+  than fanning out over a backlog or silently skipping the field.
+
+### Verified against a real board
+
+- Init **discriminated** between two visible Linear teams, binding the one whose
+  name matches the repo and rejecting the other. Previously it had only ever been
+  observed refusing.
+- The generated adapter is the first written against a real interface: it records
+  that `save_issue` without `id` creates (a duplicate-issue hazard on a live
+  board), that `labels` is a full replacement, and that `blockedBy` needs
+  `includeRelations: true` on a per-item read.
+- `plan` created an epic and four children with real parent links and
+  dependencies, invented no labels (`taxonomy()` unsupported), skipped
+  `backlog-by-rank` (this MCP exposes no sort order), and **committed nothing** —
+  the first exercise of the hosted-tracker branch, where the backlog is not in
+  the repo.
+
 ## [0.2.6] — 2026-08-11
 
 ### Fixed

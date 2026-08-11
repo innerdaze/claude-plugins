@@ -56,6 +56,7 @@ The flow's lanes are **process vocabulary**. Your tracker has whatever columns i
 
 1. Call the tracker adapter's **`statuses()`**. If the adapter declares `statuses` unsupported, ask the user to list their columns once.
 2. Show the tool's **real** statuses beside the flow's lanes and have the user map them.
+   **Check for duplicate names first.** Real boards have them — two states called `Queued`, one `backlog` and one `unstarted`, is a configuration Linear permits and a live board was observed using. Where a name is ambiguous, say so and ask which one the lane means, then write the qualified form (`{name, category}`). Never pick one silently: the two halves of an ambiguity are different columns, and choosing wrong puts work somewhere the user didn't ask for.
 3. **Lanes with no counterpart are left unmapped — not invented.** Say what that disables, concretely: *"no column for `In Progress`, so sessions won't mark work in flight."* That is a normal outcome on a two-column board.
 4. Confirm the **roles**: which lane is `backlog`, which is `done`, and — only if the user says so — which is `active` and which is `review`. Never infer a role from a lane's name; whether picking up work means `Todo` or `In Progress` is a process decision. If the user doesn't want an `active` role, write it absent.
 5. **Never create a column in their tracker.** Cadence adapts to the board; the board does not adapt to Cadence.

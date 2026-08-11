@@ -54,9 +54,19 @@ the first thing `/cadence:doctor` reads:
 
 ```markdown
 ## Capabilities
-supports:   list_closed, update, statuses, order, depends_on
+supports:    list_closed(), update(), statuses(), order, depends_on
+costly:      depends_on            # writable, but only readable one item at a time
 unsupported: cycle, assignee, severity   # this tool has no such concept
 ```
+
+**`costly` is a third state, and real adapters need it.** A field can be writable
+while being unreadable in bulk — Linear accepts `blockedBy` on a write but its
+list query returns no relations, so reading dependencies across a backlog costs
+one call per item. That is neither "supported" (a skill would evaluate it over
+fifty items without thinking) nor "unsupported" (the data is genuinely there). A
+skill seeing `costly` should narrow the candidate set first, or hand the sweep to
+the `mechanical` subagent, rather than either fanning out blindly or silently
+skipping the field.
 
 A skill that needs an unsupported capability says so once and continues without
 it. A skill must never work around a missing capability by writing the data
@@ -66,8 +76,19 @@ somewhere the tool doesn't model.
 
 A tracker adapter manages work items. Required:
 
-- **`statuses()`** → the status names this tracker **actually accepts**, each flagged terminal where the tool knows. This is the primitive the whole status layering rests on: `/cadence:init` builds `config.tracker.status_map` from it, `/cadence:doctor` re-checks the map against it, and `set_status` validates against it. If a tool genuinely cannot enumerate its statuses, declare `statuses` unsupported — init then asks the user once and records the list in config.
+- **`statuses()`** → the statuses this tracker **actually accepts**. Return `{name, id?, category?, terminal?}` per status — `id` and `category` wherever the tool has them, because **a name is not guaranteed to be unique**. This is the primitive the whole status layering rests on: `/cadence:init` builds `config.tracker.status_map` from it, `/cadence:doctor` re-checks the map against it, and `set_status` validates against it. If a tool genuinely cannot enumerate its statuses, declare `statuses` unsupported — init then asks the user once and records the list in config.
+
+  **Duplicate names are normal and must be handled, not assumed away.** Linear, Jira and GitHub Projects all let two states share a display name across different categories — a real board was observed with two states both called `Queued`, one `backlog` and one `unstarted`. A `status_map` entry must therefore resolve to **exactly one** status. Where a bare name is ambiguous, the entry carries a qualified form the adapter can resolve unambiguously:
+
+  ```yaml
+  status_map:
+    Backlog: { name: Queued, category: backlog }   # disambiguated
+    Todo:    { name: Queued, category: unstarted }
+    Done:    Shipped                                # a bare name is fine when unique
+  ```
 - **`list_open(filter?)`** → items not in the terminal set. `filter` may carry `{milestone, epic, assignee, cycle, type, status_in, status_not_in, updated_since, limit}`; ignore filter keys for fields you don't support, and say which you ignored.
+
+  **The terminal set is the union of what the flow declares and what the tracker knows.** The flow's `done` + `abandoned` roles say which lanes *Cadence drives* items into. But a tracker often has finished states the flow never models — a Linear board carries `canceled` and `duplicate` categories whether or not the flow has an `abandoned` role. Those items are finished, and `list_open` must exclude them. Counting a cancelled ticket as open work would resurface it as a candidate goal forever. Where the tool reports a status as terminal, believe it.
 - **`get(id)`** → one item's full record (fields + description + comments).
 - **`create(fields)`** → create an item; return its new `id`.
 - **`comment(id, text)`** → append a comment.
@@ -79,11 +100,13 @@ Optional:
 - **`list_closed(filter?)`** → terminal items. Needed by `session_state.prune` (to tell what's really finished) and by roadmap milestone progress.
 - **`list_cycles()` / `current_cycle()`** → for sprint flows. Unsupported degrades to milestone scope.
 
-**`set_status` must reject an unknown status.** If the target is not in
-`statuses()`, stop and report it — never approximate to a similarly-named column,
-and never create one. Cadence does not modify the shape of your board. This is
-the direct guard against the failure where a preset's lane names are used as if
-they were the tool's columns.
+**`set_status` must resolve to exactly one status, or refuse.** If the target
+matches no status in `statuses()`, stop and report it — never approximate to a
+similarly-named column, and never create one. If it matches **more than one**,
+also stop: an ambiguous target is not a licence to pick the first. Say which
+statuses matched and that `status_map` needs the qualified form. Cadence does not
+modify the shape of your board, and it does not guess which half of an ambiguity
+you meant.
 
 *Reserved, deliberately not in the contract yet:* a general history/audit
 operation. Its only consumer is the postmortem timeline inside the deferred

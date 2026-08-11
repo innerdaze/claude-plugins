@@ -78,10 +78,13 @@ This is where the checks that static analysis cannot do earn their place.
   project, so a tracker bound from another product is a real and quiet failure —
   work gets filed into someone else's board. If you cannot corroborate it, say
   so and ask. **Report only. Never rebind.**
-- **Do the mapped statuses still exist?** Call `statuses()` and check every value
-  in `config.tracker.status_map` against it. A column renamed or deleted in the
-  tool leaves a mapping that will make `set_status` fail — invisible to any
-  static check, and the single most likely way a working setup silently rots.
+- **Do the mapped statuses still exist, and resolve uniquely?** Call `statuses()`
+  and check every value in `config.tracker.status_map`. Two failures to look for:
+  a value matching **nothing** (a column renamed or deleted in the tool — the
+  single most likely way a working setup silently rots), and a bare name matching
+  **more than one** status, which `set_status` must refuse. Report the second as
+  **broken** and name the qualified form that would fix it. Neither is visible to
+  any static check.
 - **Which lanes are unmapped?** For each flow lane with no `status_map` entry,
   report it as **disabled**, naming the consequence: "no column mapped for the
   `active` lane, so `/cadence:session start` won't mark work in flight." On a

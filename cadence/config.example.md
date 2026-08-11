@@ -38,6 +38,11 @@ tracker:
     Backlog: Backlog
     In Progress: Doing
     Done: Done
+    # Where two of the tool's statuses share a display name - which Linear, Jira
+    # and GitHub Projects all permit - a bare name is ambiguous and the entry
+    # must qualify it:
+    #   Backlog: { name: Queued, category: backlog }
+    #   Todo:    { name: Queued, category: unstarted }
 
 vcs:
   kind: <git | diversion | jj | hg>
