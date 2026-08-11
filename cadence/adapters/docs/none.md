@@ -7,13 +7,14 @@
 ```yaml
 doc_system:
   kind: none
-  notes: .cadence/notes.md       # where record() appends (default)
+  notes: .claude/cadence/notes.md       # where record() appends (default)
 ```
 
 ## Operations
 
 - **`locate(topics)`** — returns nothing structured. Suggest the skill glance at `README`/`CONTRIBUTING` if present, otherwise proceed. There is no context-pack mapping under `none`.
-- **`record(note)`** — append the note to `<notes>` (default `.cadence/notes.md`) under a dated bullet, creating the file if absent. This is the minimal fallback so a hard-won gotcha survives even without a doc system.
+- **`record(note)`** — append the note to `<notes>` (default `.claude/cadence/notes.md`) under a dated bullet, creating the file if absent. This is the minimal fallback so a hard-won gotcha survives even without a doc system.
+- **`taxonomy()`** — returns **empty**. With no doc system there is no label vocabulary to mirror. Skills that would label items by context simply don't, rather than inventing a scheme; `/cadence:plan` may still apply the flow's own type labels.
 
 ## When to move off `none`
 

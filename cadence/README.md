@@ -17,7 +17,7 @@ Neither is hardcoded. A solo builder on Linear + git and a live-product team on 
 
 ## What's in the box
 
-- **Skills** — `/cadence init` (setup), `/session` (start/end a work session), `/plan` (break a milestone into work), `/roadmap` (vision & roadmap). *(Cadence does not ship a ticket-execution skill or a commit skill — it integrates with yours.)*
+- **Commands** — `/cadence:init` (setup), `/cadence:session start|end` (a work session), `/cadence:plan` (break a milestone into work), `/cadence:roadmap` (vision & roadmap). Each is backed by a skill (`cadence-init`, `cadence-session`, …) that Claude can also engage on its own when you just say "let's wrap up the session." *(Cadence does not ship a ticket-execution skill or a commit skill — it integrates with yours.)*
 - **Flows** — three shipped presets: `solo-greenfield`, `team-sprints`, `live-oncall`. Fork one, or author your own.
 - **Adapters** — trackers (Linear, GitHub, markdown), VCS (git, Diversion), doc systems (domains, none). Add more against the documented contracts.
 - **Hooks** — a named extension surface (`HOOKS.md`) so a custom flow can override any step with your own authored instructions. This is what makes Cadence a platform, not three canned workflows.
@@ -30,10 +30,17 @@ Neither is hardcoded. A solo builder on Linear + git and a live-product team on 
 
 ## Quick start
 
-Install the plugin, then in your project run:
+Install the plugin:
 
 ```
-/cadence init
+/plugin marketplace add <this-repo-url-or-path>
+/plugin install cadence@claude-plugins
+```
+
+Then, in your project:
+
+```
+/cadence:init
 ```
 
 It detects your conventions (tracker, VCS, doc system, an existing execution skill), asks you to confirm them, helps you pick or author a flow (including your Definition of Done), writes the config, and scaffolds your vision/roadmap docs.

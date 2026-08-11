@@ -58,5 +58,5 @@ hooks:
 ## What this example demonstrates
 
 - **Cadence generalizes past software.** Hierarchy (`work/section/claim`), states (`Needs-Support`, `Supported`), and the "bug" concept (a broken argument) are all domain-specific — declared, not hardcoded.
-- **A novel priority policy.** `weakest-claim-first` makes `/session start` always attack the least-defensible part of the piece.
+- **A novel priority policy.** `weakest-claim-first` makes `/cadence:session start` always attack the least-defensible part of the piece.
 - **Two real level-3 hooks.** `session.select_goal` and `gate.citations.check` are authored in `./hooks/`, each honouring its `HOOKS.md` Input→Output contract — the escape hatch, end to end.

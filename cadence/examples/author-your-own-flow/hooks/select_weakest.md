@@ -2,7 +2,7 @@
 
 *Authored override for the `manuscript` flow. Implements the `session.select_goal` contract from `flows/HOOKS.md`.*
 
-**Input** (provided by `/session`): `{backlog, sprint_or_cycle, incident_queue, priority_policy, roadmap}`.
+**Input** (provided by `/cadence:session`): `{backlog, sprint_or_cycle, incident_queue, priority_policy, roadmap}`.
 For this flow, `backlog` is the set of claims and sections; there is no sprint or incident queue.
 
 **Do:**

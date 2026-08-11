@@ -32,7 +32,7 @@ cadence:
   model: continuous         # continuous | sprint | kanban
   ceremonies: []            # solo continuous flow has none
 
-# --- Intake & prioritization: how work enters, and what /session start picks ---
+# --- Intake & prioritization: how work enters, and what /cadence:session start picks ---
 intake:
   new_work: roadmap-driven  # the next open ticket in the current milestone's active epic
   bug_triage: defer         # defer | file | preempt   (solo bug-batch rule: file, don't fix on sight)

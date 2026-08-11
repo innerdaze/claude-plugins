@@ -61,4 +61,4 @@ hooks: {}     # e.g. override bug.triage for your severity rubric, or ceremony.i
 
 - **A lane above the hierarchy.** Incidents are first-class and preempt everything — the `bug.triage: preempt` rule and the incident-first priority policy are what flip solo's "defer the bug" into "drop the roadmap."
 - **More gates, more human sign-off.** Regression, changelog, and a human-approved release pipeline encode the reality that mistakes now reach customers.
-- **`/session start` consults the incident queue first**, so the same start ritual behaves like on-call triage here and like roadmap-work under the solo flow — one skill, driven entirely by the flow.
+- **`/cadence:session start` consults the incident queue first**, so the same start ritual behaves like on-call triage here and like roadmap-work under the solo flow — one skill, driven entirely by the flow.

@@ -11,7 +11,7 @@ MILESTONE  → a roadmap milestone with a goal + exit criteria
         └─ (optional) sub-task
 ```
 
-Rules (defaults; a flow may adjust): every ticket belongs to an epic; every epic to a milestone; bugs may attach to the epic they regressed or a standing `Maintenance` epic. Labels should mirror the project's doc/context taxonomy so the execution skill can load the right context deterministically.
+Rules (defaults; a flow may adjust): every ticket belongs to an epic; every epic to a milestone; bugs may attach to the epic they regressed or a standing `Maintenance` epic. Labels should mirror the doc adapter's `taxonomy()` so the execution skill can load the right context deterministically; with no doc system there is no taxonomy, and items simply carry fewer labels.
 
 ## Epic template
 
@@ -47,7 +47,7 @@ Rules (defaults; a flow may adjust): every ticket belongs to an epic; every epic
 ```
 
 **Standard tickets to create during planning** (adapt to the flow's gates):
-- **A "cross-cutting requirement" ticket per gate the flow demands but the work doesn't do inline** — e.g. a multiplayer/replication ticket, a security-review ticket, an accessibility pass. This is how a project-specific quality bar (a `dod_gate`) becomes tracked work instead of an afterthought. It may be scheduled to a later milestone but exists from planning.
+- **A "cross-cutting requirement" ticket per gate the flow demands but the work doesn't do inline** — e.g. a security-review ticket, an accessibility pass, a perf-budget check. This is how a project-specific quality bar (a `dod_gate`) becomes tracked work instead of an afterthought. It may be scheduled to a later milestone but exists from planning.
 - **An "integration + verify + docs" ticket** — wire the pieces together, run the epic DoD, update docs, checkpoint. Prevents "all tickets done but nothing works together."
 
 ## Ticket template
@@ -87,4 +87,4 @@ A written verdict + a recommendation + a decision recorded in the roadmap. Throw
 
 ## On the Definition of Done
 
-The DoD is **configured, not fixed.** `config.dod_gates` lists the gates that apply (e.g. `tests`, `docs` universally; `mp-safe`, `persistence`, `accessibility`, `changelog` per project). Universal defaults + project additions + a "define your own" option are chosen at `/cadence init`. The point is that quality bars can't be skipped silently: an item either meets a gate or records an explicit, reasoned N/A.
+The DoD is **configured, not fixed.** `config.dod_gates` lists the gates that apply (e.g. `tests`, `docs` universally; `persistence`, `accessibility`, `changelog`, or a bar unique to your domain, per project). Universal defaults + project additions + a "define your own" option are chosen at `/cadence:init`. The point is that quality bars can't be skipped silently: an item either meets a gate or records an explicit, reasoned N/A.

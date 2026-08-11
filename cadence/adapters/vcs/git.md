@@ -17,6 +17,7 @@ vcs:
 - **`diff(paths?)`** — `git diff` (unstaged) and `git diff --staged` (staged); scope to `paths` when given. Use to review changes and draft a message.
 - **`add_untracked(paths)`** — `git add -- <paths>` (git needs new files staged before they commit).
 - **`checkpoint(message, item_ref)`** — stage the intended changes (`git add -A`, or specific paths), then `git commit -m "<item_ref>: <message>"`. Confirm with `git log -1 --oneline`. **Do not `git push`** unless the user asks.
+- **`ignore(paths)`** — append each path to `.gitignore` if not already present (idempotent; create the file if missing). Used at init to keep Cadence's session-state file (`.claude/cadence/SESSION.local.md`) out of the repo.
 
 ## Etiquette
 

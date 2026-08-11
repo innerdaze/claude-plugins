@@ -1,6 +1,6 @@
 # Walkthrough: authoring your own flow
 
-*How the `manuscript` example is built, so you can author a flow for your own domain. It runs the same Cadence skills (`/session`, `/plan`, `/roadmap`) — only the flow spec and its hooks are custom.*
+*How the `manuscript` example is built, so you can author a flow for your own domain. It runs the same Cadence skills (`/cadence:session`, `/cadence:plan`, `/cadence:roadmap`) — only the flow spec and its hooks are custom.*
 
 ## 1. Why a custom flow (not a preset)
 
@@ -31,7 +31,7 @@ Two behaviours here can't be expressed as declarative values, so they're **autho
 
 ## 4. Use it
 
-In a project's config: `flow: ./cadence/manuscript.flow.md` (copy this file + its `hooks/` there). Then `/session start` will pull your weakest claim, and `/session end` will run the citations gate. `/plan` breaks a `work` into `section`s and `claim`s using the same templates.
+In a project's config: `flow: ./cadence/manuscript.flow.md` (copy this file + its `hooks/` there). Then `/cadence:session start` will pull your weakest claim, and `/cadence:session end` will run the citations gate. `/cadence:plan` breaks a `work` into `section`s and `claim`s using the same templates.
 
 ## 5. Checklist for your own flow
 
@@ -40,4 +40,4 @@ In a project's config: `flow: ./cadence/manuscript.flow.md` (copy this file + it
 3. Write the **gates** (condition + approver) — what does "done/ready" mean here?
 4. Set **cadence**, **intake/priority**, and **decision rights** (how much may the skill decide?).
 5. Only then, author **hooks** for anything that needs run-time logic — each against its `HOOKS.md` contract.
-6. Run `/cadence init` (or hand-write the config) pointing `flow:` at your spec, and let the coherence check catch contradictions.
+6. Run `/cadence:init` (or hand-write the config) pointing `flow:` at your spec, and let the coherence check catch contradictions.

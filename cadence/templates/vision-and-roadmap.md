@@ -1,6 +1,6 @@
 # <Project> — Vision & Roadmap
 
-*Cadence scaffolds this at init and updates it via `/roadmap`. It's a living document: vision changes rarely; the roadmap is revisited at each milestone boundary. Keep dates and ticket IDs in your tracker, not here. Replace the guidance in ‹angle brackets›.*
+*Cadence scaffolds this at init and updates it via `/cadence:roadmap`. It's a living document: vision changes rarely; the roadmap is revisited at each milestone boundary. Keep dates and ticket IDs in your tracker, not here. Replace the guidance in ‹angle brackets›.*
 
 ---
 

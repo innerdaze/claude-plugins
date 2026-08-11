@@ -4,7 +4,7 @@
 
 ## How hooks work
 
-Every skill (`/session`, `/plan`, …) runs as a sequence of steps. At each step it looks up the corresponding hook in the active flow spec:
+Every skill (`/cadence:session`, `/cadence:plan`, …) runs as a sequence of steps. At each step it looks up the corresponding hook in the active flow spec:
 
 ```yaml
 # in a flow spec
@@ -29,8 +29,8 @@ A hook doc is plain Markdown instructions. It receives a context block (the Inpu
 
 ### Session
 
-**`session.start`** — fires at the top of `/session start`, after memory + config are loaded.
-Input: `{config, flow, memory, current_milestone}` → Output: `{session_frame}` (what to show the user; any setup notes).
+**`session.start`** — fires at the top of `/cadence:session start`, after config + session state are loaded.
+Input: `{config, flow, session_state, current_milestone}` → Output: `{session_frame}` (what to show the user; any setup notes).
 
 **`session.select_goal`** — chooses the session's one goal. The heart of how flows differ.
 Input: `{backlog, sprint_or_cycle, incident_queue, priority_policy, roadmap}` → Output: `{goal_item, rationale, session_type}`.
@@ -38,6 +38,10 @@ Defaults: *solo-greenfield* → next roadmap ticket; *team-sprints* → top comm
 
 **`session.end`** — the wrap sequence.
 Input: `{active_item, execution_owns, dod_result}` → Output: `{ordered close actions}` (e.g. verify-commit, set-status, next-goal). Must *verify* work the execution skill owns rather than repeat it.
+
+**`session_state.prune`** — fires at `/cadence:session end`, before session state is written. Keeps the local scratchpad from silently becoming a stale second copy of the backlog.
+Input: `{session_state, tracker}` → Output: `{pruned_session_state}`.
+Default (all presets): check each entry's item state via the **tracker adapter** — never from what the file itself claims — then delete: entries whose item is closed (unless a *non-obvious trap* survives — the shipped work deliberately departs from the ticket text and restoring it would reintroduce a bug), notes that merely restate their item's title, cross-references within the file, and bare item IDs carrying no note (a list of IDs is a tracker query, not a memory). Flows may tune how aggressively this runs by overriding the hook.
 
 ### Intake & triage
 
@@ -96,7 +100,7 @@ Input: `{candidate, gates, approver}` → Output: `{release plan}` or `{blocked_
 3. Honour the approver level — never auto-decide something the flow marks `human`.
 4. Keep side-effects in the skill: describe the action, don't perform it.
 
-## Coherence rules (checked at `/cadence init` and on flow edits)
+## Coherence rules (checked at `/cadence:init` and on flow edits)
 
 - A step whose `decision_rights` is `human` must not have a hook that returns an autonomous decision.
 - Every `gated_transition` must reference a gate that exists.

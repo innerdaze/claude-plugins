@@ -1,6 +1,6 @@
 # Cadence config — <Project Name>
 
-*Copy this into your project. **Location:** if you use a `domains/` doc system, put it at `domains/PROJECT.md`; otherwise `.claude/cadence/config.md`. Cadence's `/cadence init` writes this for you — this file documents the shape. Replace every `<...>` placeholder; **never commit real credentials or private workspace IDs to a public repo.***
+*Copy this into your project. **Location:** if you use a `domains/` doc system, put it at `domains/PROJECT.md`; otherwise `.claude/cadence/config.md`. Cadence's `/cadence:init` writes this for you — this file documents the shape. Replace every `<...>` placeholder; **never commit real credentials or private workspace IDs to a public repo.***
 
 ```yaml
 project:
@@ -24,16 +24,16 @@ vcs:
 
 execution:
   skill: <e.g. /work-on | none>           # the project's own ticket-execution skill
-  owns: [implement, test, docs, commit]   # what /session END must VERIFY, not repeat
+  owns: [implement, test, docs, commit]   # what /cadence:session END must VERIFY, not repeat
 
 doc_system:
   kind: <domains | docs | none>
   index: <e.g. domains/INDEX.md | omit>
   ticket_to_docs: "<rule, e.g. labels == domain names | omit>"
 
-memory:
-  location: <project-memory | path>
-  format: markdown
+session_state:
+  file: .claude/cadence/SESSION.local.md   # Cadence's OWN scratchpad — LOCAL, git-ignored
+  format: markdown                          # goal, milestone state, per-ticket hook notes
 
 # --- Models: WHICH tier does WHICH work (a third binding) ---
 
@@ -52,6 +52,8 @@ dod_gates: [tests, docs]                   # extend per project; feeds gate.dod 
 
 - **Bindings vs flow.** Everything above `flow:` is *bindings* (toolchain + model tiers, resolved by adapters / subagents). `flow:` + `dod_gates:` select the *methodology*. Change bindings → different tools/models; change flow → different process.
 - **Models are a binding, not an assumption.** Available models differ per user (not everyone has every tier; IDs differ on Bedrock/Vertex), so tiers are *config*, never hardcoded. `mechanical` names the cheap model Cadence delegates batchy mechanical work to (via the `mechanical` subagent); `reasoning: inherit` keeps judgment on the session model. Aliases (`haiku`/`sonnet`/`opus`) resolve to current versions automatically; rebind if you lack a tier or want a different cheap model. Delegation only pays off on *batchy* work — trivial one-off ops stay inline.
+- **One root, two kinds of file.** Everything Cadence owns lives under `.claude/cadence/` — config, generated adapters, a custom flow, the `markdown` tracker's `backlog/`, the `none` adapter's `notes.md`. All of it is *committed* except the `.local.md` session scratchpad, which init adds to your ignore file. See "Where adapter data lives" in `adapters/ADAPTERS.md`.
+- **Session state is the one store Cadence owns.** `session_state.file` is a *local, git-ignored* scratchpad (goal, milestone state, per-ticket hook notes); `/cadence:session` reads it at start and writes it at end. Cadence never reads or writes your project's *own* memory files (a `CLAUDE.md`, an agent `MEMORY.md`) and never reaches outside `.claude/cadence/`.
 - **Private vs shared.** This example ships with placeholders. Your filled-in copy — with real IDs and namespaces — lives in *your* project repo, not in Cadence.
 
 ---
@@ -64,7 +66,7 @@ tracker:   { kind: linear, mcp_namespace: linear-uft, epic_convention: label:"Ep
 vcs:       { kind: diversion, checkpoint: skill:/commit, gotchas: "dv add new/untracked files first" }
 execution: { skill: /work-on, owns: [domains, implement, test, docs, commit] }
 doc_system:{ kind: domains, index: domains/INDEX.md, ticket_to_docs: "labels == domain names" }
-memory:    { location: project-memory, format: markdown }
+session_state: { file: .claude/cadence/SESSION.local.md, format: markdown, vcs_ignored: true }
 models:    { mechanical: haiku, reasoning: inherit }
 flow:      solo-greenfield
 dod_gates: [tests, docs, mp-safe, persistence]

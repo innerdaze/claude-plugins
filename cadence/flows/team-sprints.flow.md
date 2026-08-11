@@ -56,5 +56,5 @@ hooks: {}     # override any step via HOOKS.md; e.g. ceremony.planning.prepare f
 ## What this preset demonstrates
 
 - **Hierarchy is declared, not fixed** (`story`/`task` instead of `ticket`).
-- **Ceremonies are first-class.** `/plan` under this flow *is* sprint planning — it proposes a sprint and, because `commit_scope: human`, produces a planning pack and defers the actual commitment to the team. `ceremony.*.prepare`/`.capture` hooks (defaults, overridable) drive standup/review/retro support.
+- **Ceremonies are first-class.** `/cadence:plan` under this flow *is* sprint planning — it proposes a sprint and, because `commit_scope: human`, produces a planning pack and defers the actual commitment to the team. `ceremony.*.prepare`/`.capture` hooks (defaults, overridable) drive standup/review/retro support.
 - **Human gates can't be auto-cleared.** `code_review` needs a person; the skill won't advance a story past it on its own.

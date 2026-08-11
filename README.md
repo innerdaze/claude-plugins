@@ -17,4 +17,6 @@ Add it in Claude Code, then install a plugin from it:
 /plugin install cadence@claude-plugins
 ```
 
+`claude-plugins` is the marketplace name declared in `.claude-plugin/marketplace.json`; `cadence` is the plugin. Once installed, Cadence's commands are namespaced under the plugin: `/cadence:init`, `/cadence:session start|end`, `/cadence:plan`, `/cadence:roadmap`.
+
 (Exact commands depend on your Claude Code version — see the plugins docs.)

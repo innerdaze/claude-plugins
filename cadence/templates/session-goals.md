@@ -1,6 +1,6 @@
 # Session Goals — template
 
-*Why a project works in bounded sessions, each with one goal. Tool- and process-agnostic; the specifics (how the goal is chosen, how bugs are handled) come from the project's flow. Cadence's `/session` skill automates this ritual.*
+*Why a project works in bounded sessions, each with one goal. Tool- and process-agnostic; the specifics (how the goal is chosen, how bugs are handled) come from the project's flow. Cadence's `/cadence:session` skill automates this ritual.*
 
 ## Why sessions have goals
 
@@ -13,7 +13,7 @@ Pick one per session (the flow may define its own set): **Advance** (move an epi
 ## Start ritual (~5 min)
 
 1. Load memory and the current milestone.
-2. Choose one goal via the flow's **priority policy** — not on impulse. (`/session start` does this by the flow's rules.)
+2. Choose one goal via the flow's **priority policy** — not on impulse. (`/cadence:session start` does this by the flow's rules.)
 3. State it in one sentence and pick the session type. If it won't fit one sentence, split it first.
 4. Record the goal (a tracker comment) as the anti-drift anchor.
 5. Note the flow's **bug rule** for the session (`defer` / `file` / `preempt`) so mid-session bugs are handled by policy.
@@ -42,6 +42,6 @@ Mind the seam: the **execution skill owns** implement → test → docs → chec
 ## The responsibility split (why nothing duplicates)
 
 - **Execution skill** (the project's own) owns one item end-to-end: implement, test, docs, checkpoint.
-- **`/session`** owns the envelope: goal in, gate + verify + next-goal out.
+- **`/cadence:session`** owns the envelope: goal in, gate + verify + next-goal out.
 
-If `/session end` ever finds itself committing or editing docs on a normal execution session, that's duplication — the execution skill already did it. Verify, don't repeat.
+If `/cadence:session end` ever finds itself committing or editing docs on a normal execution session, that's duplication — the execution skill already did it. Verify, don't repeat.

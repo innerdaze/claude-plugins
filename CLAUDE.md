@@ -1,0 +1,75 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## What this repo is
+
+A Claude Code / Cowork **plugin marketplace** containing one plugin, **Cadence** (`cadence/`). Everything here is Markdown — there is no source code, no build system, no dependencies, and no test suite. The "programs" are skill/adapter/flow/hook instruction docs that a Claude agent loads and follows at run time; a change to a doc *is* a change to behaviour.
+
+There are therefore no build/lint/test commands. The only exercise loop is installing and running it:
+
+```
+/plugin marketplace add C:\Users\Lee\Projects\claude-plugins
+/plugin install cadence@claude-plugins
+```
+
+Then, in a *separate* consumer project (never here), run `/cadence:init`, `/cadence:roadmap`, `/cadence:plan`, `/cadence:session start|end`. `cadence.zip` at the repo root is a packaging artifact and is gitignored (`*.zip`); it is not a source of truth — regenerate it from `cadence/` rather than editing it.
+
+## Architecture: two configurable layers over an invariant skeleton
+
+The one thing worth understanding before editing anything. Cadence ships an invariant methodology **skeleton** — vision → roadmap → epics → tickets → gates, worked in bounded sessions — and reads two independent layers of per-project configuration:
+
+- **Bindings** (`config.example.md`) — *where and with what* you work: tracker, VCS, doc system, execution skill, **and model tiers**. Resolved through **adapters** (`adapters/ADAPTERS.md`). Change these → same process, different toolchain.
+- **Flow** (`flows/*.flow.md`) — *how* you work: hierarchy, states, gates, cadence/ceremonies, intake & priority policy, decision rights, session definition. Change this → same tools, different process.
+
+The four skills (`skills/cadence-{init,session,plan,roadmap}/SKILL.md`) are **interpreters** of those two layers. They must never hardcode a tool or a workflow. Where a step can vary, it is a named **hook** (`flows/HOOKS.md`): unset → the skill's built-in default; set → the skill loads the project's instruction doc and follows it instead.
+
+Division of labour, in one line: **hooks decide and describe; adapters perform side-effects; skills orchestrate and own the writes.** A hook returns "create these three tickets"; the skill calls the tracker adapter's `create`.
+
+`flows/solo-greenfield.flow.md` doubles as the flow-spec schema by worked example — read it before touching the flow vocabulary. `examples/author-your-own-flow/` is the level-3 proof (a non-software "manuscript" flow with two authored hooks) and should keep working as a demonstration of the same contracts.
+
+## Contracts are public API
+
+Three files are **versioned interfaces**, documented for strangers to build against:
+
+- `adapters/ADAPTERS.md` — tracker / VCS / doc-system operation contracts, and the three-tier adapter model (contracts shipped · `markdown`/`git`/`none` fallbacks shipped · **environment adapters generated project-locally by `/cadence:init`**).
+- `flows/HOOKS.md` — the hook catalog with each hook's Input → Output contract, plus the coherence rules `/cadence:init` enforces.
+- The flow-spec vocabulary, defined by example in `flows/solo-greenfield.flow.md`.
+
+Renaming a hook, or changing an Input/Output shape or an adapter operation, is a **breaking change** (see the Versioning section of `HOOKS.md`). Additive changes are minor.
+
+## Editing rules (these are what actually constrain work here)
+
+`cadence/DESIGN.md` is the spec and the arbiter; read it before any non-trivial change. Its six principles are the standing constraints:
+
+1. **Environment-agnostic.** Nothing in `cadence/` may assume Linear, Diversion, GitHub, a `domains/` doc system, or any MCP. Tool specifics arrive only via bindings/adapters.
+2. **Process-agnostic.** Solo, sprints, kanban, incident-first are *flows*, never code paths.
+3. **Decision support scales inversely to autonomy.** More people / more live → the plugin shifts from *making* decisions to *preparing and recording* them. It never runs the meeting or overrides human prioritization (see `flows/CEREMONIES.md`).
+4. **It owns neither execution nor the commit.** No ticket-execution skill and no VCS commit skill are shipped; both belong to the consumer project, reached via `config.execution` / the VCS adapter. `/cadence:session end` **verifies** execution-owned work rather than repeating it. The single exception is the local session-state file (`config.session_state.file`) — the one store Cadence owns.
+5. **Detect, then confirm — never assume**, across the whole lifecycle, not just init. The specific hazard called out in DESIGN: **cross-project substitution** — skills are installed once and serve every project, so another project's ticket prefix / MCP namespace / DoD will be in context and will look plausible. A missing binding is a question for the user, never an inference.
+6. **Everything specific is data.** Adapters, flows, presets, gates are instances of open contracts; there is no "built-in vs custom" divide at the mechanism level.
+
+Two more, load-bearing in practice:
+
+- **Cadence never touches a project's own memory** (`CLAUDE.md`, an agent `MEMORY.md`) and never reaches outside `.claude/cadence/`. Any pointer from a project's memory to Cadence's session state is written by that project, by hand.
+- **No leaked specifics.** MachineGame54 appears throughout DESIGN as consumer #1 / a worked example — it is never a dependency, and real IDs, workspace GUIDs, or MCP namespaces must not land in shipped files. Presets and examples use placeholders.
+
+## Cross-file consistency is the main maintenance hazard
+
+The same facts are stated in several places by design (spec, contract, skill, README). A behavioural change usually has to land in more than one of them, or the docs start contradicting each other. Known coupling:
+
+- A hook change → `flows/HOOKS.md` **and** the skill that fires it **and** any preset flow that documents its default **and** DESIGN's hook table.
+- An adapter-contract change → `adapters/ADAPTERS.md` **and** the shipped fallback implementing it (`adapters/trackers/markdown.md`, `adapters/vcs/git.md`, `adapters/docs/none.md`) **and** `skills/cadence-init/SKILL.md`, which generates adapters against the contract.
+- A config-shape change → `config.example.md` **and** every skill that reads that key **and** DESIGN's Layer 1 block.
+- A new default behaviour → the skill, the relevant preset flow, and `flows/CEREMONIES.md` if it is a ceremony.
+
+Cadence's own `DESIGN.md` build plan (phases 1–8) tracks project status; the README states `0.1.0`, "architecture settled, skills being built against it."
+
+## Conventions
+
+- **Two surfaces, one behaviour.** `commands/*.md` are thin typed entry points (`/cadence:init`, `/cadence:session start`) that load the matching skill and pass `$ARGUMENTS` through; `skills/cadence-*/SKILL.md` hold all the behaviour and are what Claude selects on its own from a description match. Edit the skill; touch the command only if the argument shape changes.
+- **Everything is namespaced `cadence-`.** Skill directory names match their frontmatter `name` exactly (`skills/cadence-session/` ↔ `name: cadence-session`). The prefix exists so installing the plugin can never shadow a skill the adopter already has — `session`, `plan`, and `roadmap` are all names a project might already use.
+- **Bundled-file references need `${CLAUDE_PLUGIN_ROOT}`.** A skill's working directory is the *consumer's* repo, so `flows/HOOKS.md` resolves to nothing there. Any path from a skill into the plugin must be written `${CLAUDE_PLUGIN_ROOT}/flows/HOOKS.md`. The failure mode is silent — the model improvises rather than erroring — so this is easy to reintroduce and hard to notice.
+- **Descriptions are the dispatch surface.** Each SKILL.md `description` must name the trigger phrases; that is how the skill gets selected.
+- Flow specs and configs are **Markdown with a YAML block**, read as prose by the skills — human-editable, not machine-validated. Keep them readable over strict.
+- Prose style throughout is deliberate: em-dashes, bolded lead-ins, a rationale for every rule. Match it — these docs are read by both people and models, and the rationale is what makes a rule survive contact with a novel case.

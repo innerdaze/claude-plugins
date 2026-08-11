@@ -7,7 +7,7 @@
 ```yaml
 tracker:
   kind: markdown
-  path: .cadence/backlog        # directory holding item files (default)
+  path: .claude/cadence/backlog        # directory holding item files (default)
 ```
 
 ## On-disk format
@@ -50,6 +50,6 @@ labels: [<label>, ...]
 
 ## Notes
 
-- It's plain files, so `/session`'s reads/writes are Read/Write/Edit/Glob — no MCP.
-- Because items are in the repo, they're versioned by the VCS adapter alongside code — a nice property for solo/greenfield work.
+- It's plain files, so `/cadence:session`'s reads/writes are Read/Write/Edit/Glob — no MCP.
+- **Items are committed, deliberately.** They live under `.claude/cadence/backlog/` and are versioned by the VCS adapter alongside the code, so the backlog diffs and reviews like everything else — the main reason to pick this over a hosted tracker on a small project. Only `SESSION.local.md` is ignored; see "Where adapter data lives" in `ADAPTERS.md`.
 - To migrate to a hosted tracker later, switch `config.tracker.kind`; the item files can be imported or left as history.
