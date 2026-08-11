@@ -23,7 +23,9 @@ Turns a milestone from the roadmap into concrete items in the tracker. Uses `${C
 
 3. **Label from `taxonomy()`.** Ask the doc adapter for the project's label vocabulary and label items from it, so the execution skill can load the right context from labels alone. If `taxonomy()` is empty or unsupported — the `none` doc system — apply only the flow's type labels and **do not invent a scheme**.
 
-4. **Set the fields the priority policy needs.** Check which the tracker supports, then populate what it does: `order` for `backlog-by-rank`, `depends_on` for `blocker-for-current-ticket`, `milestone`/`epic` links always, `cycle` when the flow commits scope to one. A policy token whose field nobody writes is a token that silently does nothing — this step is what makes `flow.intake.priority_policy` real rather than decorative.
+4. **Set the fields the priority policy needs.** Read the flow's `priority_policy`, look up each token's required field, and populate it: `order` for `backlog-by-rank`, `depends_on` for `blocker-for-current-ticket`, `milestone` for `next-roadmap-ticket`, `epic` for `current-epic`, `cycle` for `committed-sprint`. A policy token whose field nobody writes is a token that silently does nothing — this step is what makes `flow.intake.priority_policy` real rather than decorative.
+
+   **Check each field is actually settable here, not merely listed as supported.** Some are conditional: a Linear milestone needs a *project* to exist first, so `milestone` can be "supported" by the adapter and still unsettable on a board with no projects. Where you cannot set a field the policy depends on, **say which token that disables** and either create the missing prerequisite or tell the user what to create. Silently omitting it produces the worst outcome — a backlog full of work that goal selection cannot see.
 
 5. **`plan.estimate`** (optional) — size items if the flow uses estimates.
 

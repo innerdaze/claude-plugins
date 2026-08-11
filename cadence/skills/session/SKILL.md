@@ -139,6 +139,9 @@ Cadence is a chain of lookups — config → flow → adapters → roles → tra
 - **A hook doc named in `flow.hooks` is missing** → report which, use the built-in default for that step, and continue. A flow author mid-authoring is better served by a working session and a warning.
 - **A role or `status_map` entry is missing** → see the resolution rules above: skip the transition and note it, except for `roles.done`, where you stop and ask.
 - **The tracker returns no open items** → not an error. Say the backlog is empty for this milestone and offer `/cadence:plan`.
+- **Open items exist but every priority token missed them** → *also* not an error, and not a licence to pick one anyway. This happens when the tracker cannot supply a field the policy needs, or when nothing has been populated with it yet — a board whose items carry no milestone makes `next-roadmap-ticket` match nothing, however much work is sitting there. List the open items, say **which tokens missed and why** ("no item carries a milestone, so `next-roadmap-ticket` found nothing"), and let the user choose. Then say what would make the policy work next time — usually a field `/cadence:plan` should have set.
+
+  Do not fall back to "the oldest" or "the first one listed". Under `select_goal: ai` the policy *is* the skill's mandate to choose; with the policy exhausted there is no mandate, and an arbitrary pick dressed up as a decision is worse than an honest question.
 
 ## Notes
 

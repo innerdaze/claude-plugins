@@ -11,7 +11,40 @@ changing a hook's Input/Output, removing an adapter operation, or changing the
 meaning of a config key is a *major* change. Adding an optional hook, operation,
 field, or config key is *minor*.
 
-## [0.3.1] — pending verification
+## [0.3.2] — pending verification
+
+### Fixed
+
+- **The priority policy could exhaust while open work sat there, and nothing said
+  what to do.** A live board had five open items and matched no token: nothing in
+  flight, so `blocker-for-current-ticket` and `current-epic` had no anchor, and no
+  item carried a milestone, so `next-roadmap-ticket` found nothing. The skill
+  covered "no open items" but not "items exist, no token matched". It now lists
+  them, names which tokens missed **and why**, and asks — explicitly refusing to
+  fall back to "the oldest" or "the first listed". Under `select_goal: ai` the
+  policy *is* the mandate to choose; with it exhausted there is no mandate, and an
+  arbitrary pick dressed as a decision is worse than a question.
+- **`/cadence:plan` set `epic` but not `milestone`,** which is what left goal
+  selection blind. Its instruction to set "milestone/epic links always" was too
+  glib: some fields are **conditionally** settable — a Linear milestone needs a
+  project to exist first, so `milestone` can be adapter-supported and still
+  unsettable. Plan now checks each policy field is actually settable here, and
+  where it isn't, says which token that disables rather than silently omitting it.
+
+### Verified against a live board
+
+- `set_status` twice on a hosted tracker: `Queued(backlog)` → `Building` →
+  `Shipped`, resolved through lane roles and the qualified `status_map`. Linear
+  set `startedAt` and `completedAt` itself.
+- **The terminal-union fix, demonstrated rather than reasoned about.** Cancelling
+  an item and re-listing shows the old rule returning it as open — a cancelled
+  ticket would have been a candidate goal in every future session — and the new
+  rule correctly excluding it.
+- Tracker writes left the repo untouched, so the checkpoint ordering held for the
+  opposite reason to the markdown case: not because tracker writes are repo
+  writes, but because they aren't.
+
+## [0.3.1] — superseded
 
 ### Added
 
