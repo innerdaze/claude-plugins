@@ -6,13 +6,13 @@
   },
   "metadata": {
     "description": "Plugins by Lee Driscoll. Currently home to Cadence, a configurable project-management methodology.",
-    "version": "0.2.5"
+    "version": "0.2.6"
   },
   "plugins": [
     {
       "name": "cadence",
       "source": "./cadence",
-      "version": "0.2.5",
+      "version": "0.2.6",
       "description": "A configurable project-management methodology: vision -> roadmap -> epics -> tickets -> gates, worked in bounded sessions. Binds to your tracker/VCS/docs via adapters and to your team's process via a flow spec (solo, team-sprints, live-oncall, or your own). Includes /cadence:doctor to check a project's setup.",
       "author": {
         "name": "Lee Driscoll"

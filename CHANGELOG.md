@@ -11,7 +11,35 @@ changing a hook's Input/Output, removing an adapter operation, or changing the
 meaning of a config key is a *major* change. Adding an optional hook, operation,
 field, or config key is *minor*.
 
-## [0.2.5] — pending verification
+## [0.2.6] — pending verification
+
+### Fixed
+
+- **Two end-of-session rules contradicted each other when both fired.** The
+  gate-held rule said "still checkpoint (step 5)"; step 5's verify branch said
+  "do not quietly commit on execution's behalf — offer". With a held gate *and*
+  an execution skill that owed a commit and didn't make one, an agent reading
+  the first would commit and one reading the second would offer. The gate rule
+  now defers to step 5 to decide *how* the work is saved, and says explicitly
+  that a held gate is not a licence to paper over a broken execution binding.
+
+### Verified
+
+All three fixture shapes run clean against this build:
+
+- `reduced-lane` — `In Progress` unmapped: transition skipped and noted, no
+  status written outside `status_map`, `gate.dod` still ran, item reached `Done`,
+  tree clean, HEAD agreeing with the working copy.
+- `intermediate-gate` — project-local flow and both authored hooks resolved;
+  **`gate.citations` ran** from the intermediate hop into an unmapped `Reviewed`;
+  `gate.editorial` (`human`) was not auto-cleared; the item was not dragged
+  backwards to an `active` lane it had already passed; the held gate did not
+  abandon the work — committed, tree clean, commit naming the holding gate.
+- `execution-owns-commit` — the verify branch ran for the first time, correctly
+  reported that nothing referenced `UC-1` and the tree was dirty, and named the
+  two possible faults.
+
+## [0.2.5] — superseded
 
 ### Fixed
 

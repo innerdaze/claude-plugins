@@ -76,7 +76,9 @@ checkpoint is the last thing that touches the repo.**
 
    The **effective DoD** is `flow.gates.dod.checks` ∪ `config.dod_gates` — a union; a project may raise the flow's bar, never lower it. Honour each gate's approver: a `human` gate is **never** auto-cleared — `needs-human` is not a pass.
 
-   **If a gate does not clear, the item does not advance — but the work is still saved.** Skip step 2, then carry on through the rest of end: record why the gate held (step 4), and **still checkpoint** (step 5). Gates govern whether the *item* moves, not whether the *work* survives.
+   **If a gate does not clear, the item does not advance — but the work is not abandoned.** Skip step 2 and carry on through the rest of end: record why the gate held (step 4), then **go to step 5 and let it decide how the work is saved** — by checkpointing, or, in the verify branch, by offering to. Gates govern whether the *item* moves, not whether the *work* survives.
+
+   The distinction matters when both things are wrong at once: a gate held *and* the execution skill that owed you a commit didn't make one. Step 5 still declines to commit silently on execution's behalf — a held gate is not a licence to paper over a broken binding.
 
    Stopping dead here would leave real work uncommitted and, under a file-based tracker, the tree dirty — which poisons the `status()`-clean check the next session depends on, and leaves the work one careless `git add -A` from landing in someone else's commit. A held gate is a normal outcome of a session, not a crash.
 
