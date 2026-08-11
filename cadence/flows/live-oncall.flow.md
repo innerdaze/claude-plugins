@@ -1,42 +1,57 @@
 # Flow: Live Product / On-call
 
-*A shipped Cadence preset. A team shipping to real users: **incidents preempt the roadmap**, releases are **gated and human-approved**, and anything customer-facing is low-autonomy. Demonstrates the schema at its most constrained — an incident lane above the hierarchy, extra gates, and a `preempt` bug rule. Fork to customize.*
+*A shipped Cadence preset. A team shipping to real users: **incidents preempt the roadmap**, releases are **gated and human-approved**, and anything customer-facing is low-autonomy. Demonstrates the schema at its most constrained. Schema: `FLOW-SPEC.md`.*
+
+> **The most demanding preset — read this before adopting it.** It needs a
+> tracker that supports `severity` (for `customer-bug-by-severity`) and `cycle`
+> (for `committed-sprint`); unsupported tokens are skipped with a note. Its
+> `release_pipeline` and its ceremonies are **declared but not yet invokable** —
+> no skill walks a release pipeline or runs an incident review today. Adopt this
+> flow for its incident lane, its gates, and its decision rights; do not expect
+> Cadence to drive your release.
 
 ```yaml
 meta:
   name: live-oncall
   summary: Shipping to real users. Incidents interrupt the roadmap; releases are human-approved.
+  cadence_version: "0.1"
   autonomy: low              # customer-facing decisions stay with humans
 
 hierarchy:
   levels: [milestone, epic, story, task]
-  spikes: allowed
   first_class:
     incident: above-all      # incidents outrank the normal hierarchy
 
 states:
   lanes: [Backlog, Sprint Backlog, In Progress, In Review, Done]
+  roles:
+    backlog: Backlog
+    active:  In Progress
+    review:  In Review
+    done:    Done
   incident_lanes: [Triage, Mitigating, Resolved, Postmortem]
   gated_transitions:
-    "In Review -> Done":      [gate.dod, gate.code_review, gate.regression]
-    "Resolved -> Postmortem": [gate.postmortem]
-  release_pipeline:           [gate.changelog, gate.release_approval]
+    "In Progress -> In Review": []
+    "In Review -> Done":        [gate.dod, gate.code_review, gate.regression]
+    "Resolved -> Postmortem":   [gate.postmortem]
+  release_pipeline: [gate.changelog, gate.release_approval]   # declared; not yet walked
 
 gates:
   dod:              { approver: ai-proposes, checks: [tests, docs] }
   code_review:      { approver: human,       checks: [peer-approved] }
   regression:       { approver: ai-proposes, checks: [no-regression, monitoring-in-place] }
   changelog:        { approver: ai,          checks: [changelog-entry] }
-  release_approval: { approver: human }       # a person signs off every release
-  postmortem:       { approver: human,        checks: [postmortem-written] }
+  release_approval: { approver: human }
+  postmortem:       { approver: human,       checks: [postmortem-written] }
 
 cadence:
   model: sprint
-  ceremonies: [planning, standup, review, retro, incident-review]
+  cycle_length: "2 weeks"
+  ceremonies: [planning, standup, review, retro, incident-review]   # not yet invokable
 
 intake:
   new_work: incident-first
-  bug_triage: preempt        # a customer-impacting bug interrupts the roadmap and becomes the goal
+  bug_triage: preempt        # a customer-impacting bug interrupts the roadmap
   priority_policy:
     - active-incident
     - customer-bug-by-severity
@@ -50,15 +65,13 @@ decision_rights:
   release:        human       # releasing is never autonomous
 
 session:
-  goal: the highest-priority item — an active incident if one exists, else the committed sprint item
-  start: check the incident queue FIRST -> if an incident is above threshold, that's the goal (open its lane) -> else the committed sprint
-  end: run gate.dod + gate.code_review + gate.regression -> verify the checkpoint -> if this is a release, run the release pipeline (human-approved) -> update the board -> next
+  goal: the highest-priority item — an active incident if one exists, else the committed cycle
 
-hooks: {}     # e.g. override bug.triage for your severity rubric, or ceremony.incident-review.capture for your postmortem template
+hooks: {}
 ```
 
 ## What this preset demonstrates
 
-- **A lane above the hierarchy.** Incidents are first-class and preempt everything — the `bug.triage: preempt` rule and the incident-first priority policy are what flip solo's "defer the bug" into "drop the roadmap."
-- **More gates, more human sign-off.** Regression, changelog, and a human-approved release pipeline encode the reality that mistakes now reach customers.
-- **`/cadence:session start` consults the incident queue first**, so the same start ritual behaves like on-call triage here and like roadmap-work under the solo flow — one skill, driven entirely by the flow.
+- **A lane above the hierarchy.** `first_class.incident` plus `incident_lanes` and the `preempt` bug rule are what flip solo's "defer the bug" into "drop the roadmap." `/cadence:session start` consults the incident lanes first, so the same start ritual behaves like on-call triage here and like roadmap work under the solo preset — one skill, driven entirely by the flow.
+- **More gates, more human sign-off.** Regression, changelog, and a human-approved release encode the reality that mistakes now reach customers.
+- **Declared ≠ automated.** `release_pipeline` and the ceremonies are part of the flow's description of your process, and Cadence will not pretend to run them. That honesty is deliberate: a plugin that half-runs a release is worse than one that doesn't.

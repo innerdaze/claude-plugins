@@ -1,5 +1,22 @@
 # Cadence Ceremonies — default behaviours
 
+> ## ⚠️ Documented, not yet invokable
+>
+> **No skill currently fires a `ceremony.*` hook, and no command runs a standup,
+> review, retro, or incident review.** Everything below specifies what those
+> ceremonies *will* do, so the contracts are settled and a flow can declare
+> `cadence.ceremonies` without asserting something false. Today, declaring them
+> is a description of your team's process, not an automation of it.
+>
+> **The one exception is planning**, and only partly: when a flow sets
+> `decision_rights.commit_scope: human`, `/cadence:plan` writes a planning pack
+> to `.claude/cadence/planning-pack-<date>.md` for your meeting, and stops. That
+> is the `planning.prepare` behaviour below, reached through `/cadence:plan`
+> rather than through a ceremony hook.
+>
+> Setting a `ceremony.*` hook in a flow is legal and has no effect. This section
+> will be removed when the ceremony layer becomes invokable.
+
 *A flow that lists a ceremony in `cadence.ceremonies` gets the defaults below, unless it overrides them with a `ceremony.<name>.prepare` or `.capture` hook (see `HOOKS.md`). These honour the core principle: **Cadence prepares the inputs a human ceremony needs and records what was decided — it never runs the meeting or makes the decisions.** Every `prepare` receives `{board, history, window}` and returns a prep artifact; every `capture` receives `{decisions}` and records them via the tracker/memory adapters. Ceremonies are mechanical-tier collation (delegate to the `mechanical` subagent); the judgment stays with the humans in the room.*
 
 *Solo flows list no ceremonies, so none of this applies to `solo-greenfield`. These matter for `team-sprints` and `live-oncall`.*

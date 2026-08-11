@@ -6,17 +6,25 @@
 meta:
   name: manuscript
   summary: Writing a long-form researched document. Author-led; Cadence tracks claims and their support.
+  cadence_version: "0.1"
   autonomy: mixed
 
 hierarchy:
   levels: [work, section, claim]     # the piece → its sections → individual claims/arguments
-  spikes: allowed                    # a "spike" here = a research dive to resolve an open question
 
 states:
   lanes: [Outline, Drafting, Needs-Support, Supported, Reviewed, Final]
+  roles:
+    backlog: Outline                 # new claims start life as outline entries
+    active:  Drafting
+    review:  Reviewed
+    done:    Final                   # note: NOT "Done" — the terminal lane is named by the flow
   gated_transitions:
-    "Supported -> Reviewed": [gate.citations]
-    "Reviewed -> Final":     [gate.editorial]
+    "Outline -> Drafting":     []
+    "Drafting -> Needs-Support": []
+    "Needs-Support -> Supported": []
+    "Supported -> Reviewed":   [gate.citations]
+    "Reviewed -> Final":       [gate.editorial]
 
 gates:
   citations:
@@ -46,8 +54,6 @@ decision_rights:
 
 session:
   goal: bring one claim from Needs-Support to Supported (or draft one section)
-  start: pick the weakest-supported claim (see the authored session.select_goal hook)
-  end: run gate.citations -> record sources on the claim -> set the next weakest claim
 
 # --- Level-3 authored hooks: override behaviour the vocabulary can't express ---
 hooks:
@@ -58,5 +64,6 @@ hooks:
 ## What this example demonstrates
 
 - **Cadence generalizes past software.** Hierarchy (`work/section/claim`), states (`Needs-Support`, `Supported`), and the "bug" concept (a broken argument) are all domain-specific — declared, not hardcoded.
-- **A novel priority policy.** `weakest-claim-first` makes `/cadence:session start` always attack the least-defensible part of the piece.
+- **Nothing assumes a lane called `Done`.** This flow's success terminal is `Final`, declared through `states.roles.done`. Skills ask for the *role*, so renaming the whole vocabulary costs nothing — which is the test of whether the design is really process-agnostic.
+- **A novel priority policy.** `unsupported-claim` is not one of the documented tokens. That is legal — unknown tokens are interpreted as prose — and the validator warns, because a token nothing recognises silently does nothing. Here the authored `session.select_goal` hook is what gives it meaning.
 - **Two real level-3 hooks.** `session.select_goal` and `gate.citations.check` are authored in `./hooks/`, each honouring its Input→Output contract from the plugin's `flows/HOOKS.md` — the escape hatch, end to end.

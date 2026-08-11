@@ -1,75 +1,84 @@
 # Flow: Solo / Greenfield
 
-*A shipped Cadence preset. One builder, no live users yet — maximize momentum, let the skill decide. Fork this file to customize (levels 2–3); any hook you don't set uses the built-in default. This file is also the worked example of the flow-spec vocabulary — every section below is part of the schema.*
+*A shipped Cadence preset. One builder, no live users yet — maximize momentum, let the skill decide. Fork this file to customize; any hook you don't set uses the built-in default. The schema every key here comes from is `FLOW-SPEC.md`.*
+
+> **The lanes below are process vocabulary, not columns you must create.** Only
+> `backlog` and `done` are structurally required. `Todo`, `In Progress` and
+> `In Review` are refinements — if your tracker has two columns, map those two in
+> `config.tracker.status_map`, leave the rest unmapped, and Cadence will skip the
+> steps that need them. It will never add a column to your board.
 
 ```yaml
 meta:
   name: solo-greenfield
   summary: One builder, pre-release. High autonomy, continuous flow, ship-nothing-yet.
-  autonomy: high            # high | mixed | low  (the through-line: how much the skill may decide)
+  cadence_version: "0.1"
+  autonomy: high            # documentation only — orients a flow author
 
-# --- Work hierarchy: the levels an item can be, top-down ---
 hierarchy:
   levels: [milestone, epic, ticket]
-  spikes: allowed           # timeboxed investigations attach under a milestone or epic
 
-# --- States an item moves through, and which transitions are gated ---
 states:
   lanes: [Backlog, Todo, In Progress, In Review, Done]
+  roles:
+    backlog: Backlog        # required — where /cadence:plan creates
+    active:  In Progress    # omit this and sessions won't mark work in flight
+    done:    Done           # required
+    # no `review` role: solo work has no separate review step
   wip_limit: none
   gated_transitions:
-    "In Review -> Done": [gate.dod]
+    "In Progress -> Done": [gate.dod]
 
-# --- Gates: named checkpoints with a condition + an approver ---
 gates:
   dod:
     approver: ai            # ai | ai-proposes | human
-    checks: [tests, docs]   # baseline; a project extends via config.dod_gates
-  # no design_review / qa / release gates in this preset
+    checks: [tests, docs]   # a project ADDS to this via config.dod_gates
 
-# --- Cadence & ceremonies ---
 cadence:
-  model: continuous         # continuous | sprint | kanban
+  model: continuous
   ceremonies: []            # solo continuous flow has none
 
-# --- Intake & prioritization: how work enters, and what /cadence:session start picks ---
 intake:
-  new_work: roadmap-driven  # the next open ticket in the current milestone's active epic
-  bug_triage: defer         # defer | file | preempt   (solo bug-batch rule: file, don't fix on sight)
+  new_work: roadmap-driven
+  bug_triage: defer         # file it, keep going — don't fix on sight
   priority_policy:
     - blocker-for-current-ticket
     - current-epic
     - next-roadmap-ticket
 
-# --- Decision rights: the autonomy dial per step ---
 decision_rights:
   select_goal:     ai
   plan_breakdown:  ai
   commit_scope:    ai
   release:         ai
 
-# --- Session definition: what a work session is, how its goal is chosen ---
 session:
   goal: one ticket (or a clean slice of one) from the current milestone
-  start: load memory -> propose 1-3 next tickets -> name one goal + type -> hand to execution skill
-  end: run gate.dod -> verify (not repeat) the execution skill's commit + domain-doc update -> set next goal
 
-# --- Hooks: level-3 overrides map a hook name to your instruction doc. ---
-# None here — this preset uses all built-in defaults. To override:
-#   hooks:
-#     session.select_goal: ./hooks/select_goal.md
 hooks: {}
 ```
 
-## How the other presets differ from this one
+## Why the gate sits on `In Progress -> Done`
 
-Same schema, different values — this is what "configurable methodology" means in practice:
+An earlier version gated `"In Review -> Done"` — but this flow declares no
+`review` role, so nothing ever entered `In Review`, and the only gate in the
+preset was attached to a transition that never happened. The gate now sits on the
+transition this flow actually makes. If you add a review step, add the lane role,
+its `status_map` entry, and the transition together — all three, or the gate
+goes back to being decorative.
 
-- **Team / Sprints:** `cadence.model: sprint` with `ceremonies: [planning, standup, review, retro]`; `decision_rights` shift to `ai-proposes` (the skill drafts, a human ceremony commits); `gates` add `code_review`; `intake.new_work` becomes "the top item of the committed sprint," not "next roadmap ticket."
-- **Live Product / On-call:** adds an `incident` lane above everything and `intake.bug_triage: preempt` (a customer incident interrupts the roadmap); `gates` add `regression`, `changelog`, `release_approval`; `decision_rights.release: human`; checkpoint becomes a gated, versioned release.
+## How the other presets differ
 
-## Authoring your own (levels 1–3)
+Same schema, different values — this is what "configurable methodology" means:
 
-1. **Override axes** — copy this file, change values (e.g. `cadence.model: kanban`, a different `priority_policy`, extra `gates`).
-2. **Edit the spec** — rewrite `states`/`gates`/`ceremonies` for a bespoke process.
-3. **Authored stages** — set a `hooks:` entry pointing at your own instruction doc; the skill loads it at that hook instead of the default. See `HOOKS.md` for the full hook surface and each hook's input→output contract.
+- **Team / Sprints:** `cadence.model: sprint`; `decision_rights` shift to `ai-proposes` (the skill drafts, a human ceremony commits); a `code_review` gate and a real `review` role; `intake.new_work` becomes the committed cycle rather than the raw roadmap.
+- **Live Product / On-call:** adds an incident lane above the hierarchy and `intake.bug_triage: preempt` — a customer incident interrupts the roadmap; more gates, and `decision_rights.release: human`.
+
+## Authoring your own
+
+1. **Override axes** — copy this file, change values.
+2. **Edit the spec** — restructure states and gates for a bespoke process.
+3. **Authored stages** — point a `hooks:` entry at your own instruction doc.
+
+`FLOW-SPEC.md` is the schema; `HOOKS.md` is the hook surface and each hook's
+input→output contract.
