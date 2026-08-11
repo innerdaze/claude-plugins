@@ -11,7 +11,32 @@ changing a hook's Input/Output, removing an adapter operation, or changing the
 meaning of a config key is a *major* change. Adding an optional hook, operation,
 field, or config key is *minor*.
 
-## [0.2.1] — pending verification
+## [0.2.2] — pending verification
+
+> **Not yet tagged.** Installation is now verified — the plugin loads,
+> `${CLAUDE_PLUGIN_ROOT}` resolves inside skill bodies, the `mechanical` subagent
+> registers, and `/cadence:doctor` runs correctly. The rest of
+> `docs/VERIFICATION.md` gates the tag; sections 1–7 must pass first.
+
+### Fixed
+
+- **Gates on intermediate transitions could still be skipped.** 0.2.1 matched
+  gates on the *destination* lane, which rescued the gate immediately before
+  `done` and nothing else. Two shipped flows have gates that this missed:
+  `manuscript`'s `gate.citations` on `Supported -> Reviewed` — the entire point
+  of that flow — and `live-oncall`'s `gate.postmortem` on
+  `Resolved -> Postmortem`. On a board without those columns, both silently
+  never fired. Gates are now collected along the **whole declared path**: an
+  unmapped lane skips the status write, never a gate. Otherwise the fewer
+  columns a team has, the fewer checks they get, which is backwards.
+- `/cadence:doctor` reported an unmapped lane under a gated transition as
+  **broken** when nothing actually fails. It is now **drifted**, states that the
+  gate still runs, and offers both remedies — map the lane, or redraw the flow's
+  transitions to describe the board you have. A diagnostic that cries wolf on a
+  correctly-configured board teaches people to ignore it. The genuinely broken
+  case is narrower and still reported: a gate on a transition no item can reach.
+
+## [0.2.1] — superseded
 
 > **Supersedes 0.2.0**, which was published for about twenty minutes and is
 > superseded rather than listed separately. It registered every capability twice
@@ -21,11 +46,6 @@ field, or config key is *minor*.
 > The version bump is also what makes the fix *reach* anyone: the plugin cache is
 > keyed by version, so republishing the same number leaves installed copies on the
 > old payload. **Any change to the payload needs a version bump.**
-
-> **Not yet tagged.** Installation is now verified — the plugin loads,
-> `${CLAUDE_PLUGIN_ROOT}` resolves inside skill bodies, the `mechanical` subagent
-> registers, and `/cadence:doctor` runs correctly. The rest of
-> `docs/VERIFICATION.md` gates the tag; sections 1–7 must pass first.
 
 The plugin was well-designed on paper and could not actually be installed as
 documented. Three rounds of audit — static review, then six live evaluation runs
@@ -101,7 +121,8 @@ in throwaway repos — found ~45 verified defects. This release fixes them.
   matched on the exact `"<from> -> <to>"` transition, so if an intermediate lane
   was unmapped the item took a different route and the gate never fired — meaning
   a missing column silently lowered the Definition of Done on the zero-dependency
-  default. Gates now match on the **destination** lane.
+  default. Gates now match on the **destination** lane. *(Partial — corrected in
+  0.2.2, which collects gates along the whole declared path.)*
 - **`In Progress` and `In Review` were unreachable.** `set_status` was called once
   and went straight to done, so items jumped `Backlog → Done` and
   `solo-greenfield`'s only gate was attached to a transition that never occurred.

@@ -92,7 +92,7 @@ Vision drafting deliberately has **no** hook: Principle 3 reserves it for the hu
 ### Gates
 
 **`gate.<name>.check`** — evaluate a gate on a gated transition. Names are flow-defined: `dod`, `code_review`, `qa`, `release_approval`, ….
-*Fired by:* `session`, end step 1 (gates), for every gate whose transition ends at the `done` lane - matched by destination, so an unmapped intermediate lane cannot skip a gate.
+*Fired by:* `session`, end step 1 (gates), for every gate on the declared path from the item's current lane to its destination — collected along the whole path, so a lane the tracker cannot represent skips the status write but never a gate.
 Input: `{item, context, checks}` → Output: `{result: pass | fail | needs-human, notes}`.
 `gate.dod` default: verify the **effective DoD** is satisfied or explicitly N/A'd. The effective DoD is `flow.gates.dod.checks` ∪ `config.dod_gates` — a union, so a project may raise the bar above the flow's baseline and can never silently lower it. (`dod_gates` is a **config** key; `checks` is the flow's.)
 

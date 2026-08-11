@@ -87,15 +87,24 @@ This is where the checks that static analysis cannot do earn their place.
   `active` lane, so `/cadence:session start` won't mark work in flight." On a
   two-column board this is correct and expected — say that too, so nobody
   "fixes" it by adding columns they don't want.
-- **Does an unmapped lane strand a gate?** This one is **broken**, not disabled.
-  If a gated transition passes through a lane this tracker cannot represent, the
-  item takes a different route and the gate can be skipped — so a missing column
-  silently lowers a quality bar. Name the gate: *"`gate.dod` is attached to
-  `In Progress -> Done`, but `In Progress` is unmapped here."* The skills now
-  match gates by destination lane specifically to survive this, so a finding here
-  usually means the flow's transitions want redrawing for this board — but report
-  it either way, because a silently skipped Definition of Done is the most
-  expensive failure in this list.
+- **Does a gated transition pass through an unmapped lane?** Report it as
+  **drifted**, and say plainly that the gate *still runs*: skills collect gates
+  along the whole declared path, so an unrepresentable lane costs you the status
+  write, not the check. Name it precisely — *"`gate.dod` is on
+  `In Progress -> Done`, but `In Progress` is unmapped, so items reach `Done`
+  from `Backlog`; the gate still runs."*
+
+  Do not call this broken. Nothing fails, and a diagnostic that cries wolf on a
+  correctly-configured two-column board teaches people to ignore it.
+
+  Give both remedies and let the user choose: **map the lane** if their tracker
+  has a column for it, or **redraw the flow's `gated_transitions`** to describe
+  the board they actually have. The second is usually right for a small board —
+  the flow should describe your process, not aspire to someone else's.
+
+  The genuinely broken case is narrower: a gate on a transition that is **not on
+  any path** the item can travel — an orphaned branch of the state machine. That
+  gate can never fire under any mapping. Report *that* as broken.
 
 ## 5. Live data
 

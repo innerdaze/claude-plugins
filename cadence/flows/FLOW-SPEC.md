@@ -103,6 +103,12 @@ level; a `human` gate is never auto-cleared.
 `config.dod_gates`. Union, not override — a project may raise the bar above what
 the flow requires, and can never silently lower it.
 
+**Gates survive an unrepresentable lane.** A gate belongs to a *transition*, and
+skills collect every gate along the declared path between two lanes. If a lane on
+that path has no `status_map` entry, the status write for it is skipped — the
+gate is not. Without this, a team whose board has fewer columns would silently
+get fewer checks, which is the opposite of what a Definition of Done is for.
+
 ## `cadence` — rhythm
 
 | Key | Type | Required | Read by |

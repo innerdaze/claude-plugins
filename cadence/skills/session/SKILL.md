@@ -68,8 +68,13 @@ The order of these steps matters and is explained below — do not reorder them.
 The governing rule: **every tracker write happens before the checkpoint, and the
 checkpoint is the last thing that touches the repo.**
 
-1. **Gate(s).** Run every gate the flow attaches to a transition **whose destination is `roles.done`** — matching on the destination, not on the exact `"<from> -> <to>"` string. If the item is leaving a different lane than the flow's happy path expects (because an intermediate lane is unmapped on this tracker), the gates still run. A quality bar must never be skipped as a side effect of a board having fewer columns; that would turn a missing column into a silently lowered standard.
-   The **effective DoD** is `flow.gates.dod.checks` ∪ `config.dod_gates` — a union; a project may raise the flow's bar, never lower it. Honour each gate's approver: a `human` gate is never auto-cleared. If a gate fails, leave the item where it is, record an honest note, and stop here.
+1. **Gate(s).** Work out the flow's **declared path** from the item's current lane to the lane you are moving it to, following `gated_transitions`. Run **every gate attached to any transition on that path** — including transitions whose lanes this tracker cannot represent.
+
+   **An unmapped lane skips the status write. It must never skip a gate.** Otherwise a board with fewer columns silently lowers the quality bar, and the fewer columns a team has, the fewer checks they get — exactly backwards. A flow that gates `Supported -> Reviewed -> Final` still owes you both gates on a board that only has `Outline` and `Final`.
+
+   Matching only the *final* transition is not enough: gates on intermediate hops (a citations check on the way to review, a postmortem before an incident closes) are precisely the ones an unmapped lane would drop.
+
+   The **effective DoD** is `flow.gates.dod.checks` ∪ `config.dod_gates` — a union; a project may raise the flow's bar, never lower it. Honour each gate's approver: a `human` gate is never auto-cleared. If any gate fails, leave the item where it is, record an honest note, and stop here.
 2. **Advance the item** to `roles.done` (via `roles.review` first if the flow declares that transition *and* the lane is mapped), firing `transition.<from>_to_<to>`.
 3. **Prune the session state** — run `session_state.prune`. The default rule lives in `${CLAUDE_PLUGIN_ROOT}/flows/HOOKS.md`; in short, reconcile the scratchpad **against the tracker** (not against what the file claims) and drop anything the tracker already tells you, keeping only non-obvious traps.
 4. **Decide the next goal and record it** via the tracker adapter (`comment`), and record any durable gotcha through the doc adapter's `record()`. Both of these write files that may be under version control, which is why they come *before* the checkpoint.
