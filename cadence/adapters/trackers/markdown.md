@@ -76,7 +76,7 @@ inferred value would be confidently wrong.
 - **`list_closed(filter?)`** — the same, inverted: items whose `status` *is* in the terminal set.
 - **`get(id)`** — Read `<path>/<id>.md`; return front-matter + description + comments.
 - **`create(fields)`** — compute the next id; Write `<path>/<id>.md` from the template above; create `<path>/` if absent. Set `updated`. Return the new id.
-- **`comment(id, text)`** — Edit the file: append `- <today> <text>` under `## Comments` (add the heading if missing). Take today's date from the environment.
+- **`comment(id, text)`** — Edit the file: append `- <today> <text>` under `## Comments` (add the heading if missing), and refresh `updated:`. A comment is a modification; leaving `updated:` stale would make `updated_since` filters miss the item.
 - **`update(id, fields)`** — Edit the named front-matter fields and refresh `updated`. **`set_status(id, status)`** is this with one field — and it must reject a status that is not in `statuses()` rather than writing it.
 
 ## Concept mapping

@@ -60,29 +60,37 @@ This is a normal, fully supported setup — the zero-dependency default, not a d
 ## `/cadence:session end`
 
 The order of these steps matters and is explained below — do not reorder them.
+The governing rule: **every tracker write happens before the checkpoint, and the
+checkpoint is the last thing that touches the repo.**
 
-1. **Gate(s).** For the transition to `roles.done`, run each `gate.<name>.check` the flow attaches. The **effective DoD** is `flow.gates.dod.checks` ∪ `config.dod_gates` — a union; a project may raise the flow's bar, never lower it. Honour each gate's approver: a `human` gate is never auto-cleared. If a gate fails, leave the item where it is, record an honest note, and stop here.
-2. **Advance the item** to `roles.done` (via `roles.review` first if the flow declares that transition), firing `transition.<from>_to_<to>`.
-3. **Checkpoint.** If `config.execution.owns` includes `commit`, *verify* rather than repeat: use the VCS adapter's `log()` to confirm a checkpoint referencing this item exists, and `status()` to confirm the tree is clean. Otherwise — including whenever `execution.skill` is `none` — run the checkpoint yourself via the `checkpoint` hook / VCS adapter. Record any durable gotcha through the doc adapter's `record()`.
-4. **Prune the session state** — run `session_state.prune`. The default rule lives in `${CLAUDE_PLUGIN_ROOT}/flows/HOOKS.md`; in short, reconcile the scratchpad **against the tracker** (not against what the file claims) and drop anything the tracker already tells you, keeping only non-obvious traps.
-5. **`session.end`** (default): write the pruned session state to `config.session_state.file`, per the schema in `${CLAUDE_PLUGIN_ROOT}/adapters/ADAPTERS.md` — the next goal plus any **cross-cutting** note the tracker can't hold. Drop the next goal into a tracker `comment` too.
+1. **Gate(s).** Run every gate the flow attaches to a transition **whose destination is `roles.done`** — matching on the destination, not on the exact `"<from> -> <to>"` string. If the item is leaving a different lane than the flow's happy path expects (because an intermediate lane is unmapped on this tracker), the gates still run. A quality bar must never be skipped as a side effect of a board having fewer columns; that would turn a missing column into a silently lowered standard.
+   The **effective DoD** is `flow.gates.dod.checks` ∪ `config.dod_gates` — a union; a project may raise the flow's bar, never lower it. Honour each gate's approver: a `human` gate is never auto-cleared. If a gate fails, leave the item where it is, record an honest note, and stop here.
+2. **Advance the item** to `roles.done` (via `roles.review` first if the flow declares that transition *and* the lane is mapped), firing `transition.<from>_to_<to>`.
+3. **Prune the session state** — run `session_state.prune`. The default rule lives in `${CLAUDE_PLUGIN_ROOT}/flows/HOOKS.md`; in short, reconcile the scratchpad **against the tracker** (not against what the file claims) and drop anything the tracker already tells you, keeping only non-obvious traps.
+4. **Decide the next goal and record it** via the tracker adapter (`comment`), and record any durable gotcha through the doc adapter's `record()`. Both of these write files that may be under version control, which is why they come *before* the checkpoint.
+5. **Checkpoint — the last repo write.** If `config.execution.owns` includes `commit`, *verify* rather than repeat: use the VCS adapter's `log()` to confirm a checkpoint referencing this item exists, and `status()` to confirm the tree is clean. Otherwise — including whenever `execution.skill` is `none` — run the checkpoint yourself via the `checkpoint` hook / VCS adapter.
+6. **`session.end`** (default): write the pruned session state to `config.session_state.file`, per the schema in `${CLAUDE_PLUGIN_ROOT}/adapters/ADAPTERS.md`. This file is git-ignored, so it is the one write that may safely follow the checkpoint.
 
-### Why status is set *before* the checkpoint
+### Why the checkpoint goes last
 
 Under a tracker whose items live in the repo (the `markdown` fallback commits its
-backlog deliberately), **the item file is part of the change set.** Committing
-first therefore captures the item still open, and then step 2 re-dirties the tree
-— so the commit's own backlog contradicts its message, and the `status()`-clean
-check in step 3 can never pass again for any later session.
+backlog deliberately), **every tracker write is a repo write.** Anything that
+touches the tracker after the commit leaves the tree dirty — which contradicts
+the commit, and poisons the `status()`-clean check that the *next* session uses
+to verify a checkpoint happened.
 
-Setting status first is also correct for hosted trackers, where the two are
-independent. So this order is universally right, and the reverse is quietly
-wrong in exactly the configuration Cadence ships as its default.
+That applies to all three tracker writes at end, not just the status change: the
+status, the next-goal comment, and any recorded gotcha. Fixing only the status
+ordering and then commenting afterwards reintroduces the same failure two steps
+later — which is exactly what happened the first time this was fixed.
 
-**If the checkpoint fails after the status change**, say so plainly and offer to
-revert the status. Do not leave the item advanced with the work uncommitted — a
-tracker that claims work is done when it isn't committed is the one state worse
-than either failure alone.
+The order is also correct for hosted trackers, where tracker and repo are
+independent. So it is universally right, and the reverse is quietly wrong in
+precisely the configuration Cadence ships as its default.
+
+**If the checkpoint fails**, say so plainly and offer to revert the status. Do
+not leave the item marked done with the work uncommitted — a tracker claiming
+work is finished when nothing was committed is worse than either failure alone.
 
 ## When something doesn't resolve
 

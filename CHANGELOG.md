@@ -11,45 +11,129 @@ changing a hook's Input/Output, removing an adapter operation, or changing the
 meaning of a config key is a *major* change. Adding an optional hook, operation,
 field, or config key is *minor*.
 
-## [Unreleased]
+## [0.2.0] — pending verification
+
+> **Not yet tagged.** This release is complete in the tree but has never been
+> installed as a plugin. `docs/VERIFICATION.md` is the checklist that gates the
+> tag; sections 1–7 must pass first.
+
+The plugin was well-designed on paper and could not actually be installed as
+documented. Three rounds of audit — static review, then six live evaluation runs
+in throwaway repos — found ~45 verified defects. This release fixes them.
+
+### BREAKING
+
+- **Config location is now `.claude/cadence/config.md`, always.** The alternative
+  `domains/PROJECT.md` branch is gone: it was tool-specific inside tool-agnostic
+  skills, *and* outside the root the design declares inviolable. Move an existing
+  config, or re-run `/cadence:init`. `/cadence:doctor` detects the old layout.
+- **`config.tracker.statuses` is replaced by `config.tracker.status_map`.** The
+  old key was a fixed four-slot map that could not express a flow's lanes.
+  `status_map` maps a flow lane to the status your tracker really has, and is
+  built from the tracker rather than from a preset.
+- **`epic_convention` moved out of config** into the tracker adapter's concept
+  mapping. How a tool models an epic is a fact about the tool.
+- **`/cadence:session end` reorders**: gates → set status → checkpoint. Any hook
+  or authored flow that assumed the commit came first must be updated.
+- **All skills renamed with a `cadence-` prefix** and their directories renamed to
+  match. A project referring to the old `session` / `plan` / `roadmap` skill names
+  must update.
+- **Flow specs now require `meta.cadence_version` and `states.roles`.** An
+  existing custom flow will not validate until both are added.
+- **`session_state.vcs_ignored` is removed.** Ignoring is an action init takes,
+  not a fact config records.
 
 ### Added
 
-- `commands/` — `/cadence:init`, `/cadence:session`, `/cadence:plan`,
-  `/cadence:roadmap`. Plugin skills are addressed `plugin:skill`, so the
-  previously documented `/cadence init` was never a form Claude Code could
-  parse. Each command is a thin wrapper; behaviour stays in the skill.
-- `taxonomy()` on the doc-system contract — the label vocabulary that lets an
-  item's labels resolve to context docs. Returning empty is valid and means
-  items carry no context labels.
-- A "When something doesn't resolve" section in `/cadence:session`, covering
-  the six ways the config → flow → adapter → tracker chain breaks in a project
-  that isn't the author's.
-- A documented calling convention for the `mechanical` subagent, so
-  `config.models.mechanical` is actually honoured and an unavailable tier
-  degrades visibly instead of failing silently.
-
-### Changed
-
-- **Marketplace renamed** `cadence-marketplace` → `claude-plugins`, so the
-  documented install command resolves.
-- **All skills namespaced `cadence-*`**, with directory names matching their
-  frontmatter `name`. Installing Cadence can no longer shadow a `session`,
-  `plan`, or `roadmap` skill an adopter already has.
-- Every reference from a skill to a bundled file is now anchored with
-  `${CLAUDE_PLUGIN_ROOT}`. A skill's working directory is the *consumer's*
-  repo, so bare paths resolved to nothing and the model improvised — silently.
-- Cadence's data now lives under one root, `.claude/cadence/`. The `markdown`
-  tracker's backlog and the `none` adapter's notes previously wrote to
-  `.cadence/`, outside the root the design declares inviolable.
-- `DESIGN.md` moved to the repository root. It is internal design notes and
-  history, not part of the shipped plugin payload.
+- `flows/FLOW-SPEC.md` — the flow-spec schema as its own document, with every
+  key's type, whether it's required, and which skill reads it. Previously the
+  schema *was* a preset, so the other presets invented keys nothing recognised.
+- **Lane roles** (`states.roles`). Skills ask for a role, never a literal status.
+  Roles are declared by a human and never inferred; an absent `active` role means
+  sessions don't touch status, which is a valid process rather than a gap.
+- `commands/` — `/cadence:init`, `:session`, `:plan`, `:roadmap`, `:doctor`.
+  Plugin skills are addressed `plugin:skill`, so the previously documented
+  `/cadence init` was never a form Claude Code could parse.
+- **`/cadence:doctor`** — read-only diagnosis of a project's setup: unknown config
+  keys, flow validity, adapter coverage, tracker reachability *and whether its
+  workspace belongs to this repo*, whether mapped statuses still exist, live data
+  corruption, and whether session state is really ignored.
+- **Tracker `statuses()`** — the primitive the status layering rests on. Also
+  `list_closed()`, `update()`, optional `list_cycles()`/`current_cycle()`, and
+  VCS `log()`, which `/cadence:session end` already required and could not do.
+- **Per-adapter capability declarations**, so an unsupported field degrades
+  visibly instead of silently.
+- **Item fields** `assignee`, `cycle`, `order`, `depends_on`, `severity`,
+  `updated_at`, so the priority policy has data to work with.
+- `taxonomy()` on the doc-system contract; empty is a valid answer.
+- `roadmap.milestone_progress` hook and `/cadence:roadmap` Mode C, reconciling
+  the roadmap against what shipped — measured against exit criteria, not ticket
+  counts.
+- `tools/validate_cadence.py` and CI, enforcing eleven invariants that have each
+  actually broken here. `tools/README.md` records why each rule exists.
+- `CONTRIBUTING.md`, `docs/VERIFICATION.md`, a root `LICENSE`, and this file.
+- A `--defaults` non-interactive mode for init, deliberately restricted to the
+  zero-dependency stack and forbidden from binding any MCP.
 
 ### Fixed
 
-- The shipped Definition-of-Done menu and templates no longer carry
-  game-development-specific gates.
-- The `session_state.prune` default rule was stated verbatim in three files and
-  had begun to drift; `flows/HOOKS.md` is now its sole owner.
+- **`/cadence:session end` committed before writing to the tracker.** Under the
+  `markdown` tracker — whose items are committed files — every tracker write is a
+  repo write, so committing first captured the item still open and re-dirtied the
+  tree, and the "tree clean" check later sessions depend on could never pass
+  again. The checkpoint is now the last repo write, after *all three* tracker
+  writes (status, next-goal comment, recorded gotcha). Fixing only the status
+  ordering left the same failure two steps later — a regression run caught it.
+- **A gate could be silently skipped on a board with fewer columns.** Gates were
+  matched on the exact `"<from> -> <to>"` transition, so if an intermediate lane
+  was unmapped the item took a different route and the gate never fired — meaning
+  a missing column silently lowered the Definition of Done on the zero-dependency
+  default. Gates now match on the **destination** lane.
+- **`In Progress` and `In Review` were unreachable.** `set_status` was called once
+  and went straight to done, so items jumped `Backlog → Done` and
+  `solo-greenfield`'s only gate was attached to a transition that never occurred.
+- **`config.example.md` shipped a real project's filled-in config** while init was
+  told to write configs "per" that file. An undocumented key from that example
+  leaked into two unrelated projects during testing. Init now assembles the config
+  from the user's answers and copies nothing.
+- **Init bound any connected tracker MCP without checking whose it was.** MCPs are
+  user-scoped and Cadence is installed once for every project, so the tracker in
+  view is often another product's. Init now corroborates the workspace against the
+  repo and asks when it can't.
+- **Seven catalogued hooks were never fired by any skill.** `intake.classify`,
+  `intake.prioritize`, `bug.triage`, `transition.*` and `checkpoint` now have real
+  firing sites; `ceremony.*` and `release` are explicitly marked deferred.
+  `bug.triage` mattered most — the bug rule was stated at session start and never
+  applied.
+- Skills referenced bundled files by bare path, which resolves into the
+  *consumer's* repo. All such references are now anchored with
+  `${CLAUDE_PLUGIN_ROOT}`.
+- The marketplace name didn't match the documented install command.
+- `execution.skill: none` — the advertised default — was undefined in the flow
+  spec and actively forbidden by a shipped template.
+- Definition-of-Done precedence between `flow.gates.dod.checks` and
+  `config.dod_gates` was never stated. It is a union: a project may raise the
+  flow's bar, never lower it.
+- Item titles containing a colon were unquoted and silently unparseable.
+- `comment()` didn't refresh `updated:`, so commented items fell out of
+  `updated_since` filters.
+- The `git` adapter's `checkpoint` staged with a blanket `git add -A`, attributing
+  build output and unrelated stray edits to the item's commit.
+- `markdown` tracker data moved from `.cadence/` into `.claude/cadence/`, the root
+  the design says Cadence never writes outside of.
+- Game-specific gates removed from the shipped DoD menu and templates.
 
-[Unreleased]: https://keepachangelog.com/en/1.1.0/
+### Known limitations
+
+- **The ceremony layer is documented but not invokable.** No skill fires
+  `ceremony.*`; no command runs a standup, review, retro, or incident review.
+  `team-sprints` and `live-oncall` are usable for their lanes, gates and decision
+  rights, but Cadence will not run your meetings. `/cadence:plan` writes a
+  planning pack when `commit_scope` is `human`, which is the one real path.
+- **`states.release_pipeline` is declarable but not walked.**
+- **The `markdown` fallback has no cycles or assignees**, so `committed-sprint`
+  is skipped on it.
+
+## [0.1.0]
+
+Initial internal version. Never published.

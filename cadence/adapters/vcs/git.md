@@ -24,7 +24,8 @@ vcs:
 - **`diff(paths?)`** — `git diff` (unstaged) and `git diff --staged` (staged); scope to `paths` when given. Use to review changes and draft a message.
 - **`log(n?, paths?)`** — `git log -n <n|10> --format='%h %s'`, scoped to `paths` when given. Return `{ref, message, item_refs}` per entry, where `item_refs` are the `<PREFIX>-<n>` tokens found in the subject. This is how `/cadence:session end` confirms a checkpoint referencing the item exists.
 - **`add_untracked(paths)`** — `git add -- <paths>` (git needs new files staged before they commit).
-- **`checkpoint(message, item_ref)`** — stage the intended changes (`git add -A`, or specific paths), then `git commit -m "<item_ref>: <message>"`. Confirm with `git log -1 --oneline`. **Do not `git push`** unless the user asks.
+- **`checkpoint(message, item_ref)`** — stage **the paths belonging to this piece of work**, then `git commit -m "<item_ref>: <message>"`. Confirm with `git log -1 --oneline`. **Do not `git push`** unless the user asks.
+  Prefer explicit paths over `git add -A`. A blanket add sweeps in whatever else happens to be sitting in the tree — build output, a stray scratch file, another task's half-finished edit — and attributes it to this item's commit. If you do use `-A`, run `status()` first and say what you are about to include.
 - **`ignore(paths)`** — append each path to `.gitignore` if not already present (idempotent; create the file if missing). Used at init to keep Cadence's session-state file (`.claude/cadence/SESSION.local.md`) out of the repo.
 
 ## Etiquette

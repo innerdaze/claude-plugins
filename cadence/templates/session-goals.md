@@ -32,16 +32,19 @@ How a found bug is handled is set by the flow, not habit:
 
 ## End ritual (~5 min)
 
-1. **Gate:** run the flow's gates for the transition to the *done* lane. Pass → continue; fail → leave the item where it is, with an honest note.
+1. **Gate:** run the flow's gates for reaching the *done* lane. Pass → continue; fail → leave the item where it is, with an honest note.
 2. **Advance the item** in the tracker.
-3. **Checkpoint:** if an execution skill owns `commit`, *verify* it happened; otherwise do it yourself.
-4. **Set the next session's goal** (one line, recorded) so the next start opens loaded.
+3. **Set the next session's goal** (one line, recorded) so the next start opens loaded.
+4. **Checkpoint:** if an execution skill owns `commit`, *verify* it happened; otherwise do it yourself.
 5. **Scratchpad:** keep only cross-cutting notes the tracker can't hold — not per-item gotchas, which belong on the item or in the docs.
 
-**Advance before you commit.** If your work items live in the repo — a
-file-based tracker — the item is part of the change set, so committing first
-captures it still open and leaves the tree dirty afterwards. The order above is
-also correct for hosted trackers, where the two are independent.
+**Commit last.** If your work items live in the repo — a file-based tracker —
+then *every* tracker write is a repo write: the status change, the next-goal
+note, all of it. Anything you write after committing leaves the tree dirty and
+contradicts the commit you just made. Moving only the status earlier and still
+commenting afterwards reproduces the same problem one step later.
+
+The scratchpad is the exception: it's ignored, so it can be written last.
 
 ## The responsibility split (why nothing duplicates)
 

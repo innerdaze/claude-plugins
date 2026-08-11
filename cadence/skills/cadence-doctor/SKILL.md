@@ -87,6 +87,15 @@ This is where the checks that static analysis cannot do earn their place.
   `active` lane, so `/cadence:session start` won't mark work in flight." On a
   two-column board this is correct and expected — say that too, so nobody
   "fixes" it by adding columns they don't want.
+- **Does an unmapped lane strand a gate?** This one is **broken**, not disabled.
+  If a gated transition passes through a lane this tracker cannot represent, the
+  item takes a different route and the gate can be skipped — so a missing column
+  silently lowers a quality bar. Name the gate: *"`gate.dod` is attached to
+  `In Progress -> Done`, but `In Progress` is unmapped here."* The skills now
+  match gates by destination lane specifically to survive this, so a finding here
+  usually means the flow's transitions want redrawing for this board — but report
+  it either way, because a silently skipped Definition of Done is the most
+  expensive failure in this list.
 
 ## 5. Live data
 

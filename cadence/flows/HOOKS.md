@@ -44,11 +44,11 @@ Input: `{backlog, cycle, incident_queue, priority_policy, roadmap}` → Output: 
 Defaults: *solo-greenfield* → next roadmap ticket; *team-sprints* → top committed cycle item; *live-oncall* → highest incident, else cycle, else roadmap.
 
 **`session.end`** — the wrap sequence.
-*Fired by:* `cadence-session`, end step 6.
+*Fired by:* `cadence-session`, end step 6 (write state).
 Input: `{active_item, execution_owns, dod_result}` → Output: `{ordered close actions}`. Must *verify* work the execution skill owns rather than repeat it — except where `execution.skill` is `none`, in which case there is nothing to verify and the session performs the checkpoint itself.
 
 **`session_state.prune`** — fires at `/cadence:session end`, before session state is written. Keeps the local scratchpad from silently becoming a stale second copy of the backlog.
-*Fired by:* `cadence-session`, end step 5.
+*Fired by:* `cadence-session`, end step 3 (prune).
 Input: `{session_state, tracker}` → Output: `{pruned_session_state}`.
 Default (all presets): check each entry's item state via the **tracker adapter** — never from what the file itself claims — then delete: entries whose item is closed (unless a *non-obvious trap* survives — the shipped work deliberately departs from the ticket text and restoring it would reintroduce a bug), notes that merely restate their item's title, cross-references within the file, and bare item IDs carrying no note (a list of IDs is a tracker query, not a memory). Flows may tune how aggressively this runs by overriding the hook. The file's schema is in `${CLAUDE_PLUGIN_ROOT}/adapters/ADAPTERS.md`.
 
@@ -92,7 +92,7 @@ Vision drafting deliberately has **no** hook: Principle 3 reserves it for the hu
 ### Gates
 
 **`gate.<name>.check`** — evaluate a gate on a gated transition. Names are flow-defined: `dod`, `code_review`, `qa`, `release_approval`, ….
-*Fired by:* `cadence-session`, end step 1, for each gate on the transition being made.
+*Fired by:* `cadence-session`, end step 1 (gates), for every gate whose transition ends at the `done` lane - matched by destination, so an unmapped intermediate lane cannot skip a gate.
 Input: `{item, context, checks}` → Output: `{result: pass | fail | needs-human, notes}`.
 `gate.dod` default: verify the **effective DoD** is satisfied or explicitly N/A'd. The effective DoD is `flow.gates.dod.checks` ∪ `config.dod_gates` — a union, so a project may raise the bar above the flow's baseline and can never silently lower it. (`dod_gates` is a **config** key; `checks` is the flow's.)
 
@@ -122,7 +122,7 @@ Input: `{decisions}` → Output: `{recorded changes}`.
 Input: `{item, from, to}` → Output: `{side_effects}`.
 
 **`checkpoint`** — how work is committed. Delegates to the VCS adapter; the hook can add changelog/version steps.
-*Fired by:* `cadence-session`, end step 3.
+*Fired by:* `cadence-session`, end step 5 (checkpoint - the last repo write).
 Input: `{changes, item_ref, vcs_adapter}` → Output: `{commit actions}`.
 
 **`release`** — a gated release (mostly for live-product flows).
