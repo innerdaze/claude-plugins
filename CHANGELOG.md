@@ -11,7 +11,37 @@ changing a hook's Input/Output, removing an adapter operation, or changing the
 meaning of a config key is a *major* change. Adding an optional hook, operation,
 field, or config key is *minor*.
 
-## [0.4.0] — pending verification
+## [0.4.1] — pending verification
+
+### Changed
+
+- **Adapter generation reads the project's own documentation first, then the
+  tool.** Init previously said to generate a VCS adapter by inspecting the CLI. A
+  real project's notes turned out to carry what no interface can express: that its
+  VCS *"has no amend or reword — a garbled commit message is permanent"*, and that
+  the documented fix for one failure mode *"overwrites local edits"*. `--help`
+  lists verbs; it does not tell you which of them will quietly discard a day's
+  work. An adapter built only from an interface knows how to call things and not
+  when calling them is a mistake — which is exactly what the etiquette rules
+  (never push, never force, surface destructive actions) depend on knowing.
+
+  Docs for judgement, the tool for verbs, and **cite where each gotcha came from**
+  so it can be re-checked when the tool changes. Applies to trackers too.
+
+- **The "never touch project memory" rule was over-broad, and it forbade this.**
+  It said Cadence must not *read* a `CLAUDE.md` or agent `MEMORY.md`. The
+  principle's purpose is that Cadence must not **own or depend on** those files:
+  never write to one, never require one, never read one **at run time**, because a
+  skill that only works when a memory file is present has a hidden dependency on a
+  file it does not control.
+
+  Reading one *once at init*, as evidence for a binding the user then confirms, is
+  a different act — init already reads READMEs, manifests and skill files — and
+  leaves nothing depending on the original. The rule now says dependency and
+  ownership rather than reading. `/cadence:session` keeps the run-time
+  prohibition unchanged.
+
+## [0.4.0] — superseded
 
 Found by running `/cadence:doctor` against a real project for the first time —
 MachineGame54, 245 issues, a Diversion working copy, a `domains/` doc system, and

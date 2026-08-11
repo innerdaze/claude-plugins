@@ -120,7 +120,11 @@ that are silent and confident rather than loud:
    fictional placeholders. The validator enforces a banned-term list because this
    has leaked before.
 5. **Cadence writes only inside `.claude/cadence/`**, plus one line in the
-   project's ignore file. It never reads or writes a project's own memory files.
+   project's ignore file. It never writes to a project's own memory files, never
+   requires one, and never reads one at run time. `/cadence:init` may read one
+   *once*, as evidence for a binding the user then confirms — the rule is about
+   dependency and ownership, not about refusing to look at documentation the
+   project wrote.
 
 ## Reporting a bug
 
