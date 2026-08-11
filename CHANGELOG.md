@@ -11,7 +11,30 @@ changing a hook's Input/Output, removing an adapter operation, or changing the
 meaning of a config key is a *major* change. Adding an optional hook, operation,
 field, or config key is *minor*.
 
-## [0.3.4] — pending verification
+## [0.3.5] — pending verification
+
+### Fixed
+
+- **"The priority policy found nothing" conflated a gap with an answer.** 0.3.2
+  treated an exhausted policy as a failure and offered the backlog for picking.
+  But a token that *could not be evaluated* (field unsupported or unpopulated) is
+  a gap, while a token that *was* evaluated and returned nothing is an answer.
+  `committed-sprint` on a board with work committed to a cycle starting next week
+  has not failed — it has said the sprint hasn't begun. Presenting a free choice
+  there quietly invites starting cycle work early, which is the one thing a sprint
+  flow exists to prevent. The two cases are now handled separately.
+
+### Verified against a live board
+
+- **Cycle commitment is two writes, and both landed**: `cycle: 1` plus a move to
+  `roles.committed`. Deferred items stayed in `Backlog`, so the board now
+  distinguishes "in the backlog" from "committed to the cycle" — which is what the
+  `committed` role was added for.
+- Both lanes resolve to a status *displayed* as `Queued` (categories `backlog` and
+  `unstarted`). They look identical on the board and are different states; the
+  qualified `status_map` form is what keeps them apart.
+
+## [0.3.4] — superseded
 
 ### Added
 
