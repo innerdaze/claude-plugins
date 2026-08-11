@@ -25,13 +25,16 @@ hierarchy:
 states:
   lanes: [Backlog, Sprint Backlog, In Progress, In Review, Done]
   roles:
-    backlog: Backlog
-    active:  In Progress
-    review:  In Review
-    done:    Done
+    backlog:   Backlog
+    committed: Sprint Backlog
+    active:    In Progress
+    review:    In Review
+    done:      Done
   incident_lanes: [Triage, Mitigating, Resolved, Postmortem]
   gated_transitions:
-    "In Progress -> In Review": []
+    "Backlog -> Sprint Backlog":     []
+    "Sprint Backlog -> In Progress": []
+    "In Progress -> In Review":      []
     "In Review -> Done":        [gate.dod, gate.code_review, gate.regression]
     # the incident lane's own path — declared so gate.postmortem is reachable
     "Triage -> Mitigating":     []

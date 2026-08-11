@@ -26,14 +26,17 @@ hierarchy:
 states:
   lanes: [Backlog, Sprint Backlog, In Progress, In Review, Done]
   roles:
-    backlog: Backlog
-    active:  In Progress
-    review:  In Review      # this flow DOES review, so the role is declared
-    done:    Done
+    backlog:   Backlog
+    committed: Sprint Backlog   # accepted into the cycle, not yet started
+    active:    In Progress
+    review:    In Review        # this flow DOES review, so the role is declared
+    done:      Done
   wip_limit: per-person
   gated_transitions:
-    "In Progress -> In Review": []
-    "In Review -> Done":        [gate.dod, gate.code_review]
+    "Backlog -> Sprint Backlog":     []   # the team committing scope at planning
+    "Sprint Backlog -> In Progress": []
+    "In Progress -> In Review":      []
+    "In Review -> Done":             [gate.dod, gate.code_review]
 
 gates:
   dod:

@@ -11,7 +11,33 @@ changing a hook's Input/Output, removing an adapter operation, or changing the
 meaning of a config key is a *major* change. Adding an optional hook, operation,
 field, or config key is *minor*.
 
-## [0.3.2] — pending verification
+## [0.3.3] — pending verification
+
+### Fixed
+
+- **Three shipped flows declared lanes nothing could ever reach.** `team-sprints`
+  and `live-oncall` each had a `Sprint Backlog` that no role named and no
+  transition mentioned; `solo-greenfield` had `Todo` and `In Review` in the same
+  state — the second of which *this cleanup created*, when the gate moved to
+  `In Progress -> Done` and left `In Review` stranded. A flow naming a part of a
+  process it cannot perform is a promise it cannot keep.
+- **The vocabulary had no way to say "committed to the cycle, not yet started".**
+  That is why `Sprint Backlog` was orphaned rather than simply deleted — the state
+  is real in every sprint process. Added an optional **`committed`** role, wired
+  it into both sprint presets with transitions in and out, and made
+  `/cadence:plan` move items there when scope is committed. Committing scope is
+  two things, not one: writing the cycle *and* moving the item.
+- `solo-greenfield` now declares three lanes rather than five. It never used the
+  other two.
+
+### Added
+
+- **Validator rule: orphan lanes.** A lane in `states.lanes` that no role names
+  and no transition mentions is an error. The existing reachability rule only
+  inspected lanes that *appeared in* transitions, so it structurally could not see
+  this. The new rule found all three cases on its first run.
+
+## [0.3.2] — superseded
 
 ### Fixed
 

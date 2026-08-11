@@ -75,6 +75,7 @@ process decision only you can make.
 |---|---|---|---|
 | `backlog` | **yes** | where `/cadence:plan` creates new items | — |
 | `done` | **yes** | the success terminal | — |
+| `committed` | no | accepted into the current cycle, not yet started | committing scope changes no status |
 | `active` | no | work is in flight | `/cadence:session start` does **not** change status |
 | `review` | no | awaiting review | no review step is implied |
 | `abandoned` | no | list of terminal-but-not-success lanes | nothing is treated as abandoned |
@@ -85,6 +86,13 @@ separately, so it cannot drift. `list_open` is "not in the terminal set."
 **Roles never imply a path between lanes.** `gated_transitions` is the only
 declaration of how items move. Declaring a `review` role does not mean work
 passes through review — a flow that reviews says so with a transition.
+
+**Every lane must be reachable.** A lane that no role names and no transition
+mentions is an **orphan**: nothing in Cadence can ever put an item there, so it is
+a promise the flow cannot keep. This is easy to introduce — `team-sprints` shipped
+a `Sprint Backlog` lane in exactly that state, naming a real part of the process
+that no skill could act on. Either give the lane a role, put it in a transition,
+or remove it. The validator reports orphans.
 
 ## `gates` — named checkpoints
 

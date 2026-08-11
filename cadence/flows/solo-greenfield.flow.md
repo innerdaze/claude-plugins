@@ -3,10 +3,14 @@
 *A shipped Cadence preset. One builder, no live users yet — maximize momentum, let the skill decide. Fork this file to customize; any hook you don't set uses the built-in default. The schema every key here comes from is `FLOW-SPEC.md`.*
 
 > **The lanes below are process vocabulary, not columns you must create.** Only
-> `backlog` and `done` are structurally required. `Todo`, `In Progress` and
-> `In Review` are refinements — if your tracker has two columns, map those two in
-> `config.tracker.status_map`, leave the rest unmapped, and Cadence will skip the
-> steps that need them. It will never add a column to your board.
+> `backlog` and `done` are structurally required; `In Progress` is a refinement —
+> if your tracker has two columns, map those two in `config.tracker.status_map`,
+> leave the rest unmapped, and Cadence will skip the steps that need them. It will
+> never add a column to your board.
+>
+> This preset deliberately declares **three** lanes, not five. An earlier version
+> listed `Todo` and `In Review` as well, and nothing could ever put an item in
+> either — a flow should not name parts of a process it does not perform.
 
 ```yaml
 meta:
@@ -19,7 +23,7 @@ hierarchy:
   levels: [milestone, epic, ticket]
 
 states:
-  lanes: [Backlog, Todo, In Progress, In Review, Done]
+  lanes: [Backlog, In Progress, Done]
   roles:
     backlog: Backlog        # required — where /cadence:plan creates
     active:  In Progress    # omit this and sessions won't mark work in flight

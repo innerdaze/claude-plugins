@@ -320,6 +320,21 @@ def check_flows(hook_names: set[str], wildcards: list[str]) -> None:
             if gname not in gates:
                 err("flow", f"{name}: release_pipeline references undefined gate {gname!r}")
 
+        # Orphan lanes: declared, but no role names them and no transition
+        # mentions them, so nothing can ever put an item there. team-sprints
+        # shipped `Sprint Backlog` in exactly this state - a real part of the
+        # process that no skill could act on.
+        role_lanes = set()
+        for v in roles.values():
+            role_lanes.update(v if isinstance(v, list) else [v])
+        transition_lanes = set()
+        for key in transitions:
+            if "->" in key:
+                transition_lanes.update(s.strip() for s in key.split("->", 1))
+        for lane in sorted(set(lanes) - role_lanes - transition_lanes):
+            err("flow", f"{name}: lane {lane!r} is an orphan - no role names it and no "
+                        f"transition mentions it, so nothing can put an item there")
+
         # Lane reachability: a gate on a transition nothing reaches never fires.
         # This is the shape of a real defect - a preset gated "In Review -> Done"
         # while declaring no review step.
