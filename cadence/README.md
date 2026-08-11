@@ -34,7 +34,7 @@ Install the plugin:
 
 ```
 /plugin marketplace add innerdaze/claude-plugins
-/plugin install cadence@claude-plugins
+/plugin install cadence@innerdaze
 ```
 
 (Or `/plugin marketplace add /path/to/claude-plugins` from a local clone.)

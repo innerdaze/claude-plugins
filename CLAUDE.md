@@ -21,7 +21,7 @@ Beyond that there is no build or test suite. The only full exercise loop is inst
 
 ```
 /plugin marketplace add C:\Users\Lee\Projects\claude-plugins
-/plugin install cadence@claude-plugins
+/plugin install cadence@innerdaze
 ```
 
 Then, in a *separate* consumer project (never here), run `/cadence:init`, `/cadence:roadmap`, `/cadence:plan`, `/cadence:session start|end`. `cadence.zip` at the repo root is a packaging artifact and is gitignored (`*.zip`); it is not a source of truth — regenerate it from `cadence/` rather than editing it.

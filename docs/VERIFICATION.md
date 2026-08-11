@@ -37,7 +37,7 @@ which is the right order.
 
 ```
 /plugin marketplace add C:\Users\Lee\Projects\claude-plugins
-/plugin install cadence@claude-plugins
+/plugin install cadence@innerdaze
 ```
 
 A local marketplace reads the working tree, so whatever branch is checked out is
@@ -46,8 +46,11 @@ what you are testing. Confirm you are on the branch you mean to verify.
 - [ ] The marketplace resolves and the plugin installs.
 - [ ] `/plugin` lists Cadence with its version (`0.2.0`) and description.
 
-**If the marketplace name is rejected**, that is finding #1 — the manifest says
-`claude-plugins`, and the install command must match.
+**If the marketplace name is rejected**, check `.claude-plugin/marketplace.json`.
+Claude Code refuses a marketplace `name` containing "claude" or "anthropic" —
+it reads as impersonating an official source. The name is `innerdaze` and
+deliberately differs from the repository name; the install command must match the
+manifest, not the repo.
 
 > The published form — `/plugin marketplace add innerdaze/claude-plugins` — only
 > works once the repo exists on GitHub. It resolves that shorthand over SSH, so
@@ -148,7 +151,7 @@ local path; this section verifies distribution, which is a separate thing.
 ```
 /plugin marketplace remove claude-plugins      # drop the local one first
 /plugin marketplace add innerdaze/claude-plugins
-/plugin install cadence@claude-plugins
+/plugin install cadence@innerdaze
 ```
 
 - [ ] The shorthand resolves. It clones over **SSH** — if you get

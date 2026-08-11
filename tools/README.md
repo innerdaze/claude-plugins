@@ -25,7 +25,8 @@ but read this file first, because the reasoning is usually the point.
 
 ## The rules
 
-**Manifests** — both JSON files parse; `plugin.json` carries the fields a
+**Manifests** — both JSON files parse; the marketplace `name` avoids "claude"
+and "anthropic"; `plugin.json` carries the fields a
 published plugin needs; the marketplace entry's version matches `plugin.json`;
 the CHANGELOG knows about the current version. *Why:* the repo shipped for two
 commits with a marketplace name that made the documented install command fail,

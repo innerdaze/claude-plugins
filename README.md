@@ -14,16 +14,16 @@ Add it in Claude Code, then install a plugin from it:
 
 ```
 /plugin marketplace add innerdaze/claude-plugins
-/plugin install cadence@claude-plugins
+/plugin install cadence@innerdaze
 ```
 
 Or, to try it from a local clone without going through GitHub:
 
 ```
 /plugin marketplace add /path/to/claude-plugins
-/plugin install cadence@claude-plugins
+/plugin install cadence@innerdaze
 ```
 
-`claude-plugins` is the marketplace name declared in `.claude-plugin/marketplace.json`; `cadence` is the plugin. Once installed, Cadence's commands are namespaced under the plugin: `/cadence:init`, `/cadence:session start|end`, `/cadence:plan`, `/cadence:roadmap`, `/cadence:doctor`.
+`innerdaze` is the marketplace name declared in `.claude-plugin/marketplace.json` — note that it differs from the repository name, because Claude Code rejects marketplace names containing "claude" or "anthropic" as impersonating an official source. `cadence` is the plugin. Once installed, Cadence's commands are namespaced under the plugin: `/cadence:init`, `/cadence:session start|end`, `/cadence:plan`, `/cadence:roadmap`, `/cadence:doctor`.
 
 (Exact commands depend on your Claude Code version — see the plugins docs.)

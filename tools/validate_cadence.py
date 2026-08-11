@@ -98,6 +98,19 @@ def check_manifests() -> None:
                 err("manifest", f"plugin.json is missing '{field}'")
 
     market = data.get(mp)
+    if market:
+        # Claude Code refuses to load a marketplace whose name looks like an
+        # official Anthropic source, and the error only appears at install time -
+        # long after the name was chosen. Catch it here instead.
+        mname = str(market.get("name", ""))
+        if not mname:
+            err("manifest", "marketplace.json has no 'name'")
+        elif re.search(r"claude|anthropic", mname, re.I):
+            err("manifest",
+                f"marketplace name {mname!r} contains 'claude'/'anthropic' - Claude Code "
+                f"rejects it as impersonating an official marketplace. It need not match "
+                f"the repository name.")
+
     if market and plugin:
         entries = {e.get("name"): e for e in market.get("plugins", [])}
         if "cadence" not in entries:
