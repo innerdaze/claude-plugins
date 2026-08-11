@@ -1,6 +1,6 @@
 ---
 name: cadence-init
-description: Set up Cadence in a project. Detects the project's conventions (doc system, VCS, execution skill, issue tracker), confirms them, and GENERATES a project-local adapter for each non-fallback tool it finds; then helps you pick or author a flow (including your Definition of Done), writes the config, and scaffolds your vision/roadmap docs. Use when the user runs /cadence:init, says "set up Cadence", "initialize Cadence", or asks to put a project-management process, a roadmap-and-tickets workflow, or goal-driven work sessions in place for a project.
+description: Set up Cadence in a project. Detects the project's conventions (doc system, VCS, execution skill, issue tracker), confirms them, and GENERATES a project-local adapter for each non-fallback tool it finds; then helps you pick or author a flow, maps your tracker's real statuses to the flow's lanes, writes the config, and scaffolds your roadmap. Use when the user runs /cadence:init, says "set up Cadence", "initialize Cadence", or asks to put a project-management process, a roadmap-and-tickets workflow, or goal-driven work sessions in place for a project.
 ---
 
 # /cadence:init — set up Cadence in a project
@@ -11,62 +11,97 @@ Cadence ships no integration for a specific external tool (see `${CLAUDE_PLUGIN_
 
 If a Cadence config already exists, this is an **update**: read it first, propose changes, back it up before overwriting.
 
+## The rule that matters most
+
+**Assemble the config from the user's answers. Never copy a config from anywhere — not from `config.example.md`, not from another project, not from something in your context.**
+
+`config.example.md` documents the *shape* of each key. It is a reference to read, not a file to duplicate. Write only keys the user actually answered; leave the rest out. A key you didn't ask about should not appear in their file.
+
+This is not fussiness. These skills are installed once and serve every project, so another project's ticket prefix, MCP namespace, or DoD is often already in context and will look entirely plausible here. Nothing gets stored wrongly — the substitution happens in the *reasoning*, which is what makes it silent and confident. **No project's configuration is ever a default for another's.**
+
 ## Phase 1 — Detect the environment, and generate its adapters (propose → confirm)
 
-Inspect the repo and connected tools, present findings as one summary the user confirms or corrects, and **for each non-fallback tool, generate a project-local adapter** at `.claude/cadence/adapters/<family>/<kind>.md` implementing that family's contract against what you actually find. Never assume a tool or its interface.
+Inspect the repo and connected tools, present findings as one summary the user confirms or corrects, and **for each non-fallback tool, generate a project-local adapter** at `.claude/cadence/adapters/<family>/<kind>.md` implementing that family's contract — including its **Capabilities** block — against what you actually find. Never assume a tool or its interface.
 
-- **Doc system.** If the project keeps structured knowledge docs with an index (`docs/INDEX.md` or similar) → propose that `kind`, and **generate `.claude/cadence/adapters/docs/<kind>.md`** implementing the doc-system contract against that index, including `taxonomy()` from its headings. Else → the shipped `none` fallback. Either way, ask where the roadmap should live (`doc_system.roadmap`, default `docs/ROADMAP.md`) — it is a project document, not Cadence state.
-- **VCS.** Detect `.git` / `.diversion` / `.jj` / `.hg`. `git` → use the shipped `git` fallback. Anything else (e.g. `diversion`) → **inspect its CLI and generate `.claude/cadence/adapters/vcs/<kind>.md`** implementing the vcs contract against the tool's real commands, capturing only **tool-generic** gotchas; put **machine/workspace-specific** quirks in `config.vcs.gotchas`, not the adapter. Detect an existing commit skill to delegate to.
-- **Execution skill.** Scan `.claude/skills/`, enabled plugins, and global skills for a ticket-execution skill (`work-on`, `implement`, `do-ticket`, …). **Propose the best candidate but ask the user to confirm** it's the right one, how it's invoked, and what it `owns` (implement/test/docs/commit) — this drives the verify-don't-repeat seam in `/cadence:session end`. If none, `execution.skill: none`.
-- **Tracker.** Detect connected tracker MCPs. For one found → **inspect the tools/verbs it actually exposes and generate `.claude/cadence/adapters/trackers/<kind>.md`** implementing the tracker contract against those exact operations; collect its `mcp_namespace`, IDs, and `ticket_prefix` into config (namespaces differ per project). If none is connected → the shipped `markdown` fallback (no MCP needed).
+1. **Doc system.** If the project keeps structured knowledge docs with an index → propose that `kind` and generate `.claude/cadence/adapters/docs/<kind>.md`, including `taxonomy()` from its headings. Else → the shipped `none` fallback. Either way, ask where the roadmap should live (`doc_system.roadmap`, default `docs/ROADMAP.md`) — it is a project document, not Cadence state, so it belongs where a person would look for it.
 
-Show the generated adapters + assembled bindings and get explicit confirmation. Adapters are stored **in the project**; the plugin is untouched.
+2. **VCS.** Detect `.git` / `.diversion` / `.jj` / `.hg`. `git` → use the shipped fallback. Anything else → inspect its CLI and generate `.claude/cadence/adapters/vcs/<kind>.md` against the tool's real commands, capturing only **tool-generic** gotchas; machine- or workspace-specific quirks go in `config.vcs.gotchas`, not the adapter. Detect an existing commit skill to delegate to.
 
-## Phase 2 — Choose the flow (pick or author)
+3. **Execution skill.** Scan `.claude/skills/`, enabled plugins, and global skills for a ticket-execution skill. **Propose a candidate, but confirm three things with the user**: that it's the right one, how it's invoked, and what it `owns`. Also check it can actually run *here* — a skill that hardcodes another project's engine, tracker, or VCS will abort on first use, and `execution.skill: none` is better than a binding that fails. `none` is a first-class answer, not a fallback.
 
-Offer two paths:
+4. **Tracker.** Detect connected tracker MCPs.
+   - **Before binding any of them, confirm the workspace belongs to *this* repo.** MCPs are user-scoped and Cadence is installed once for every project, so the tracker you can see is very often somebody else's. Query the tool for its teams/projects and look for corroboration: a name matching this repo, an existing ticket prefix that matches, recent items referencing this codebase. **If you cannot confirm it, ask.** Do not bind a tracker on the strength of its being the only one connected — that is how tickets end up filed into another product's board.
+   - Once confirmed, inspect the verbs it actually exposes and generate `.claude/cadence/adapters/trackers/<kind>.md` implementing the tracker contract against those exact operations. Collect `mcp_namespace` and IDs into config.
+   - If none is connected, or none is confirmed → the shipped `markdown` fallback. This needs no MCP and is a perfectly good answer.
 
-**A) Pick a preset**, then optionally override axes (level 1):
-- `solo-greenfield` — one builder, pre-release; high autonomy, continuous flow, bugs deferred.
-- `team-sprints` — sprint cadence + ceremonies; the skill proposes, the team commits scope; goals come from the committed sprint.
-- `live-oncall` — an incident lane that preempts the roadmap; release/regression/changelog gates; releases human-approved.
+Show the generated adapters and the assembled bindings, and get explicit confirmation. Adapters are stored **in the project**; the plugin is untouched.
 
-Summarize each; let the user pick, then ask about tweaking any axis (cadence, priority policy, gates).
+## Phase 2 — Choose the flow
 
-**B) Author a custom flow** — walk the flow-spec vocabulary (hierarchy, states, gates, cadence/ceremonies, intake/priority policy, decision rights, session definition). For any step the vocabulary can't express, author a **hook doc** (level 3) at the relevant hook from `${CLAUDE_PLUGIN_ROOT}/flows/HOOKS.md`. Write to `.claude/cadence/<name>.flow.md` (+ `.claude/cadence/hooks/*.md`).
+**A) Pick a preset**, then optionally override axes:
+- `solo-greenfield` — one builder, pre-release; high autonomy, continuous, bugs deferred.
+- `team-sprints` — cycle cadence; the skill proposes, the team commits scope. Needs a tracker with cycles.
+- `live-oncall` — an incident lane that preempts the roadmap; more gates; releases human-approved.
 
-**Definition of Done** (either path): present a multi-select menu, always ending in **"define your own"** — `tests` · `docs` · `no-warnings` · `accessibility` · `perf-budget` · `persistence` · `changelog` · `security-review` · *define your own…* The selection becomes `config.dod_gates`. Keep the shipped menu domain-neutral; a project's own bar (a game's replication check, a regulated product's audit trail) arrives through "define your own," not by widening this list. Settle milestone mechanism, epic convention, and the session-state location as needed.
+Summarize each, let the user pick, then offer to tweak any axis. Say plainly which parts of a preset are **not yet automated** (ceremonies, release pipelines) so nobody adopts `team-sprints` expecting Cadence to run their standup.
 
-**Model tiers.** Set `config.models` — default `mechanical: haiku`, `reasoning: inherit`. If the user lacks the default cheap tier or prefers a different one, rebind it. This is what lets the skills delegate batchy mechanical work (adapter ops, scaffolding) to the cheap `mechanical` subagent while judgment stays on the session model.
+**B) Author a custom flow** — walk the vocabulary in `${CLAUDE_PLUGIN_ROOT}/flows/FLOW-SPEC.md`. For any step the vocabulary can't express, author a **hook doc** against the contract in `${CLAUDE_PLUGIN_ROOT}/flows/HOOKS.md`. Write to `.claude/cadence/<name>.flow.md` (+ `.claude/cadence/hooks/*.md`).
+
+### Then map the lanes to real statuses — do not skip this
+
+The flow's lanes are **process vocabulary**. Your tracker has whatever columns it has. `config.tracker.status_map` is the only place the two meet, and it is built from what the tool reports, never from the preset:
+
+1. Call the tracker adapter's **`statuses()`**. If the adapter declares `statuses` unsupported, ask the user to list their columns once.
+2. Show the tool's **real** statuses beside the flow's lanes and have the user map them.
+3. **Lanes with no counterpart are left unmapped — not invented.** Say what that disables, concretely: *"no column for `In Progress`, so sessions won't mark work in flight."* That is a normal outcome on a two-column board.
+4. Confirm the **roles**: which lane is `backlog`, which is `done`, and — only if the user says so — which is `active` and which is `review`. Never infer a role from a lane's name; whether picking up work means `Todo` or `In Progress` is a process decision. If the user doesn't want an `active` role, write it absent.
+5. **Never create a column in their tracker.** Cadence adapts to the board; the board does not adapt to Cadence.
+
+**Definition of Done:** present a multi-select, always ending in "define your own" — `tests` · `docs` · `no-warnings` · `accessibility` · `perf-budget` · `persistence` · `changelog` · `security-review` · *define your own…* The selection becomes `config.dod_gates`, which **adds to** the flow's `gates.dod.checks` rather than replacing it. Keep the shipped menu domain-neutral; a project's own bar arrives through "define your own."
+
+**Model tiers.** Set `config.models` — default `mechanical: haiku`, `reasoning: inherit`. Rebind if the user lacks that tier.
 
 ## Phase 3 — Coherence check
 
-Before writing, validate config + flow + adapters and **warn on any contradiction** (don't silently accept):
-- No step whose decision right is `human` may have a hook that returns an autonomous decision.
-- Every gated transition references a gate that exists.
+Before writing, validate and **warn on any contradiction**:
+- Every `states.roles` value is a member of `states.lanes`; `backlog` and `done` are present.
+- Both lanes of every gated transition are declared, and every gate referenced exists.
+- **Lane reachability**: a lane on the right of a gated transition that nothing reaches means that gate will never fire. Report it.
 - Every `hooks:` entry names a real hook from `${CLAUDE_PLUGIN_ROOT}/flows/HOOKS.md` and points at a readable doc.
-- Every ceremony in `cadence.ceremonies` has at least a `.prepare` default or hook.
-- **Every `config.<family>.kind` resolves** — to a project-local adapter just generated, or a shipped fallback. If not, generate or fall back before finishing.
+- No step whose decision right is `human` has a hook returning an autonomous decision.
+- Every `config.<family>.kind` resolves to a generated adapter or a shipped fallback.
+- Every priority-policy token's required field is supported by the tracker adapter — or the token is flagged as one that will be skipped.
 
-## Phase 4 — Write the config
+## Phase 4 — Write
 
-Write to the location chosen in Phase 1, per `${CLAUDE_PLUGIN_ROOT}/config.example.md`. **Never write secrets or credentials.** For the `markdown` tracker, create its `path` directory. Also set `session_state` (default `.claude/cadence/SESSION.local.md`), create that file, and call the VCS adapter's `ignore()` on it so Cadence's local scratchpad stays out of the repo. If updating, back up the prior config first.
+Write the config to **`.claude/cadence/config.md`** — one location, always. Assemble it from the answers; **never write secrets or credentials**. For the `markdown` tracker, note that its `path` directory is created lazily on first item rather than seeded empty.
+
+Set `session_state.file` (default `.claude/cadence/SESSION.local.md`), create it, and call the VCS adapter's `ignore()` on it. If updating, back up the prior config first.
+
+Then **commit Cadence's own output** via `add_untracked` + `checkpoint`: the config, generated adapters, and any flow are project state that collaborators need (see "Where adapter data lives" in `${CLAUDE_PLUGIN_ROOT}/adapters/ADAPTERS.md`). Leaving them untracked contradicts that, and risks them being swept into an unrelated commit later. The session-state file is the one thing that stays out.
 
 ## Phase 5 — Scaffold the docs
 
-From the plugin's `${CLAUDE_PLUGIN_ROOT}/templates/`, create any absent, pre-filled with the project name and chosen flow:
-- `vision-and-roadmap.md` (always — the north star).
-- Offer `feature-process.md` and `session-goals.md` as in-repo references.
+Create `config.doc_system.roadmap` from `${CLAUDE_PLUGIN_ROOT}/templates/vision-and-roadmap.md`, pre-filled with what you actually know about the project. Leave the sections you *don't* know as marked placeholders rather than inventing a vision — vision is human-led, and a confident fabrication is worse than an honest gap. Point the user at `/cadence:roadmap` to fill them.
+
+Do not copy `feature-process.md` or `session-goals.md` into the project. They are plugin references, read from `${CLAUDE_PLUGIN_ROOT}/templates/` when needed; copying them creates a fork that silently goes stale when the plugin updates.
+
 Do not overwrite existing docs — only fill gaps.
 
 ## Phase 6 — Dry-run
 
-Resolve config + flow + adapters and show what `/cadence:session start` would surface now (e.g. "current milestone: none yet; no open items — run `/cadence:plan`"). This proves the bindings, adapters, *and* process resolve before the user relies on them. Finish by naming the next moves: `/cadence:roadmap`, then `/cadence:plan`, then `/cadence:session start`.
+Resolve config + flow + adapters and show what `/cadence:session start` would surface now, including **which steps are disabled** by unmapped lanes or unsupported capabilities. Finish by naming the next moves: `/cadence:roadmap`, then `/cadence:plan`, then `/cadence:session start`. Mention `/cadence:doctor` as the way to re-check the setup later.
+
+## Non-interactive mode (`--defaults`)
+
+For automated or headless use, `--defaults` skips the interview and writes the zero-dependency stack: `markdown` + `git` + `none` + `solo-greenfield`, `execution.skill: none`, a two-entry `status_map` (`backlog`, `done`), `dod_gates: [tests, docs]`, prefix derived from the directory name.
+
+**It must never bind an MCP-backed tracker, and never adopt a config it finds in context.** The whole risk of a non-interactive mode is that it makes a confident guess with nobody watching; restricting it to the stack that assumes nothing removes that risk. If the user wants a real tracker, they run init properly.
 
 ## Notes
 
-- **What init does NOT do:** create tickets (that's `/cadence:plan`) or implement anything. It configures, generates adapters, and scaffolds.
-- **Idempotent:** safe to re-run; updates and backs up rather than clobbering. Re-running can regenerate an adapter if a tool's interface changed.
-- **Never substitute another project's config.** These skills are installed once and serve every project, so another project's values (a prefix, a DoD doc, an MCP namespace) may be in context and look plausible here — the substitution happens in *reasoning*, silently and confidently. Confirm every binding for *this* project; a missing one is a question for the user, never a gap to fill by inference. No project's config is ever a default for another's.
-- **Never touch the project's own memory.** Cadence owns only `.claude/cadence/` (its config, adapters, flow, and the local session-state file). It must not read, write, or depend on a project's own `CLAUDE.md` / agent `MEMORY.md`; if a project wants a pointer to the session-state file, it adds that by hand.
+- **What init does NOT do:** create work items (that's `/cadence:plan`) or implement anything.
+- **Idempotent:** safe to re-run; updates and backs up rather than clobbering. Re-run to regenerate an adapter if a tool's interface changed, or after upgrading Cadence if `meta.cadence_version` no longer matches.
+- **Check for skill collisions.** If the project or user scope already has a `session`, `plan`, or `roadmap` skill, say so — Cadence's are namespaced `cadence-*` and won't be shadowed, but two live session rituals is a confusion worth naming rather than discovering mid-flow.
+- **Never touch the project's own memory.** Cadence owns only `.claude/cadence/` plus one line in the ignore file. It must not read, write, or depend on a project's `CLAUDE.md` or agent `MEMORY.md`.
 - **Zero-dependency default:** if nothing is detected, `markdown` + `git` + `none` + `solo-greenfield` is a complete, runnable setup with no external service and no generated adapters.

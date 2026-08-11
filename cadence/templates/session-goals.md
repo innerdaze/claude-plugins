@@ -12,11 +12,12 @@ Pick one per session (the flow may define its own set): **Advance** (move an epi
 
 ## Start ritual (~5 min)
 
-1. Load memory and the current milestone.
+1. Load the session scratchpad and the current milestone.
 2. Choose one goal via the flow's **priority policy** — not on impulse. (`/cadence:session start` does this by the flow's rules.)
 3. State it in one sentence and pick the session type. If it won't fit one sentence, split it first.
-4. Record the goal (a tracker comment) as the anti-drift anchor.
-5. Note the flow's **bug rule** for the session (`defer` / `file` / `preempt`) so mid-session bugs are handled by policy.
+4. Move the item to the flow's *active* lane, if the flow declares one and the tracker has a column for it.
+5. Record the goal (a tracker comment) as the anti-drift anchor.
+6. Note the flow's **bug rule** for the session (`defer` / `file` / `preempt`) so mid-session bugs are handled by policy rather than reflex.
 
 ## Sizing a good goal
 
@@ -31,17 +32,27 @@ How a found bug is handled is set by the flow, not habit:
 
 ## End ritual (~5 min)
 
-Mind the seam: the **execution skill owns** implement → test → docs → checkpoint. The end ritual *verifies* that and closes the envelope — it does not repeat them.
-
-1. **Gate:** run the flow's gates for the transition to Done. Pass → done; fail → keep in progress with an honest note.
-2. **Verify the checkpoint** — confirm the execution skill committed and updated docs; only do it yourself if execution doesn't own it.
-3. **Advance the item** to Done in the tracker.
+1. **Gate:** run the flow's gates for the transition to the *done* lane. Pass → continue; fail → leave the item where it is, with an honest note.
+2. **Advance the item** in the tracker.
+3. **Checkpoint:** if an execution skill owns `commit`, *verify* it happened; otherwise do it yourself.
 4. **Set the next session's goal** (one line, recorded) so the next start opens loaded.
-5. **Memory:** capture cross-cutting decisions only — not the per-item gotchas the execution skill already filed.
+5. **Scratchpad:** keep only cross-cutting notes the tracker can't hold — not per-item gotchas, which belong on the item or in the docs.
+
+**Advance before you commit.** If your work items live in the repo — a
+file-based tracker — the item is part of the change set, so committing first
+captures it still open and leaves the tree dirty afterwards. The order above is
+also correct for hosted trackers, where the two are independent.
 
 ## The responsibility split (why nothing duplicates)
 
-- **Execution skill** (the project's own) owns one item end-to-end: implement, test, docs, checkpoint.
-- **`/cadence:session`** owns the envelope: goal in, gate + verify + next-goal out.
+- **Execution skill** (the project's own, if it has one) owns an item end-to-end: implement, test, docs, checkpoint.
+- **`/cadence:session`** owns the envelope: goal in, gate + advance + checkpoint + next-goal out.
 
-If `/cadence:session end` ever finds itself committing or editing docs on a normal execution session, that's duplication — the execution skill already did it. Verify, don't repeat.
+The seam is `execution.owns`, and it cuts both ways. **What execution owns, the
+session verifies rather than repeats** — if end finds itself re-committing work
+an execution skill already committed, that's duplication.
+
+**What execution does not own, the session must do itself.** With
+`execution.skill: none` — the zero-dependency default — nothing is owned
+elsewhere: the work happens in the session, and end performs the checkpoint. That
+is the correct behaviour, not an exception to the rule.
