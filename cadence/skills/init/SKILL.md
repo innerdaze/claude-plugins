@@ -76,6 +76,13 @@ The flow's lanes are **process vocabulary**. Your tracker has whatever columns i
 
 4. **Lanes with no counterpart are left unmapped — not invented.** Say what that disables, concretely: *"no column for `In Progress`, so sessions won't mark work in flight."* That is a normal outcome on a two-column board.
 
+   **And the reverse: statuses the flow cannot name.** A board often has states no preset models — `Blocked`, `Needs Design`, `Waiting on Vendor`. Name them and say what it means: items there are excluded from goal selection, because Cadence does not know what the status signifies. Then offer the two honest options rather than picking one:
+
+   - **Leave them unmapped.** Correct when the status marks work that genuinely shouldn't be picked up. Nothing breaks; those items are simply outside the process.
+   - **Fork the preset into a project-local flow** with a lane for it. Worth it when the state is part of how the team actually works — a `Blocked` status the team uses daily deserves a `blocked` role, so a session can park a stuck item there instead of leaving it looking active.
+
+   Do not add lanes to a shipped preset to make a board fit; presets are read-only and a flow should describe the process, not the other way round.
+
 5. Confirm the **roles**. The draft above proposes them; the user disposes. Never settle a role from a lane's *name* — whether picking up work means `Todo` or `In Progress` is a process decision, and no amount of reading the board reveals it. If the user doesn't want an `active` role, write it absent.
 
 6. **Never create a column in their tracker.** Cadence adapts to the board; the board does not adapt to Cadence.

@@ -119,7 +119,16 @@ This is where the checks that static analysis cannot do earn their place.
 
 Cheap reads that catch real corruption:
 
-- Item statuses that aren't in the flow's lanes (or aren't in `statuses()`).
+- **Items in statuses the flow maps to no lane** — `Blocked`, `Needs Design`,
+  whatever this board has that the flow never named. Report the count and the
+  statuses, as **disabled**: those items are excluded from goal selection, which
+  is correct (Cadence does not know what the status means) but means they are
+  invisible to the process. A handful is normal; a third of the board is a sign
+  the flow does not describe how this team actually works. If the flow declares a
+  `blocked` role and the board has a matching status, say so — that one at least
+  can be parked deliberately.
+- Item statuses that aren't in `statuses()` at all — a status the tracker itself
+  no longer has.
 - Items parked in a lane with no declared exit transition — stranded work.
 - For a `markdown` tracker: front-matter that doesn't parse, and **unquoted
   titles containing a colon**, which is the specific way an item file silently

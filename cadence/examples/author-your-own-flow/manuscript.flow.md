@@ -6,7 +6,7 @@
 meta:
   name: manuscript
   summary: Writing a long-form researched document. Author-led; Cadence tracks claims and their support.
-  cadence_version: "0.3"
+  cadence_version: "0.4"
   autonomy: mixed
 
 hierarchy:

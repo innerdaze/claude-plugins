@@ -50,6 +50,8 @@ with the work in limbo.
 1. **`session.start`** (default): read the session-state file (`config.session_state.file`) — Cadence's own local scratchpad, *not* the project's memory. Determine the current milestone from the roadmap (`config.doc_system.roadmap`) and the tracker.
 2. **`session.select_goal`** (default): walk `flow.intake.priority_policy` in order, gathering candidates via the tracker adapter.
 
+   **Exclude items whose status maps to no lane.** A real board carries statuses the flow never named — `Blocked`, `Needs Design`, `Waiting on Vendor`. Those items are neither terminal nor ready, and you do not know what the status means, so they are not candidates. Say how many you set aside and in which statuses; a board where most work is invisible to the process is worth surfacing rather than silently narrowing.
+
    **Candidates are items at the flow's working level — the *last* entry in `hierarchy.levels`.** Everything above it is a container: an epic or a milestone is not a session's goal, and "by end of session this epic is Done" is a promise no session can keep. Filter before ranking, or a mechanical token will hand you a container and the framing step will dutifully write a goal nobody can finish. Where the tracker has no explicit level field, infer it structurally — an item with children, or with no parent in a flow whose levels nest, is not the working level. **Skip any token whose required field the adapter declares unsupported** (see the token table in `${CLAUDE_PLUGIN_ROOT}/flows/FLOW-SPEC.md`) and say which you skipped — a policy that silently does nothing is worse than a shorter one that works. If the flow has `hierarchy.first_class.incident`, check `states.incident_lanes` first. Where more than one candidate survives, run **`intake.prioritize`**. Respect `flow.decision_rights.select_goal`:
    - `ai` → pick it and state the choice.
    - `ai-proposes` → present the top 1–3 and let the user choose.
@@ -86,6 +88,10 @@ checkpoint is the last thing that touches the repo.**
 
    Say plainly in the commit message and the session state that the item is *not* done and which gate is holding it.
 2. **Advance the item** to `roles.done` (via `roles.review` first if the flow declares that transition *and* the lane is mapped), firing `transition.<from>_to_<to>`. Skip this step entirely if a gate held.
+
+   **If the user says the work is blocked**, park it in `roles.blocked` instead of advancing — when the flow declares that role and its lane is mapped. Leaving a stuck item in `active` claims someone is working on it; sending it back to `backlog` loses that it was started. Record what it is blocked *on*, since a blocked item with no stated blocker is indistinguishable from an abandoned one a month later.
+
+   **Only an explicit statement parks an item.** Never infer blockage — not from a gate failing, not from a short session, not from work looking incomplete. Cadence cannot tell "stuck" from "unfinished", and guessing wrong writes a status the user never chose.
 
    Only move **forward** along the declared path. If the item already sits past the lane you were going to move it to — an `active` role naming a lane the item left three transitions ago — do not move it backwards; say so once and leave it. A status that walks backwards misrepresents the board more than a status that stands still.
 3. **Prune the session state** — run `session_state.prune`. The default rule lives in `${CLAUDE_PLUGIN_ROOT}/flows/HOOKS.md`; in short, reconcile the scratchpad **against the tracker** (not against what the file claims) and drop anything the tracker already tells you, keeping only non-obvious traps.

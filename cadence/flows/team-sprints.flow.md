@@ -17,7 +17,7 @@
 meta:
   name: team-sprints
   summary: A team on fixed cycles. Skill proposes and records; the team commits scope.
-  cadence_version: "0.3"
+  cadence_version: "0.4"
   autonomy: mixed
 
 hierarchy:

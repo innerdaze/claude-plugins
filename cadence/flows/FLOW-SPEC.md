@@ -77,6 +77,7 @@ process decision only you can make.
 | `done` | **yes** | the success terminal | — |
 | `committed` | no | accepted into the current cycle, not yet started | committing scope changes no status |
 | `active` | no | work is in flight | `/cadence:session start` does **not** change status |
+| `blocked` | no | started, but cannot proceed for a reason outside the work | a session cannot park a stuck item; it stays wherever it is |
 | `review` | no | awaiting review | no review step is implied |
 | `abandoned` | no | list of terminal-but-not-success lanes | nothing is treated as abandoned |
 
@@ -93,6 +94,32 @@ a promise the flow cannot keep. This is easy to introduce — `team-sprints` shi
 a `Sprint Backlog` lane in exactly that state, naming a real part of the process
 that no skill could act on. Either give the lane a role, put it in a transition,
 or remove it. The validator reports orphans.
+
+### A status your flow does not map is not open work
+
+The roles above cover a common shape, not every shape. A real board carries
+statuses that map to no lane at all — `Blocked`, `Needs Design`, `Waiting on
+Vendor`. Such an item is **neither terminal nor ready**, and the honest position
+is that Cadence does not know what it means:
+
+> **An item whose status maps to no lane is never a selection candidate.**
+
+Not an error, and not something to fix by inventing a role per status — that game
+has no end. It is simply unknown work, and offering it as a session goal would be
+claiming knowledge Cadence doesn't have. `/cadence:doctor` reports how many items
+sit in unmapped statuses, because a board where most of the work is invisible to
+the process is worth knowing about.
+
+**`blocked` earns a role for one reason only**: so a session can *park* a stuck
+item somewhere honest. Leaving it `active` claims someone is working on it;
+moving it back to `backlog` loses that it was started. Nothing else needs the
+role — exclusion from selection is already covered by the rule above.
+
+**Nothing ever moves an item to `blocked` automatically.** Cadence cannot detect
+that you are stuck, and inferring it from silence would be a guess with a real
+cost. Only an explicit statement from the user parks an item there. Blocked items
+also do **not** count toward `wip_limit`: the limit exists to cap concurrent
+work, and blocked work is not progressing.
 
 ## `gates` — named checkpoints
 

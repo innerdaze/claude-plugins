@@ -11,6 +11,43 @@ changing a hook's Input/Output, removing an adapter operation, or changing the
 meaning of a config key is a *major* change. Adding an optional hook, operation,
 field, or config key is *minor*.
 
+## [0.4.0] — pending verification
+
+Found by running `/cadence:doctor` against a real project for the first time —
+MachineGame54, 245 issues, a Diversion working copy, a `domains/` doc system, and
+a Linear board with eight statuses.
+
+### Added
+
+- **An item whose status maps to no lane is never a selection candidate.** A real
+  board carries states no flow named — that board has `Blocked`, another team's
+  has `Needs Design` or `Waiting on Vendor`. Such an item is neither terminal nor
+  ready, and Cadence does not know what the status means, so offering it as a
+  session goal would be claiming knowledge it doesn't have. Previously
+  `list_open` returned them and goal selection would have picked one.
+
+  This is deliberately **one rule rather than a role per status**. Chasing
+  `blocked`, then `waiting`, then `needs-design` has no end, and each new role
+  would be Cadence guessing at another team's semantics.
+
+- **Optional `blocked` role**, for the single thing the rule above cannot do:
+  *park* a stuck item somewhere honest. Leaving it `active` claims someone is
+  working on it; sending it back to `backlog` loses that it was started. Nothing
+  moves an item there automatically — Cadence cannot tell "stuck" from
+  "unfinished", and only an explicit statement parks one. Blocked items do not
+  count toward `wip_limit`, since the limit caps concurrent work and blocked work
+  is not progressing.
+
+  **No shipped preset declares it.** Adding a `Blocked` lane to a preset would
+  assert that boards ought to have that column, contradicting the rule that lanes
+  are process vocabulary rather than columns you must create. `/cadence:init` now
+  spots statuses a preset cannot name and offers the two honest options: leave
+  them unmapped, or fork the preset into a project-local flow with a lane for it.
+
+- `/cadence:doctor` reports how many items sit in unmapped statuses. A handful is
+  normal; a third of the board means the flow does not describe how that team
+  actually works.
+
 ## [0.3.6] — 2026-08-11
 
 Closes the hosted-tracker work. A full kanban loop ran against a live Linear
