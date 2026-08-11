@@ -11,7 +11,7 @@ changing a hook's Input/Output, removing an adapter operation, or changing the
 meaning of a config key is a *major* change. Adding an optional hook, operation,
 field, or config key is *minor*.
 
-## [0.2.6] — pending verification
+## [0.2.6] — 2026-08-11
 
 ### Fixed
 
@@ -99,10 +99,10 @@ All three fixture shapes run clean against this build:
 
 ## [0.2.2] — superseded
 
-> **Not yet tagged.** Installation is now verified — the plugin loads,
-> `${CLAUDE_PLUGIN_ROOT}` resolves inside skill bodies, the `mechanical` subagent
-> registers, and `/cadence:doctor` runs correctly. The rest of
-> `docs/VERIFICATION.md` gates the tag; sections 1–7 must pass first.
+> **Tagged `v0.2.6`.** `docs/VERIFICATION.md` sections 1–7b pass against a real
+> install. Sections 8–9 remain unrun and their gaps are recorded in the coverage
+> table rather than glossed: a hosted tracker, sprint cadence with cycles, and a
+> gate that fails outright rather than being held.
 
 ### Fixed
 
