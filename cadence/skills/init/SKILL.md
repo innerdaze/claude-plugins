@@ -78,7 +78,7 @@ Before writing, validate and **warn on any contradiction**:
 
 ## Phase 4 — Write
 
-Write the config to **`.claude/cadence/config.md`** — one location, always. Assemble it from the answers; **never write secrets or credentials**. For the `markdown` tracker, note that its `path` directory is created lazily on first item rather than seeded empty.
+Write the config to **`.claude/cadence/config.md`** — one location, always. Include `cadence_version`, set to this plugin's contract version, so a later upgrade mismatch is detectable rather than silent. Assemble the rest from the answers; **never write secrets or credentials**. For the `markdown` tracker, note that its `path` directory is created lazily on first item rather than seeded empty.
 
 Set `session_state.file` (default `.claude/cadence/SESSION.local.md`), create it, and call the VCS adapter's `ignore()` on it. If updating, back up the prior config first.
 

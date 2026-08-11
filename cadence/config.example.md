@@ -19,6 +19,8 @@ only inside `.claude/cadence/`.
 ## The shape
 
 ```yaml
+cadence_version: "0.3"             # the contract version this config is written against
+
 project:
   name: <Project Name>
   ticket_prefix: <PREFIX>          # e.g. ABC -> ABC-42
@@ -80,6 +82,15 @@ dod_gates: [tests, docs]   # ADDS to the flow's own gates.dod.checks — never r
 ---
 
 ## Notes on the keys that cause trouble
+
+**`cadence_version` exists so an upgrade mismatch is detectable.** Flows have
+always declared the contract version they target; configs did not — which meant a
+config using a newer contract feature than the installed plugin was invisible.
+That is a real ordering hazard, not a theoretical one: it happened here, when a
+config was written with the qualified `status_map` form against a plugin that
+predated it. The older skill reads a mapping where it expects a string and has no
+way to know why. `/cadence:doctor` compares this against the installed version and
+says so.
 
 **`tracker.status_map` is the whole reason lanes are safe.** A flow declares
 *process* lanes; your tracker has whatever columns it has. This map is the only

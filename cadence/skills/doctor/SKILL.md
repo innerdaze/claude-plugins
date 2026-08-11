@@ -23,6 +23,12 @@ If everything passes, say so in one line. Don't pad a clean report.
 ## 1. Config
 
 - Read `.claude/cadence/config.md`. Missing → **broken**: run `/cadence:init`.
+- **Compare `cadence_version` against the installed plugin.** A config written
+  against a *newer* contract than the plugin is **broken**, not drifted: it may
+  use shapes the installed skills cannot read — a qualified `status_map` entry
+  against a plugin that only understands plain names, say — and the older skill
+  has no way to recognise why. Say which side is behind. A config with no
+  `cadence_version` at all predates 0.3; report it and suggest re-running init.
 - If there is no config there but one exists at another path (a `PROJECT.md` in a
   docs folder, say), report the **pre-0.2 layout** and its remedy: move it to
   `.claude/cadence/config.md`, or re-run init.

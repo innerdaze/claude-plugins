@@ -11,7 +11,19 @@ changing a hook's Input/Output, removing an adapter operation, or changing the
 meaning of a config key is a *major* change. Adding an optional hook, operation,
 field, or config key is *minor*.
 
-## [0.3.0] — pending verification
+## [0.3.1] — pending verification
+
+### Added
+
+- **`cadence_version` in the config.** Flows have always declared the contract
+  version they target; configs did not — so a config using a newer contract
+  feature than the installed plugin was undetectable. That is not theoretical: it
+  happened here, when a config written with the qualified `status_map` form met a
+  plugin that predated it. The older skill reads a mapping where it expects a
+  string and cannot know why. Init now stamps it and `/cadence:doctor` reports a
+  mismatch as **broken**, naming which side is behind.
+
+## [0.3.0] — superseded
 
 First run against a **hosted tracker**. Three defects that the `markdown`
 fallback structurally could not expose, because its statuses are the values of
