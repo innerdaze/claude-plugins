@@ -9,7 +9,7 @@ This skill assumes **nothing** about the environment or the process. It reads th
 
 ## Load order (do this first, every time)
 
-1. **Locate & read the config.** If the repo has a `domains/` doc system, the config is `domains/PROJECT.md`; otherwise `.claude/cadence/config.md`. If neither exists, tell the user to run `/cadence:init` and stop.
+1. **Read the config** at `.claude/cadence/config.md` — one location, always. If it isn't there, tell the user to run `/cadence:init` and stop. (A config at some other path is a pre-0.2 layout; say so and point at `/cadence:doctor`.)
 2. **Load the flow spec** named in `config.flow` — a shipped preset at `${CLAUDE_PLUGIN_ROOT}/flows/<name>.flow.md`, or a project-local path resolved relative to the config file.
 3. **Resolve adapters** from `config.tracker.kind`, `config.vcs.kind`, `config.doc_system.kind`. For each family, look first for a project-local adapter at `.claude/cadence/adapters/<family>/<kind>.md`, else the shipped fallback at `${CLAUDE_PLUGIN_ROOT}/adapters/<family>/<kind>.md`. Load each adapter doc; it tells you which tools/commands to use.
 4. **Note `config.execution`** — the project's execution skill and what it `owns`. This is what `/cadence:session end` must **verify, not repeat**.

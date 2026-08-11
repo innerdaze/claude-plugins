@@ -1,6 +1,6 @@
 # Hook: `gate.citations.check` — "every claim cited"
 
-*Authored gate for the `manuscript` flow. Implements the `gate.<name>.check` contract from `flows/HOOKS.md`. Approver: `ai-proposes` — recommend, let the author accept.*
+*Authored gate for the `manuscript` flow. Implements the `gate.<name>.check` contract from the plugin's `flows/HOOKS.md`. Approver: `ai-proposes` — recommend, let the author accept.*
 
 **Input** (provided by `/cadence:session` at the `Supported -> Reviewed` transition): `{item, context, checks}`.
 `item` is a claim, or a section (a set of claims). `checks` is `[every-claim-cited]`.

@@ -1,6 +1,6 @@
 # Hook: `session.select_goal` — "weakest claim first"
 
-*Authored override for the `manuscript` flow. Implements the `session.select_goal` contract from `flows/HOOKS.md`.*
+*Authored override for the `manuscript` flow. Implements the `session.select_goal` contract from the plugin's `flows/HOOKS.md`.*
 
 **Input** (provided by `/cadence:session`): `{backlog, sprint_or_cycle, incident_queue, priority_policy, roadmap}`.
 For this flow, `backlog` is the set of claims and sections; there is no sprint or incident queue.

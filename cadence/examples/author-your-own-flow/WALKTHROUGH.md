@@ -24,14 +24,14 @@ This is levels 1–2 of customization: pick the vocabulary values that describe 
 
 Two behaviours here can't be expressed as declarative values, so they're **authored hooks** in `./hooks/`, wired via the flow's `hooks:` map:
 
-- **`session.select_goal` → `select_weakest.md`.** "Weakest claim first" needs *logic* (score claims by support strength), not a value. The hook receives the standard `session.select_goal` Input and returns the standard Output — see `flows/HOOKS.md` for the contract.
+- **`session.select_goal` → `select_weakest.md`.** "Weakest claim first" needs *logic* (score claims by support strength), not a value. The hook receives the standard `session.select_goal` Input and returns the standard Output — see the plugin's `flows/HOOKS.md` for the contract.
 - **`gate.citations.check` → `citations.md`.** Checking that every claim is genuinely sourced is a judgment, so the gate's check is authored. It returns `pass | fail | needs-human` per the gate contract, and — being `ai-proposes` — surfaces findings for the author instead of auto-advancing.
 
 **Rule of thumb:** if you can say it as a value, put it in the flow spec; if it needs reasoning at run time, author a hook. Never fork the plugin.
 
 ## 4. Use it
 
-In a project's config: `flow: ./cadence/manuscript.flow.md` (copy this file + its `hooks/` there). Then `/cadence:session start` will pull your weakest claim, and `/cadence:session end` will run the citations gate. `/cadence:plan` breaks a `work` into `section`s and `claim`s using the same templates.
+In a project's config: `flow: ./manuscript.flow.md` (copy this file + its `hooks/` there). Then `/cadence:session start` will pull your weakest claim, and `/cadence:session end` will run the citations gate. `/cadence:plan` breaks a `work` into `section`s and `claim`s using the same templates.
 
 ## 5. Checklist for your own flow
 
@@ -39,5 +39,5 @@ In a project's config: `flow: ./cadence/manuscript.flow.md` (copy this file + it
 2. Define the **states** and which transitions are **gated**.
 3. Write the **gates** (condition + approver) — what does "done/ready" mean here?
 4. Set **cadence**, **intake/priority**, and **decision rights** (how much may the skill decide?).
-5. Only then, author **hooks** for anything that needs run-time logic — each against its `HOOKS.md` contract.
+5. Only then, author **hooks** for anything that needs run-time logic — each against its contract in the plugin's `flows/HOOKS.md`.
 6. Run `/cadence:init` (or hand-write the config) pointing `flow:` at your spec, and let the coherence check catch contradictions.

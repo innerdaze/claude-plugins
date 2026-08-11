@@ -1,6 +1,6 @@
 # Flow: Manuscript (worked example — author-your-own)
 
-*A **custom** flow, not a shipped preset — the worked example for authoring your own. It runs Cadence for a **non-software** project: writing a long-form researched document (paper, report, book). It shows the flow-spec vocabulary bent to a new domain, plus two **level-3 authored hooks** (in `./hooks/`) that override behaviour the vocabulary can't express declaratively. Read `WALKTHROUGH.md` alongside this. To use it in a project: `flow: ./cadence/manuscript.flow.md`.*
+*A **custom** flow, not a shipped preset — the worked example for authoring your own. It runs Cadence for a **non-software** project: writing a long-form researched document (paper, report, book). It shows the flow-spec vocabulary bent to a new domain, plus two **level-3 authored hooks** (in `./hooks/`) that override behaviour the vocabulary can't express declaratively. Read `WALKTHROUGH.md` alongside this. To use it in a project: `flow: ./manuscript.flow.md`.*
 
 ```yaml
 meta:
@@ -59,4 +59,4 @@ hooks:
 
 - **Cadence generalizes past software.** Hierarchy (`work/section/claim`), states (`Needs-Support`, `Supported`), and the "bug" concept (a broken argument) are all domain-specific — declared, not hardcoded.
 - **A novel priority policy.** `weakest-claim-first` makes `/cadence:session start` always attack the least-defensible part of the piece.
-- **Two real level-3 hooks.** `session.select_goal` and `gate.citations.check` are authored in `./hooks/`, each honouring its `HOOKS.md` Input→Output contract — the escape hatch, end to end.
+- **Two real level-3 hooks.** `session.select_goal` and `gate.citations.check` are authored in `./hooks/`, each honouring its Input→Output contract from the plugin's `flows/HOOKS.md` — the escape hatch, end to end.

@@ -59,6 +59,47 @@ Within that root there are two kinds of file, and the difference is whether the 
 
 The `.local.md` suffix marks the second kind. The split matters most for the `markdown` tracker: its items are *meant* to be committed, so a backlog diffs and reviews like code — that's the main reason to choose it over a hosted tracker on a small project. Session state is the opposite: high-churn, single-author, and a guaranteed conflict on any shared branch.
 
+## The one store Cadence owns — `session_state`
+
+Everything else Cadence touches, it reaches through an adapter. This file is the
+exception: there is no external tool behind it, so the plugin owns the format.
+
+It is a **scratchpad for what the tracker cannot tell you**, and its value comes
+entirely from staying small. A large session-state file is not a richer memory —
+it is a second, stale copy of the backlog that disagrees with the real one while
+looking authoritative. Hence a fixed, deliberately thin schema and a stated
+budget:
+
+```markdown
+# Session state — <project>
+updated: <YYYY-MM-DD>
+
+## Goal
+current: <item-id> — <one line, or "none">
+next:    <item-id> — <one line, or "none">
+
+## Traps
+- <item-id or area>: <the non-obvious thing that would be re-broken by someone
+  reading only the ticket>
+
+## Milestone note
+<at most a couple of lines on where the milestone actually stands, when that
+differs from what the tracker implies>
+```
+
+**Budget: about 40 lines.** Past that, `session_state.prune` is under-pruning —
+the fix is to delete, not to extend the schema. Anything durable belongs in the
+doc system via `record()`; anything about one item belongs on that item.
+
+A **trap** is the only thing that survives its item being closed, and it has a
+specific shape: *the shipped work deliberately departs from the ticket text, and
+restoring it to match the ticket would reintroduce a bug.* "Ticket X was hard" is
+not a trap.
+
+The file is **local and never committed** (`.local.md`, added to the ignore file
+at init). It is high-churn, single-author, and a guaranteed conflict on any
+shared branch. `flows/HOOKS.md` owns the prune rule that keeps it honest.
+
 ## Purity & etiquette
 
 - **Adapters perform; hooks decide.** A hook returns "create these three tickets"; the tracker adapter's `create` writes them. A custom flow can change *what* happens without touching *how* the tool is driven.
