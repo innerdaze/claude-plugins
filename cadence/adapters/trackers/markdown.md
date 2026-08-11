@@ -5,9 +5,9 @@
 ## Capabilities
 
 ```
-supports:    statuses, list_open, get, create, comment, update, list_closed,
-             epic, milestone, labels, order, depends_on, severity, updated_at
-unsupported: cycle, assignee
+supports:    statuses(), list_open(), list_closed(), get(), create(), comment(), update()
+fields:      epic, milestone, labels, order, depends_on, severity, updated_at
+unsupported: list_cycles(), current_cycle(), cycle, assignee
 ```
 
 `cycle` and `assignee` are unsupported by choice, not oversight: this tracker

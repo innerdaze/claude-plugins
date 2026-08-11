@@ -1,0 +1,39 @@
+name: validate
+
+# The plugin payload is Markdown an agent executes at run time, so there is no
+# compiler to catch drift. This workflow is the substitute - see tools/README.md
+# for why each rule exists.
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install PyYAML
+        run: pip install --disable-pip-version-check pyyaml
+
+      - name: Validate the plugin payload
+        run: python tools/validate_cadence.py
+
+      - name: Confirm the payload ships no executable code
+        # tools/ is repo infrastructure and must never migrate into cadence/.
+        run: |
+          found=$(find cadence -type f ! -name '*.md' ! -name 'LICENSE' \
+                    ! -path '*/.claude-plugin/*.json' -print)
+          if [ -n "$found" ]; then
+            echo "Non-Markdown files in the shipped payload:"
+            echo "$found"
+            exit 1
+          fi
+          echo "payload is Markdown + manifests only"

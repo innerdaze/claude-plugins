@@ -33,6 +33,9 @@ states:
   gated_transitions:
     "In Progress -> In Review": []
     "In Review -> Done":        [gate.dod, gate.code_review, gate.regression]
+    # the incident lane's own path — declared so gate.postmortem is reachable
+    "Triage -> Mitigating":     []
+    "Mitigating -> Resolved":   []
     "Resolved -> Postmortem":   [gate.postmortem]
   release_pipeline: [gate.changelog, gate.release_approval]   # declared; not yet walked
 
