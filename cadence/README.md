@@ -17,7 +17,7 @@ Neither is hardcoded. A solo builder on Linear + git and a live-product team on 
 
 ## What's in the box
 
-- **Commands** — `/cadence:init` (setup), `/cadence:session start|end` (a work session), `/cadence:plan` (break a milestone into work), `/cadence:roadmap` (vision & roadmap). Each is backed by a skill (`cadence-init`, `cadence-session`, …) that Claude can also engage on its own when you just say "let's wrap up the session." *(Cadence does not ship a ticket-execution skill or a commit skill — it integrates with yours.)*
+- **Commands** — `/cadence:init` (setup), `/cadence:session start|end` (a work session), `/cadence:plan` (break a milestone into work), `/cadence:roadmap` (vision & roadmap), `/cadence:doctor` (check your setup; read-only). Each is backed by a skill (`cadence-init`, `cadence-session`, …) that Claude can also engage on its own when you just say "let's wrap up the session." *(Cadence does not ship a ticket-execution skill or a commit skill — it integrates with yours.)*
 - **Flows** — three shipped presets: `solo-greenfield`, `team-sprints`, `live-oncall`. Fork one, or author your own.
 - **Adapters** — the plugin ships the **contracts** plus three zero-dependency fallbacks: `markdown` (tracker), `git` (VCS), `none` (docs). Adapters for real tools — Linear, GitHub, Jira, whatever you use — are **generated into your project by `/cadence:init`** against the interface that tool actually exposes, because those interfaces vary per install. Cadence assumes no environment.
 - **Hooks** — a named extension surface (`HOOKS.md`) so a custom flow can override any step with your own authored instructions. This is what makes Cadence a platform, not three canned workflows.

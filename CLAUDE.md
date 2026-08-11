@@ -33,7 +33,7 @@ The one thing worth understanding before editing anything. Cadence ships an inva
 - **Bindings** (`config.example.md`) — *where and with what* you work: tracker, VCS, doc system, execution skill, **and model tiers**. Resolved through **adapters** (`adapters/ADAPTERS.md`). Change these → same process, different toolchain.
 - **Flow** (`flows/*.flow.md`) — *how* you work: hierarchy, states, gates, cadence/ceremonies, intake & priority policy, decision rights, session definition. Change this → same tools, different process.
 
-The four skills (`skills/cadence-{init,session,plan,roadmap}/SKILL.md`) are **interpreters** of those two layers. They must never hardcode a tool or a workflow. Where a step can vary, it is a named **hook** (`flows/HOOKS.md`): unset → the skill's built-in default; set → the skill loads the project's instruction doc and follows it instead.
+The five skills (`skills/cadence-{init,session,plan,roadmap,doctor}/SKILL.md`) are **interpreters** of those two layers. Only `cadence-init` writes configuration; `cadence-doctor` is strictly read-only, which is what makes it safe to run anywhere. They must never hardcode a tool or a workflow. Where a step can vary, it is a named **hook** (`flows/HOOKS.md`): unset → the skill's built-in default; set → the skill loads the project's instruction doc and follows it instead.
 
 Division of labour, in one line: **hooks decide and describe; adapters perform side-effects; skills orchestrate and own the writes.** A hook returns "create these three tickets"; the skill calls the tracker adapter's `create`.
 
