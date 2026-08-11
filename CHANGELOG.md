@@ -108,7 +108,11 @@ in throwaway repos — found ~45 verified defects. This release fixes them.
 - Skills referenced bundled files by bare path, which resolves into the
   *consumer's* repo. All such references are now anchored with
   `${CLAUDE_PLUGIN_ROOT}`.
-- The marketplace name didn't match the documented install command.
+- The marketplace name didn't match the documented install command. It is now
+  `innerdaze`, and install is `cadence@innerdaze`. Note it deliberately does not
+  match the repository name: Claude Code rejects a marketplace whose `name`
+  contains "claude" or "anthropic" as impersonating an official source, and that
+  rejection only surfaces at install time.
 - `execution.skill: none` — the advertised default — was undefined in the flow
   spec and actively forbidden by a shipped template.
 - Definition-of-Done precedence between `flow.gates.dod.checks` and
