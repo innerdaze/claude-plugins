@@ -11,7 +11,33 @@ changing a hook's Input/Output, removing an adapter operation, or changing the
 meaning of a config key is a *major* change. Adding an optional hook, operation,
 field, or config key is *minor*.
 
-## [0.2.3] — pending verification
+## [0.2.4] — pending verification
+
+### Fixed
+
+- **The verify branch had no failure path.** When `execution.owns` includes
+  `commit`, `/cadence:session end` verifies someone else's checkpoint instead of
+  making one — and said nothing about what to do when that verification fails.
+  Every test run until now used `execution.skill: none`, so the branch had never
+  executed at all. It now reports the discrepancy precisely, declines to commit
+  silently on execution's behalf (which would hide a broken execution binding
+  forever), declines to abandon the work, and says the fault is either the
+  execution skill or an `execution.owns` that overstates what it does. If no
+  checkpoint exists by the end of the step, the item does not stay advanced.
+- `/cadence:doctor` now reports an `execution.owns` that claims `commit` while
+  recent items have no referencing checkpoint.
+
+### Added
+
+- `tools/make_fixture.py` — scripted scratch projects in the configuration
+  *shapes* the default cannot expose: `reduced-lane`, `intermediate-gate`,
+  `execution-owns-commit`.
+- A **coverage table** in `docs/VERIFICATION.md` naming the configuration axes
+  and which shape covers each, so the gaps are visible rather than discovered.
+  Two axes are still uncovered and now say so: a hosted tracker, and sprint
+  cadence with cycles.
+
+## [0.2.3] — superseded
 
 ### Fixed
 

@@ -6,7 +6,13 @@ stays pure Markdown, and nothing here is part of what an adopter installs.
 ```
 python tools/validate_cadence.py            # what CI runs
 python tools/validate_cadence.py --quiet    # only print failures
+
+python tools/make_fixture.py --list         # scratch projects for behavioural testing
+python tools/make_fixture.py reduced-lane
 ```
+
+The validator checks **structure**; the fixtures are how you check **behaviour**,
+which no static rule can. See `docs/VERIFICATION.md` for the coverage table.
 
 Requires PyYAML. Exit code 0 means no errors (warnings are allowed); 1 means at
 least one error.

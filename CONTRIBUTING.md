@@ -19,6 +19,25 @@ operation, or changing what a config key means are all **breaking** changes and
 need a major version bump plus a `CHANGELOG.md` entry under a `BREAKING`
 heading. Adding an optional hook, operation, field, or config key is minor.
 
+## Testing a behavioural change
+
+`tools/validate_cadence.py` checks structure, never behaviour. For anything that
+changes what a skill *does*, build a fixture and run the skill against it:
+
+```
+python tools/make_fixture.py --list
+```
+
+Each fixture is a configuration *shape* the default cannot expose — a board with
+fewer columns than the flow's lanes, a gate on an intermediate transition, an
+execution skill that claims the commit and doesn't do it. Cadence's defect
+surface is the cross-product of its configurations, so testing the default tests
+one cell of a matrix. `docs/VERIFICATION.md` has the coverage table and the
+per-fixture assertions.
+
+When you find a defect, ask **what shape was needed to see it** and add that
+shape. A defect no fixture could have caught means the table is short a row.
+
 ## Any payload change needs a version bump
 
 The plugin cache is keyed by version: `~/.claude/plugins/cache/<marketplace>/cadence/<version>/`.

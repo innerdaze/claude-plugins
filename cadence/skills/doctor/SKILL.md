@@ -132,6 +132,11 @@ Cheap reads that catch real corruption:
 - Files under `.claude/cadence/` that `ADAPTERS.md` says should be committed but
   are untracked — the config, adapters, a custom flow, the backlog. Being
   untracked risks them being swept into an unrelated commit.
+- **Does `execution.owns` match what the repo shows?** If it claims `commit` but
+  recent items have no checkpoint referencing them, report it as **drifted**: the
+  execution skill is failing, or `owns` overstates what it actually does. Either
+  way sessions are silently doing — or skipping — work the config says belongs
+  elsewhere. Name which items lack a referencing commit.
 - A `session`, `plan`, or `roadmap` skill at user or project scope. Cadence's are
   namespaced `cadence-*` so they can't be shadowed, but two live session rituals
   is worth naming rather than discovering mid-flow.

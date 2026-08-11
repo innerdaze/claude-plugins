@@ -16,6 +16,54 @@ treat anything unexpected as a finding rather than a hiccup.
 
 ---
 
+## Coverage — which shapes have been exercised
+
+Cadence's defect surface is the **cross-product of its configurations**, not a
+list of features. Every behavioural defect found so far needed a *particular
+shape* to become visible, and re-running a shape that already passes produces
+nothing. The default — `solo-greenfield`, every lane mapped, one in-flight lane,
+the only gate on the final transition, no execution skill — is precisely the cell
+where most failures are invisible.
+
+So this table, not the checklist below, is the thing to keep honest. A blank cell
+is a known unknown; the point is that it is *visible*.
+
+| Axis | Values | Covered by |
+|---|---|---|
+| Tracker storage | items in the repo | every run so far |
+| | hosted (MCP) | **not covered** — needs §8 |
+| Board vs flow lanes | fully mapped | early eval runs |
+| | fewer columns than lanes | `reduced-lane`, `intermediate-gate` |
+| Lane shape | one in-flight lane | `solo-greenfield` fixtures |
+| | pipeline (lanes in sequence) | `intermediate-gate` |
+| Gate position | on the final transition | `reduced-lane` |
+| | on an intermediate transition | `intermediate-gate` |
+| Gate outcome | passes | `reduced-lane` |
+| | held by a `human` approver | `intermediate-gate` |
+| | fails | **not covered** |
+| Execution seam | `skill: none` → session performs | every run so far |
+| | `owns: [commit]` → session verifies | `execution-owns-commit` |
+| | `owns: [commit]` but it didn't | `execution-owns-commit` |
+| Flow source | shipped preset | `reduced-lane`, `execution-owns-commit` |
+| | project-local + authored hooks | `intermediate-gate` |
+| Cadence model | continuous | all fixtures |
+| | sprint / cycles | **not covered** — needs a tracker with `cycle` |
+
+**Building a shape.** These are scripted so a run is repeatable rather than
+reassembled by hand:
+
+```
+python tools/make_fixture.py --list
+python tools/make_fixture.py intermediate-gate
+```
+
+Each prints the path it built and what it is for. Run the skills against it, then
+delete it.
+
+**Adding a shape.** When a defect is found, ask *what shape was required to see
+it* — then add that shape to `tools/make_fixture.py` and a row here. A defect
+that needed a shape no fixture has is telling you the table is short a row.
+
 ## 0. Before you start
 
 ```
@@ -141,6 +189,36 @@ Restore the `active` mapping first.
 - [ ] Break something deliberately — add a bogus key to the config, point `flow:` at a missing file, or delete a `status_map` entry.
 - [ ] Doctor reports each with a remedy, in the right band (broken / disabled / drifted).
 - [ ] **Doctor wrote nothing.** `git status` unchanged.
+
+## 7b. The shape fixtures
+
+Run each against the installed plugin. These are the cases the default cannot
+expose, so a pass here is worth more than another clean run of section 6.
+
+```
+python tools/make_fixture.py reduced-lane
+```
+- [ ] `session start` says once that work-in-flight isn't representable, and continues.
+- [ ] No `set_status` ever targets a column absent from `status_map`.
+- [ ] `gate.dod` still runs, and the item reaches the done lane.
+
+```
+python tools/make_fixture.py intermediate-gate
+```
+- [ ] The project-local flow and both authored hooks resolve.
+- [ ] **`gate.citations` runs** — it sits on `Supported -> Reviewed`, and `Reviewed` is unmapped. If it is skipped, gates are being matched on the destination instead of collected along the path.
+- [ ] `gate.editorial` (approver `human`) is **not** auto-cleared.
+- [ ] The item is not dragged backwards to the `active` lane it has already passed.
+- [ ] The held gate does **not** abandon the work: it is still committed, the tree is clean, and the commit message says which gate is holding the item.
+
+```
+python tools/make_fixture.py execution-owns-commit
+```
+- [ ] `session end` takes the **verify** branch, not the perform branch.
+- [ ] Verification fails (nothing references `UC-1`, tree dirty) and this is **reported**, naming the discrepancy.
+- [ ] It does **not** silently commit on execution's behalf, and does **not** abandon the work — it offers.
+- [ ] It says the fault is either the execution skill or an inaccurate `execution.owns`.
+- [ ] The item does not stay advanced with no checkpoint behind it.
 
 ## 8. Against a real tracker
 

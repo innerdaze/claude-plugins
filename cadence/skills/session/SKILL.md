@@ -87,7 +87,18 @@ checkpoint is the last thing that touches the repo.**
 3. **Prune the session state** — run `session_state.prune`. The default rule lives in `${CLAUDE_PLUGIN_ROOT}/flows/HOOKS.md`; in short, reconcile the scratchpad **against the tracker** (not against what the file claims) and drop anything the tracker already tells you, keeping only non-obvious traps.
 4. **Decide the next goal and record it** via the tracker adapter (`comment`), and record any durable gotcha through the doc adapter's `record()`. Both of these write files that may be under version control, which is why they come *before* the checkpoint.
 5. **Checkpoint — the last repo write.** First call `status()` and look at what is actually there: running the gates may have produced artefacts the gates themselves created (`__pycache__`, coverage output, a build directory). Ignore or remove those before committing rather than attributing them to this item — the tree being clean afterwards is only meaningful if you didn't commit rubbish to achieve it.
-   Then: if `config.execution.owns` includes `commit`, *verify* rather than repeat — use `log()` to confirm a checkpoint referencing this item exists and `status()` to confirm the tree is clean. Otherwise — including whenever `execution.skill` is `none` — run the checkpoint yourself via the `checkpoint` hook / VCS adapter, and **confirm it landed** with `log()` afterwards. A checkpoint you performed is not more trustworthy than one you verified; it just failed more recently if it failed.
+   Then take one of two branches.
+
+   **If `config.execution.owns` includes `commit` — verify, don't repeat.** Use `log()` to confirm a checkpoint referencing this item exists, and `status()` to confirm the tree is clean.
+
+   **When that verification fails**, say exactly what you found — *"`execution.owns` says `/do-ticket` commits, but no checkpoint references `UC-1` and two paths are dirty."* Then:
+   - **Do not quietly commit on execution's behalf.** The seam exists so each side's failure is visible; absorbing it silently means the execution binding can stay broken forever while sessions appear to succeed.
+   - **Do not abandon the work either.** Offer to checkpoint it, saying plainly that you are doing execution's job because execution didn't.
+   - Say that one of two things is wrong, because the user can only fix it if they know which: **either the execution skill failed**, or **`execution.owns` claims a responsibility it doesn't actually take**. A binding that overstates what it owns produces exactly this and looks like a Cadence bug.
+
+   **Otherwise — including whenever `execution.skill` is `none`** — run the checkpoint yourself via the `checkpoint` hook / VCS adapter, and **confirm it landed** with `log()` afterwards. A checkpoint you performed is not more trustworthy than one you verified; it just failed more recently if it failed.
+
+   **In either branch, if no checkpoint exists at the end of this step, the item must not stay advanced.** Step 2 has already moved it, so offer to revert the status — a tracker claiming work is finished when nothing was committed is worse than either failure alone.
 6. **`session.end`** (default): write the pruned session state to `config.session_state.file`, per the schema in `${CLAUDE_PLUGIN_ROOT}/adapters/ADAPTERS.md`. This file is git-ignored, so it is the one write that may safely follow the checkpoint.
 
 ### Why the checkpoint goes last
@@ -110,6 +121,10 @@ precisely the configuration Cadence ships as its default.
 **If the checkpoint fails**, say so plainly and offer to revert the status. Do
 not leave the item marked done with the work uncommitted — a tracker claiming
 work is finished when nothing was committed is worse than either failure alone.
+
+The same applies when you were only *verifying* someone else's checkpoint and it
+isn't there. "Execution owns the commit" is a statement about whose job it is,
+not evidence the job was done.
 
 ## When something doesn't resolve
 
