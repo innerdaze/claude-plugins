@@ -34,6 +34,8 @@ Turns a milestone from the roadmap into concrete items in the tracker. Uses `${C
 
 7. **Create the items** via the tracker adapter (`create`), linking children to parents and setting the initial status to **`flow.states.roles.backlog`** resolved through `config.tracker.status_map`. If that role is unmapped, ask which status new work should start in rather than guessing. For a large breakdown, hand the bulk creation to the `mechanical` subagent — the decisions are already made; only the tracker writes remain. Spawn it per the calling convention in `${CLAUDE_PLUGIN_ROOT}/adapters/ADAPTERS.md`.
 
+8. **Checkpoint the new items.** If the tracker stores items in the repo, a breakdown just created a pile of files. Commit them via the VCS adapter (`add_untracked` + `checkpoint`, message referencing the milestone) so they are versioned as their own change. Leaving them untracked means the next `/cadence:session end` sweeps a whole backlog into an unrelated item's commit — and `/cadence:doctor` will rightly flag it. If the tracker is hosted, there is nothing to commit; say so and skip.
+
 ## Cadence note
 
 - **Continuous / solo:** `/cadence:plan` populates the milestone's backlog.

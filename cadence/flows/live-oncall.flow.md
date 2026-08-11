@@ -14,7 +14,7 @@
 meta:
   name: live-oncall
   summary: Shipping to real users. Incidents interrupt the roadmap; releases are human-approved.
-  cadence_version: "0.1"
+  cadence_version: "0.2"
   autonomy: low              # customer-facing decisions stay with humans
 
 hierarchy:

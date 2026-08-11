@@ -230,6 +230,15 @@ def flow_files() -> list[Path]:
 
 
 def check_flows(hook_names: set[str], wildcards: list[str]) -> None:
+    plugin_minor = ""
+    pj = PLUGIN / ".claude-plugin" / "plugin.json"
+    if pj.exists():
+        try:
+            v = json.loads(read(pj)).get("version", "")
+            plugin_minor = ".".join(v.split(".")[:2])
+        except json.JSONDecodeError:
+            pass
+
     spec = PLUGIN / "flows" / "FLOW-SPEC.md"
     if not spec.exists():
         err("flow", "flows/FLOW-SPEC.md is missing - it is the schema")
@@ -255,6 +264,13 @@ def check_flows(hook_names: set[str], wildcards: list[str]) -> None:
         for k in ("name", "summary", "cadence_version"):
             if not meta.get(k):
                 err("flow", f"{name}: meta.{k} is required")
+        # A shipped flow must target the version it ships with, or /cadence:doctor
+        # reports contract drift on a pristine install.
+        if plugin_minor and meta.get("cadence_version"):
+            if str(meta["cadence_version"]) != plugin_minor:
+                err("flow", f"{name}: meta.cadence_version is {meta['cadence_version']!r} "
+                            f"but this plugin is {plugin_minor!r} - a shipped flow that targets "
+                            f"an older contract makes doctor report drift on a clean install")
 
         st = d.get("states") or {}
         lanes = st.get("lanes") or []

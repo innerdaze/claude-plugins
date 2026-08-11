@@ -12,7 +12,7 @@
 meta:
   name: solo-greenfield
   summary: One builder, pre-release. High autonomy, continuous flow, ship-nothing-yet.
-  cadence_version: "0.1"
+  cadence_version: "0.2"
   autonomy: high            # documentation only — orients a flow author
 
 hierarchy:
