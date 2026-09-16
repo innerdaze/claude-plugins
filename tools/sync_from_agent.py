@@ -538,7 +538,10 @@ def main() -> int:
         print(f"  {plugin:<9} v{rec['version']:<8} {rec['files']:>3} files{change}")
 
     written.extend(sync_vendored_files(agent, args.ref, args.dry_run))
-    write_marketplace(args.dry_run)
+    # Appended so the audit below covers the generated manifest too: it carries
+    # every plugin's description verbatim from upstream, which is as good a
+    # place for a leaked name as any payload file.
+    written.append(write_marketplace(args.dry_run))
     write_provenance(sha, args.ref, records, args.dry_run)
 
     if args.dry_run:
