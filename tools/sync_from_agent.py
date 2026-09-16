@@ -493,9 +493,25 @@ def main() -> int:
                     help="commit locally, but do not push or open a PR")
     ap.add_argument("--skip-validate", action="store_true",
                     help="mirror even if the payload fails validation")
+    ap.add_argument("--audit-only", action="store_true",
+                    help="scan the committed tree for leaked internal identifiers "
+                         "and exit; touches no upstream and writes nothing (CI)")
     ap.add_argument("--dry-run", action="store_true",
                     help="report what would change; write nothing")
     args = ap.parse_args()
+
+    # The audit is also worth running against the tree as committed, not only
+    # against what the mirror just produced: this is a public repository, and a
+    # hand-edited file is as capable of leaking the private repo's identity as a
+    # missed rewrite rule is. CI runs this on every push.
+    if args.audit_only:
+        targets = [p for p in (ROOT / "plugins").rglob("*") if p.is_file()]
+        targets += [ROOT / "CHANGELOG.md", ROOT / "README.md",
+                    ROOT / ".claude-plugin" / "marketplace.json",
+                    ROOT / "tools" / "validate_cadence.py"]
+        audit([p for p in targets if p.exists()])
+        print(f"scrub audit: clean ({len(targets)} files)")
+        return 0
 
     if not args.dry_run and not git_is_clean():
         fail("this repository has uncommitted changes. Commit or stash them "

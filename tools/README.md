@@ -1,15 +1,28 @@
 # tools/
 
-Repository infrastructure. **Never shipped** — the plugin payload in `cadence/`
-stays pure Markdown, and nothing here is part of what an adopter installs.
+Repository infrastructure. **Never shipped** — nothing here is part of what an
+adopter installs, and nothing here may migrate into `plugins/`.
 
 ```
-python tools/validate_cadence.py            # what CI runs
-python tools/validate_cadence.py --quiet    # only print failures
+python tools/sync_from_agent.py             # mirror the plugins in and open the PR
+python tools/sync_from_agent.py --dry-run   # report what would change, write nothing
+
+python tools/validate_cadence.py            # payload invariants (what CI runs)
+python tools/sync_from_agent.py --audit-only # leak check (what CI runs)
 
 python tools/make_fixture.py --list         # scratch projects for behavioural testing
 python tools/make_fixture.py reduced-lane
 ```
+
+`sync_from_agent.py` is this repository's reason to exist; it is documented in
+`CLAUDE.md` and in its own docstring.
+
+**`validate_cadence.py` is vendored, not maintained here.** The sync tool copies
+it from the source monorepo on every run, with one declared substitution (the
+changelog path), because a validator must track the payload it validates — one
+release behind, it reports confidently on rules that have moved. Edit it
+upstream. The rule catalogue below describes what it checks and why; where the
+two disagree, the script is right and this file is stale.
 
 The validator checks **structure**; the fixtures are how you check **behaviour**,
 which no static rule can. See `docs/VERIFICATION.md` for the coverage table.
