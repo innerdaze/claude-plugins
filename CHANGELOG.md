@@ -11,6 +11,96 @@ changing a hook's Input/Output, removing an adapter operation, or changing the
 meaning of a config key is a *major* change. Adding an optional hook, operation,
 field, or config key is *minor*.
 
+## [0.5.1] — 2026-09-11
+
+Published from the ecosystem release. The payload changes are described under
+0.5.0 below; this entry exists because the version on the registry has to exist
+in the changelog too, and 0.5.1 is what the release job actually published.
+
+### Changed
+
+- A DoD check declares how its applicability is decided — `always`, `infer`, or
+  a stated `applies_when` (path globs, or one sentence about the change), with
+  `infer` the default for a check a project adds. Every skipped check is named
+  in the report with its reason and evidence, which is what makes a judged skip
+  auditable rather than an override. Contract **0.4 → 0.6**, additive: a bare
+  string still means `always`.
+- Every shipped preset declares an `abandoned` role and a `Won't Do` lane, so a
+  won't-fix column is terminal instead of counting as open for ever.
+- `/cadence:init` asks four questions where it asked nine. The ticket prefix,
+  the roadmap path and the lane count are answered by the repo; the Definition
+  of Done is asked open, with a stated default, rather than as a menu.
+- `/cadence:doctor` reports a `done` role nothing can reach, checks that can
+  never fire, and a version gap that is only additive as informational rather
+  than drift.
+
+## [0.5.0] — 2026-09-03
+
+Cadence's first migration, and the reason it needed one: it stopped keeping the whole
+configuration to itself.
+
+### Changed — the config is split by *who else needs the value*
+
+**Bindings moved to the shared config bus** at `.agent/PROJECT.md`: `tracker`, `execution`, and
+— read rather than owned — `vcs` and `doc_system`. **Methodology stayed** in cadence's own
+config: `flow`, `dod_gates`, `session_state`, `models`, `cadence_version`.
+
+The test, stated once in `config.example.md`: **if only one tool could use a value, it does not
+belong in the bus.** A flow spec is meaningless to a ticket engine; a tracker binding is not.
+
+`## Tracker` is a **handover**, not a fork. When a delivery tool already wrote that section,
+cadence rewrites the owner marker to `methodology` and keeps the values — prioritisation and
+status transitions become its business on install. One section, new owner.
+
+### Changed — the root moved to `.agent/cadence/`
+
+From `.claude/cadence/`. `.claude/` belongs to Claude Code and to the user; the stack now owns
+one namespace, and each plugin keeps its private config in a subdirectory of it.
+
+⚠️ **Any local script, alias or note of yours that referenced `.claude/cadence/` now points at
+nothing.** The migration cannot find those, so it says so rather than leaving it to be
+discovered.
+
+### Added — a migration mechanism, and a second version number
+
+`/cadence:migrate`, a `migrations/` registry, and a `Methodology scaffolding version` stamped
+into the bus as the `cadence methodology` row. Migrations declare **preconditions** and may
+**decline**: v1 does the root move unconditionally but defers the config split when no bus
+exists yet, so an orchestrating migrate can retry after another tool creates one.
+
+Two numbers now, answering different questions — conflating them would be easy and wrong:
+
+| Number | Answers |
+|---|---|
+| `cadence methodology` (bus) | has this project's cadence scaffolding been migrated? |
+| `cadence_version` (own config) | which hook/flow contract was this flow authored against? |
+
+### Changed — the contract version is now declared, not inferred
+
+`meta.cadence_version` used to be compared against the **plugin's minor**, and `HOOKS.md` said so.
+This release exposed why that cannot hold: it moved where config lives without touching a single
+hook name, contract or vocabulary term, so under the old rule every flow — shipped and
+adopter-authored alike — would have read as **stale after a release that did not change its
+interface**.
+
+The contract is now declared in `flows/CONTRACT-VERSION.md` (**0.4**, unchanged by this release),
+and `/cadence:doctor` and the payload validator compare flows against *that*. **A flow is stale
+when the contract moved, not when the plugin did.**
+
+Three numbers now, and they are genuinely three questions: the contract (what a flow targets), the
+plugin version (what is installed), and the methodology scaffolding version (whether this project
+has been migrated).
+
+### Migration
+
+Run `/cadence:migrate`. It is a **minor, not a major**, by the ecosystem's definition: an adopter
+acts once — one reviewed change — and carries on. One developer, on its own branch; it edits
+shared committed files and re-stamps once.
+
+The ignore entry for the session-state file is re-pointed **in the same change** as the move. A
+moved session file with a stale ignore entry gets committed by the next person running `add -A`,
+and it is precisely the high-churn single-author file that must never be shared.
+
 ## [0.4.1] — 2026-08-11
 
 ### Changed
@@ -53,8 +143,8 @@ from scratch produces a plausible config rather than an error.
 ## [0.4.0] — superseded
 
 Found by running `/cadence:doctor` against a real project for the first time —
-MachineGame54, 245 issues, a Diversion working copy, a `domains/` doc system, and
-a Linear board with eight statuses.
+245 issues, a Diversion working copy, a `domains/` doc system, and a Linear board
+with eight statuses.
 
 ### Added
 
@@ -523,11 +613,10 @@ in throwaway repos — found ~45 verified defects. This release fixes them.
 - Skills referenced bundled files by bare path, which resolves into the
   *consumer's* repo. All such references are now anchored with
   `${CLAUDE_PLUGIN_ROOT}`.
-- The marketplace name didn't match the documented install command. It is now
-  `innerdaze`, and install is `cadence@innerdaze`. Note it deliberately does not
-  match the repository name: Claude Code rejects a marketplace whose `name`
-  contains "claude" or "anthropic" as impersonating an official source, and that
-  rejection only surfaces at install time.
+- The marketplace name didn't match the documented install command. Worth keeping as
+  a general gotcha: Claude Code rejects a marketplace whose `name` contains "claude"
+  or "anthropic" as impersonating an official source, and that rejection only
+  surfaces at install time.
 - `execution.skill: none` — the advertised default — was undefined in the flow
   spec and actively forbidden by a shipped template.
 - Definition-of-Done precedence between `flow.gates.dod.checks` and
