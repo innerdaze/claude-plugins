@@ -25,7 +25,8 @@ upstream. The rule catalogue below describes what it checks and why; where the
 two disagree, the script is right and this file is stale.
 
 The validator checks **structure**; the fixtures are how you check **behaviour**,
-which no static rule can. See `docs/VERIFICATION.md` for the coverage table.
+which no static rule can — install a fixture project and actually run the skills
+against it.
 
 Requires PyYAML. Exit code 0 means no errors (warnings are allowed); 1 means at
 least one error.
@@ -108,7 +109,7 @@ Whether the prose is *correct*. Whether a preset's stated default matches the
 hook contract's stated default. Whether an adapter's described commands actually
 work against the real tool. Whether the session-end ordering is right.
 
-Those need a human, or a live run — see `docs/VERIFICATION.md`. The validator
+Those need a human, or a live run against a fixture project. The validator
 catches drift and broken references; it does not read for meaning.
 
 ## Adding a rule
