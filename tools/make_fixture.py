@@ -28,7 +28,7 @@ import tempfile
 import textwrap
 from pathlib import Path
 
-PLUGIN = Path(__file__).resolve().parent.parent / "cadence"
+PLUGIN = Path(__file__).resolve().parent.parent / "plugins" / "cadence"
 
 
 def write(root: Path, rel: str, body: str) -> None:

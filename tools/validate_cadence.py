@@ -4,11 +4,11 @@
 Everything Cadence ships is Markdown that an agent executes at run time, so
 there is no compiler between what we write and what happens. This script is the
 substitute: it enforces the invariants that have actually drifted or broken in
-practice, each one traceable to a real defect. See tools/README.md for the
-reasoning behind each rule.
+practice, each one traceable to a real defect. See
+scripts/README-cadence-validator.md for the reasoning behind each rule.
 
 Usage:
-    python tools/validate_cadence.py [--quiet]
+    python3 scripts/validate_cadence.py [--quiet]
 
 Exit codes: 0 = clean (warnings allowed), 1 = at least one error.
 """
@@ -31,7 +31,7 @@ except ImportError:
     sys.exit(2)
 
 ROOT = Path(__file__).resolve().parent.parent
-PLUGIN = ROOT / "cadence"
+PLUGIN = ROOT / "plugins" / "cadence"
 
 ERRORS: list[str] = []
 WARNINGS: list[str] = []
@@ -77,6 +77,40 @@ def frontmatter(text: str) -> dict | None:
 # --------------------------------------------------------------------------
 # 1. Manifests parse, and their versions agree with the changelog
 # --------------------------------------------------------------------------
+
+def covers(pin: str, version: str) -> bool:
+    """Does a marketplace pin's range include this version?
+
+    It used to demand string equality after stripping the caret, which made a
+    pin and a version the same fact written twice — and the release job bumps
+    the version without touching the pin, so every patch release would have
+    failed this check. They never met only because no bump ever reached git.
+
+    A caret pin is a range and is allowed to be broader than the version it
+    resolves to. What must not happen is a pin that *cannot* reach the shipped
+    version, because then the catalogue points at something nobody can install.
+    """
+    if not pin or not version:
+        return False
+    op, base = ("^", pin[1:]) if pin.startswith("^") else \
+               ("~", pin[1:]) if pin.startswith("~") else ("", pin)
+    try:
+        pv = [int(x) for x in version.split("-")[0].split(".")]
+        bv = [int(x) for x in base.split("-")[0].split(".")]
+    except ValueError:
+        return pin == version
+    pv += [0] * (3 - len(pv))
+    bv += [0] * (3 - len(bv))
+    if op == "":
+        return pv == bv
+    if pv < bv:
+        return False                      # pin asks for more than is shipped
+    if op == "~":
+        return pv[:2] == bv[:2]
+    # ^ on 0.x is locked to the minor: ^0.1.0 covers 0.1.x and not 0.2.0
+    return pv[0] == bv[0] and (pv[1] == bv[1] if bv[0] == 0 else True)
+
+
 def check_manifests() -> None:
     mp = ROOT / ".claude-plugin" / "marketplace.json"
     pp = PLUGIN / ".claude-plugin" / "plugin.json"
@@ -115,10 +149,16 @@ def check_manifests() -> None:
         entries = {e.get("name"): e for e in market.get("plugins", [])}
         if "cadence" not in entries:
             err("manifest", "marketplace.json does not list the cadence plugin")
-        elif entries["cadence"].get("version") != plugin.get("version"):
-            err("manifest",
-                f"version mismatch: plugin.json {plugin.get('version')!r} vs "
-                f"marketplace entry {entries['cadence'].get('version')!r}")
+        else:
+            # This repo carries the version inside `source` and pins a caret range
+            # (e.g. "^0.4.1"); upstream had an exact version at entry level. Accept
+            # either shape and compare on the bare version.
+            e = entries["cadence"]
+            raw = str(e.get("version") or (e.get("source") or {}).get("version") or "")
+            if not covers(raw, plugin.get("version", "")):
+                err("manifest",
+                    f"marketplace pin {raw!r} does not cover plugin.json "
+                    f"{plugin.get('version')!r}")
 
     # The changelog must know about the current version, so a release can never
     # ship without a note saying what changed.
@@ -128,8 +168,24 @@ def check_manifests() -> None:
     elif plugin:
         v = plugin.get("version", "")
         body = read(ch)
-        if v and v not in body and "[Unreleased]" not in body:
-            err("manifest", f"CHANGELOG.md mentions neither {v} nor [Unreleased]")
+        # A patch release is covered by its minor's entry. The release job bumps
+        # the patch automatically, so demanding a heading per patch made every
+        # release fail this check the moment bumps started reaching git — the
+        # rule and the job were written against different worlds and had never
+        # met. What the check is actually for is that no *notable* version ships
+        # undescribed, and notable means the minor: 0.5.2 shipping under the
+        # 0.5.x story is honest, while 0.6.0 appearing with nothing written about
+        # it is the thing worth failing over.
+        minor = ".".join(v.split(".")[:2]) if v else ""
+        covered = bool(v) and (
+            v in body
+            or "[Unreleased]" in body
+            or any(line.startswith(f"## [{minor}.") for line in body.splitlines())
+        )
+        if v and not covered:
+            err("manifest",
+                f"CHANGELOG.md has no entry for {v}, nothing in the {minor}.x line, "
+                f"and no [Unreleased] section")
 
 
 # --------------------------------------------------------------------------
@@ -224,8 +280,17 @@ def check_banned_terms() -> None:
     name or namespace in the payload is a live contamination source, not a
     cosmetic blemish. This has leaked before."""
     for p in payload_md():
+        # The vendored bus-checks spec is exempt for one term only, and the
+        # reason is the opposite of a leak: the rule exists to stop one
+        # consumer's config location shipping as a general default, while that
+        # spec names it as the single *legacy* path being migrated away from.
+        # The shim's first condition is "exactly one legacy path, named" — a
+        # genericised version would break the rule it encodes.
+        exempt = {"domains/PROJECT.md"} if p.name == "BUS-CHECKS.md" else set()
         low = read(p).lower()
         for term, why in BANNED.items():
+            if term in exempt:
+                continue
             if term.lower() in low:
                 err("banned-term", f"{rel(p)} contains {term!r} ({why})")
 
@@ -242,15 +307,80 @@ def flow_files() -> list[Path]:
     return sorted(PLUGIN.rglob("*.flow.md"))
 
 
+# A `checks` entry is either a bare string (always applicable) or a mapping
+# declaring what makes it apply. FLOW-SPEC.md § "Declaring what makes a check
+# applicable" is the prose this enforces.
+CHECK_KEYS = {"check", "applies_when", "applies"}
+APPLIES_MODES = {"always", "infer"}
+APPLIES_WHEN_KEYS = {"changed_paths"}
+
+
+def check_gate_checks(flow: str, gate: str, checks) -> None:
+    where = f"{flow}: gate {gate!r}"
+    if not isinstance(checks, list):
+        err("flow", f"{where}: checks must be a list, got {type(checks).__name__}")
+        return
+    for entry in checks:
+        if isinstance(entry, str):
+            continue
+        if not isinstance(entry, dict):
+            err("flow", f"{where}: check entry {entry!r} is neither a string nor a mapping")
+            continue
+        unknown = set(entry) - CHECK_KEYS
+        if unknown:
+            err("flow", f"{where}: check entry has unknown key(s) {sorted(unknown)}; "
+                        f"expected {sorted(CHECK_KEYS)}")
+        cname = entry.get("check")
+        if not isinstance(cname, str) or not cname.strip():
+            err("flow", f"{where}: check entry {entry!r} has no `check` name")
+            continue
+        mode = entry.get("applies")
+        if mode is not None and mode not in APPLIES_MODES:
+            err("flow", f"{where}: check {cname!r} has applies {mode!r}, expected one of "
+                        f"{sorted(APPLIES_MODES)}")
+        if mode is not None and "applies_when" in entry:
+            # Both is a contradiction: one says how to decide, the other decides.
+            err("flow", f"{where}: check {cname!r} declares both `applies: {mode}` and "
+                        f"`applies_when` - a check states how it is decided once")
+            continue
+        if "applies_when" not in entry:
+            if mode is None:
+                # A mapping with neither is a string written the long way, and
+                # reads as if something narrows it when nothing does.
+                err("flow", f"{where}: check {cname!r} is a mapping with no `applies` and no "
+                            f"`applies_when` - write it as the bare string {cname!r} if it "
+                            f"always applies")
+            continue
+        aw = entry["applies_when"]
+        if isinstance(aw, str):
+            if not aw.strip():
+                err("flow", f"{where}: check {cname!r} has an empty `applies_when`")
+            continue
+        if isinstance(aw, dict):
+            unknown = set(aw) - APPLIES_WHEN_KEYS
+            if unknown:
+                err("flow", f"{where}: check {cname!r} applies_when has unknown key(s) "
+                            f"{sorted(unknown)}; expected {sorted(APPLIES_WHEN_KEYS)} or a prose string")
+            paths = aw.get("changed_paths")
+            if paths is not None and (not isinstance(paths, list) or not paths
+                                      or not all(isinstance(g, str) and g.strip() for g in paths)):
+                err("flow", f"{where}: check {cname!r} changed_paths must be a non-empty list of globs")
+            continue
+        err("flow", f"{where}: check {cname!r} applies_when must be a prose string or a mapping")
+
+
 def check_flows(hook_names: set[str], wildcards: list[str]) -> None:
-    plugin_minor = ""
-    pj = PLUGIN / ".claude-plugin" / "plugin.json"
-    if pj.exists():
-        try:
-            v = json.loads(read(pj)).get("version", "")
-            plugin_minor = ".".join(v.split(".")[:2])
-        except json.JSONDecodeError:
-            pass
+    # The contract version is declared in the payload, independently of the
+    # plugin version: a release may ship changes no flow author can observe.
+    contract_version = ""
+    cv = PLUGIN / "flows" / "CONTRACT-VERSION.md"
+    if cv.exists():
+        m = re.search(r"contract version:\s*([0-9]+\.[0-9]+)", read(cv), re.I)
+        if m:
+            contract_version = m.group(1)
+    if not contract_version:
+        err("flow", "flows/CONTRACT-VERSION.md is missing or declares no "
+                    "'Hook & flow contract version: X.Y' - flows cannot be checked")
 
     spec = PLUGIN / "flows" / "FLOW-SPEC.md"
     if not spec.exists():
@@ -279,11 +409,15 @@ def check_flows(hook_names: set[str], wildcards: list[str]) -> None:
                 err("flow", f"{name}: meta.{k} is required")
         # A shipped flow must target the version it ships with, or /cadence:doctor
         # reports contract drift on a pristine install.
-        if plugin_minor and meta.get("cadence_version"):
-            if str(meta["cadence_version"]) != plugin_minor:
+        # Compare against the declared CONTRACT version, never the plugin version.
+        # They were the same number until 0.5.0, when a scaffolding move that no
+        # flow author could observe would otherwise have marked every flow stale.
+        if contract_version and meta.get("cadence_version"):
+            if str(meta["cadence_version"]) != contract_version:
                 err("flow", f"{name}: meta.cadence_version is {meta['cadence_version']!r} "
-                            f"but this plugin is {plugin_minor!r} - a shipped flow that targets "
-                            f"an older contract makes doctor report drift on a clean install")
+                            f"but the declared contract is {contract_version!r} - a shipped flow "
+                            f"targeting an older contract makes doctor report drift on a clean "
+                            f"install")
 
         st = d.get("states") or {}
         lanes = st.get("lanes") or []
@@ -361,6 +495,7 @@ def check_flows(hook_names: set[str], wildcards: list[str]) -> None:
             ap = (g or {}).get("approver")
             if ap not in APPROVERS:
                 err("flow", f"{name}: gate {gname!r} has approver {ap!r}, expected one of {sorted(APPROVERS)}")
+            check_gate_checks(name, gname, (g or {}).get("checks") or [])
 
         for step, right in (d.get("decision_rights") or {}).items():
             if right not in APPROVERS:

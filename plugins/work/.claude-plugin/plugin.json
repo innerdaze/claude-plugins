@@ -1,0 +1,11 @@
+{
+  "name": "work",
+  "description": "Portable domain-system + ticket-workflow skill. `work init` bootstraps per-project operational-knowledge files and the `prep` commands; `work on <TICKET>` delivers a tracked ticket end-to-end via subagent orchestration. Detects the environment, VCS, and ticket tracker rather than assuming them.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Lee Driscoll"
+  },
+  "homepage": "https://github.com/innerdaze/claude-plugins/tree/main/plugins/work",
+  "repository": "https://github.com/innerdaze/claude-plugins",
+  "license": "Apache-2.0"
+}

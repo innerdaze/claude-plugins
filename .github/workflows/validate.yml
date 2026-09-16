@@ -1,8 +1,9 @@
 name: validate
 
-# The plugin payload is Markdown an agent executes at run time, so there is no
-# compiler to catch drift. This workflow is the substitute - see tools/README.md
-# for why each rule exists.
+# The plugins here are mirrored in from a private monorepo by
+# tools/sync_from_agent.py, and their payload is Markdown an agent executes at
+# run time - so there is no compiler between what lands in a PR and what a user
+# gets. These three jobs are the substitute.
 
 on:
   push:
@@ -23,17 +24,57 @@ jobs:
       - name: Install PyYAML
         run: pip install --disable-pip-version-check pyyaml
 
+      # Vendored from upstream by the sync tool, so it always matches the
+      # payload release it is checking. See tools/README.md.
       - name: Validate the plugin payload
         run: python tools/validate_cadence.py
 
-      - name: Confirm the payload ships no executable code
-        # tools/ is repo infrastructure and must never migrate into cadence/.
+      # This repository is public and its source is not. The sync tool scrubs
+      # the private repo's identity out of everything it mirrors and refuses to
+      # commit if anything survives; this runs the same check against the tree
+      # as committed, which is what covers a file edited by hand.
+      - name: Check for leaked internal identifiers
+        run: python tools/sync_from_agent.py --audit-only
+
+      # The shipped payload is Markdown, plus each plugin's manifest and the
+      # small vendored `checks/` reader the plugins load to parse the config
+      # bus. Anything else appearing here means build tooling has drifted into
+      # a published plugin, where a user would install and run it.
+      - name: Confirm the payload ships nothing unexpected
         run: |
-          found=$(find cadence -type f ! -name '*.md' ! -name 'LICENSE' \
-                    ! -path '*/.claude-plugin/*.json' -print)
+          found=$(find plugins -type f \
+                    ! -name '*.md' \
+                    ! -path '*/.claude-plugin/*.json' \
+                    ! -path '*/checks/*.py' -print)
           if [ -n "$found" ]; then
-            echo "Non-Markdown files in the shipped payload:"
+            echo "Unexpected files in the shipped payload:"
             echo "$found"
             exit 1
           fi
-          echo "payload is Markdown + manifests only"
+          echo "payload is Markdown, manifests and vendored checks only"
+
+      # The manifest is generated from the plugin directories, so the two can
+      # only disagree if one was edited by hand - and a marketplace advertising
+      # a version it does not contain fails at install time, for the user.
+      - name: Confirm the marketplace manifest matches the plugins
+        run: |
+          python - <<'PY'
+          import json, pathlib, sys
+          root = pathlib.Path(".")
+          market = json.loads((root / ".claude-plugin/marketplace.json").read_text())
+          bad = []
+          for entry in market["plugins"]:
+              src = root / entry["source"]
+              manifest = src / ".claude-plugin/plugin.json"
+              if not manifest.exists():
+                  bad.append(f"{entry['name']}: {entry['source']} has no plugin.json")
+                  continue
+              have = json.loads(manifest.read_text())
+              if have["version"] != entry["version"]:
+                  bad.append(f"{entry['name']}: marketplace says {entry['version']}, "
+                             f"plugin.json says {have['version']}")
+          if bad:
+              print("\n".join(bad))
+              sys.exit(1)
+          print(f"{len(market['plugins'])} plugins, manifests agree")
+          PY

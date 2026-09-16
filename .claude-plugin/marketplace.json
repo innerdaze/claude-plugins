@@ -5,19 +5,37 @@
     "url": "https://github.com/innerdaze/claude-plugins/issues"
   },
   "metadata": {
-    "description": "Plugins by Lee Driscoll. Currently home to Cadence, a configurable project-management methodology.",
-    "version": "0.4.1"
+    "description": "Claude Code plugins by Lee Driscoll: an interoperating stack of hub, cadence, domains, work and intent."
   },
   "plugins": [
     {
-      "name": "cadence",
-      "source": "./cadence",
-      "version": "0.4.1",
-      "description": "A configurable project-management methodology: vision -> roadmap -> epics -> tickets -> gates, worked in bounded sessions. Binds to your tracker/VCS/docs via adapters and to your team's process via a flow spec (solo, team-sprints, live-oncall, or your own). Includes /cadence:doctor to check a project's setup.",
+      "name": "hub",
+      "source": "./plugins/hub",
+      "version": "1.0.0",
+      "description": "The stack's front door: reports what is installed and what each component's version is, runs the guided upgrade across every owner in order, and collates every other plugin's doctor into one report. Resolves a role to the plugin that serves it via a published roster contract, so an in-house plugin is bootstrapped the same way an official one is. Declares no dependencies and is required by nothing.",
       "author": {
         "name": "Lee Driscoll"
       },
-      "homepage": "https://github.com/innerdaze/claude-plugins/tree/main/cadence",
+      "homepage": "https://github.com/innerdaze/claude-plugins/tree/main/plugins/hub",
+      "repository": "https://github.com/innerdaze/claude-plugins",
+      "license": "Apache-2.0",
+      "keywords": [
+        "claude-code-plugin",
+        "ecosystem",
+        "upgrade",
+        "migration",
+        "roster"
+      ]
+    },
+    {
+      "name": "cadence",
+      "source": "./plugins/cadence",
+      "version": "1.0.0",
+      "description": "A configurable project-management methodology: vision -> roadmap -> epics -> tickets -> gates, worked in bounded sessions. Binds to your tracker/VCS/docs via adapters, and to your team's process via a flow spec (solo, team-sprints, live-oncall, or your own authored flow). Includes /cadence:doctor to check a project's setup.",
+      "author": {
+        "name": "Lee Driscoll"
+      },
+      "homepage": "https://github.com/innerdaze/claude-plugins/tree/main/plugins/cadence",
       "repository": "https://github.com/innerdaze/claude-plugins",
       "license": "Apache-2.0",
       "keywords": [
@@ -27,6 +45,55 @@
         "sessions",
         "planning",
         "sprints"
+      ]
+    },
+    {
+      "name": "domains",
+      "source": "./plugins/domains",
+      "version": "1.0.0",
+      "description": "Project memory: per-topic operational-knowledge files a repo authors about itself, with a manifest that maps a task's topics to the files worth loading. `domains init` scaffolds the knowledge system; `domains migrate` upgrades it. Publishes a doc-system contract so any tool can find what applies without reading this plugin's files.",
+      "author": {
+        "name": "Lee Driscoll"
+      },
+      "homepage": "https://github.com/innerdaze/claude-plugins/tree/main/plugins/domains",
+      "repository": "https://github.com/innerdaze/claude-plugins",
+      "license": "Apache-2.0",
+      "keywords": [
+        "knowledge",
+        "project-memory",
+        "domains",
+        "context"
+      ]
+    },
+    {
+      "name": "work",
+      "source": "./plugins/work",
+      "version": "1.0.0",
+      "description": "Portable domain-system + ticket-workflow skill. `work init` bootstraps per-project operational-knowledge files and the `prep` commands; `work on <TICKET>` delivers a tracked ticket end-to-end via subagent orchestration. Detects the environment, VCS, and ticket tracker rather than assuming them.",
+      "author": {
+        "name": "Lee Driscoll"
+      },
+      "homepage": "https://github.com/innerdaze/claude-plugins/tree/main/plugins/work",
+      "repository": "https://github.com/innerdaze/claude-plugins",
+      "license": "Apache-2.0"
+    },
+    {
+      "name": "intent",
+      "source": "./plugins/intent",
+      "version": "1.0.0",
+      "description": "Capture a project's design as an authoritative intent layer: what the maintainer says the system is FOR, dictated rather than read off the code, with every contradiction between stated intent and implementation logged as a tracked gap. Publishes an intent-read contract so a tool can ask what applies to what it is about to touch — and exposes no write operation at any tier, because the code gets no vote.",
+      "author": {
+        "name": "Lee Driscoll"
+      },
+      "homepage": "https://github.com/innerdaze/claude-plugins/tree/main/plugins/intent",
+      "repository": "https://github.com/innerdaze/claude-plugins",
+      "license": "Apache-2.0",
+      "keywords": [
+        "design",
+        "intent",
+        "architecture",
+        "decisions",
+        "alignment"
       ]
     }
   ]

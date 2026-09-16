@@ -1,86 +1,118 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Guidance for Claude Code (claude.ai/code) working in this repository.
 
 ## What this repo is
 
-A Claude Code / Cowork **plugin marketplace** containing one plugin, **Cadence** (`cadence/`). The shipped payload is entirely Markdown — the "programs" are skill/adapter/flow/hook instruction docs that a Claude agent loads and follows at run time, so a change to a doc *is* a change to behaviour.
+A **public plugin marketplace** and nothing else. It holds five plugins — `hub`,
+`cadence`, `domains`, `work`, `intent` — under `plugins/`, and serves them
+directly: `.claude-plugin/marketplace.json` points at each directory, so
+**merging to `main` is publishing**. There is no registry and no release step.
 
-Two things at the repo root are **not** part of the payload and must never move into `cadence/`:
+**The plugins are not developed here.** They are developed in a private monorepo
+(`agent`, cloned at `~/Projects/agent`) and mirrored in by
+`tools/sync_from_agent.py`. Everything under `plugins/` is generated output.
 
-- **`DESIGN.md`** — architecture, rationale, and history. Internal notes. No shipped file may cite it; anything an adopter needs belongs in the contracts.
-- **`tools/`** — the repo's own validator and CI. This is the only executable code in the repo, and it exists to enforce the invariants below mechanically. Keeping it outside `cadence/` is what lets the shipped plugin stay pure Markdown.
+### The rule that matters most
 
-Run the validator before committing (it is what CI runs):
+**Never edit anything under `plugins/`.** A fix made here survives exactly until
+the next sync, which deletes and rewrites each plugin directory wholesale. It
+also diverges the public copy from the one the author is actually maintaining,
+which is worse than the bug being fixed — the two look identical and behave
+differently.
+
+When something in a plugin is wrong: fix it in `~/Projects/agent/plugins/<name>/`,
+commit it there, then re-run the sync. If the user asks for a plugin change while
+in this repo, say where it has to be made rather than making it here.
+
+The same applies to `CHANGELOG.md` and `tools/validate_cadence.py`, which are
+also mirrored (from `intent/cadence/CHANGELOG.md` and `scripts/validate_cadence.py`
+upstream). `tools/sync_from_agent.py`, `README.md`, `CLAUDE.md` and
+`.github/workflows/` are this repository's own and are edited here.
+
+## The sync
 
 ```
-python tools/validate_cadence.py
+python tools/sync_from_agent.py              # sync, push, open the PR
+python tools/sync_from_agent.py --dry-run    # report what would change, write nothing
+python tools/sync_from_agent.py --no-pr      # commit locally, stop there
 ```
 
-Beyond that there is no build or test suite. The only full exercise loop is installing and running the plugin:
+It reads the **committed** upstream tree (`git archive origin/main`), never the
+working copy, so it neither disturbs nor is disturbed by whatever is checked out
+over there. In order it: resolves the ref, copies each plugin's published file
+set, scrubs the private repo's identity, regenerates the marketplace manifest,
+records provenance in `.upstream.json`, audits, validates, commits, pushes, and
+opens the PR with `gh`.
+
+Three of its design choices are load-bearing, and all three exist because the
+alternative failed:
+
+- **What to copy comes from upstream's `package.json` `files` array**, not a list
+  in this script. That array already governs what npm publishes, so it is
+  maintained; a list here would be a second answer to the same question, and the
+  second answer is the one that goes stale. It also excludes exactly the right
+  things — `evals/`, `.npmrc`, `package.json` itself.
+- **Each plugin directory is deleted before it is rewritten.** A mirror that only
+  adds files keeps serving a skill that upstream deleted, and a skill is usually
+  deleted because following it now does the wrong thing.
+- **Text is normalised to LF on ingest** (`to_lf`). `git archive` honours
+  `core.autocrlf`, so on Windows upstream bytes arrive CRLF while the rules that
+  rewrite them are anchored on `\n`. Against CRLF those rules do not error, they
+  match nothing — which is how a README once shipped a page of private-registry
+  install instructions through a scrub that reported "clean".
+
+## The scrub, and why it fails closed
+
+This repository is public; its source is not. The sync rewrites the private
+repo's identity out of every file — npm scope, GitLab URLs, project id, author —
+and then **audits the result and refuses to commit if anything survives**. A
+warning would be useless: the next statement in the script is `git push`.
+
+The audit checks two different things, because the first is not enough:
+
+1. **Identifier tokens** — `acresoftware`, `skunkworks`, the project id, the
+   registry endpoint.
+2. **The shape of private-install prose** — `The repo is private`, `read_registry`,
+   `.npmrc`. Rewriting `@acresoftware` to `@innerdaze` inside a paragraph about
+   wiring a scope to a token-gated registry produces text that passes every
+   identifier check and still sends a reader somewhere they cannot go. This is
+   not hypothetical; it is what the first run produced.
+
+If the audit fires, the fix is a rule in `REWRITES` or `INSTALL_BLOCK` in the
+sync tool — never a hand-edit of the mirrored file, which the next sync reverts.
+
+CI runs the same audit against the committed tree
+(`python tools/sync_from_agent.py --audit-only`), which is what covers a file
+edited by hand.
+
+## Adding a sixth plugin
+
+Add its name to `PLUGINS` in `tools/sync_from_agent.py` and re-run. Everything
+else — the marketplace entry, the README install block, the manifest rewrite —
+is derived. It must exist upstream with a `files` array in its `package.json`.
+
+## Before committing
 
 ```
-/plugin marketplace add C:\Users\Lee\Projects\claude-plugins
-/plugin install cadence@innerdaze
+python tools/validate_cadence.py            # payload invariants (vendored)
+python tools/sync_from_agent.py --audit-only # leak check
 ```
 
-Then, in a *separate* consumer project (never here), run `/cadence:init`, `/cadence:roadmap`, `/cadence:plan`, `/cadence:session start|end`. `cadence.zip` at the repo root is a packaging artifact and is gitignored (`*.zip`); it is not a source of truth — regenerate it from `cadence/` rather than editing it.
-
-## Architecture: two configurable layers over an invariant skeleton
-
-The one thing worth understanding before editing anything. Cadence ships an invariant methodology **skeleton** — vision → roadmap → epics → tickets → gates, worked in bounded sessions — and reads two independent layers of per-project configuration:
-
-- **Bindings** (`config.example.md`) — *where and with what* you work: tracker, VCS, doc system, execution skill, **and model tiers**. Resolved through **adapters** (`adapters/ADAPTERS.md`). Change these → same process, different toolchain.
-- **Flow** (`flows/*.flow.md`) — *how* you work: hierarchy, states, gates, cadence/ceremonies, intake & priority policy, decision rights, session definition. Change this → same tools, different process.
-
-The five skills (`skills/{init,session,plan,roadmap,doctor}/SKILL.md`) are **interpreters** of those two layers. Only `init` writes configuration; `doctor` is strictly read-only, which is what makes it safe to run anywhere. They must never hardcode a tool or a workflow. Where a step can vary, it is a named **hook** (`flows/HOOKS.md`): unset → the skill's built-in default; set → the skill loads the project's instruction doc and follows it instead.
-
-Division of labour, in one line: **hooks decide and describe; adapters perform side-effects; skills orchestrate and own the writes.** A hook returns "create these three tickets"; the skill calls the tracker adapter's `create`.
-
-`flows/solo-greenfield.flow.md` doubles as the flow-spec schema by worked example — read it before touching the flow vocabulary. `examples/author-your-own-flow/` is the level-3 proof (a non-software "manuscript" flow with two authored hooks) and should keep working as a demonstration of the same contracts.
-
-## Contracts are public API
-
-Three files are **versioned interfaces**, documented for strangers to build against:
-
-- `adapters/ADAPTERS.md` — tracker / VCS / doc-system operation contracts, and the three-tier adapter model (contracts shipped · `markdown`/`git`/`none` fallbacks shipped · **environment adapters generated project-locally by `/cadence:init`**).
-- `flows/HOOKS.md` — the hook catalog with each hook's Input → Output contract, plus the coherence rules `/cadence:init` enforces.
-- The flow-spec vocabulary, defined by example in `flows/solo-greenfield.flow.md`.
-
-Renaming a hook, or changing an Input/Output shape or an adapter operation, is a **breaking change** (see the Versioning section of `HOOKS.md`). Additive changes are minor.
-
-## Editing rules (these are what actually constrain work here)
-
-`DESIGN.md` (repo root, not shipped) carries the rationale; read it before any non-trivial change. Its six principles are the standing constraints:
-
-1. **Environment-agnostic.** Nothing in `cadence/` may assume Linear, Diversion, GitHub, a `domains/` doc system, or any MCP. Tool specifics arrive only via bindings/adapters.
-2. **Process-agnostic.** Solo, sprints, kanban, incident-first are *flows*, never code paths.
-3. **Decision support scales inversely to autonomy.** More people / more live → the plugin shifts from *making* decisions to *preparing and recording* them. It never runs the meeting or overrides human prioritization (see `flows/CEREMONIES.md`).
-4. **It owns neither execution nor the commit.** No ticket-execution skill and no VCS commit skill are shipped; both belong to the consumer project, reached via `config.execution` / the VCS adapter. `/cadence:session end` **verifies** execution-owned work rather than repeating it. The single exception is the local session-state file (`config.session_state.file`) — the one store Cadence owns.
-5. **Detect, then confirm — never assume**, across the whole lifecycle, not just init. The specific hazard called out in DESIGN: **cross-project substitution** — skills are installed once and serve every project, so another project's ticket prefix / MCP namespace / DoD will be in context and will look plausible. A missing binding is a question for the user, never an inference.
-6. **Everything specific is data.** Adapters, flows, presets, gates are instances of open contracts; there is no "built-in vs custom" divide at the mechanism level.
-
-Two more, load-bearing in practice:
-
-- **Cadence never touches a project's own memory** (`CLAUDE.md`, an agent `MEMORY.md`) and never reaches outside `.claude/cadence/`. Any pointer from a project's memory to Cadence's session state is written by that project, by hand.
-- **No leaked specifics.** MachineGame54 appears throughout DESIGN as consumer #1 / a worked example — it is never a dependency, and real IDs, workspace GUIDs, or MCP namespaces must not land in shipped files. Presets and examples use placeholders.
-
-## Cross-file consistency is the main maintenance hazard
-
-The same facts are stated in several places by design (spec, contract, skill, README). A behavioural change usually has to land in more than one of them, or the docs start contradicting each other. Known coupling:
-
-- A hook change → `flows/HOOKS.md` **and** the skill that fires it **and** any preset flow that documents its default **and** DESIGN's hook table.
-- An adapter-contract change → `adapters/ADAPTERS.md` **and** the shipped fallback implementing it (`adapters/trackers/markdown.md`, `adapters/vcs/git.md`, `adapters/docs/none.md`) **and** `skills/init/SKILL.md`, which generates adapters against the contract.
-- A config-shape change → `config.example.md` **and** every skill that reads that key **and** DESIGN's Layer 1 block.
-- A new default behaviour → the skill, the relevant preset flow, and `flows/CEREMONIES.md` if it is a ceremony.
-
-`CHANGELOG.md` is the release record and the place a breaking change must be declared — and under this project's rule, *the contracts are the public API*: renaming a hook, changing its Input/Output, removing an adapter operation, or changing a config key's meaning are all major changes.
+Both run in CI, along with a check that nothing but Markdown, manifests and the
+vendored `checks/*.py` readers reach a plugin payload, and that the marketplace
+manifest's versions match the plugin manifests'.
 
 ## Conventions
 
-- **One skill, one surface. There is no `commands/` directory.** A plugin skill is *both* typeable as `/cadence:<name>` and selectable by Claude from its description, so a command wrapper adds nothing but a duplicate entry. Learned the hard way: an earlier version shipped both, and every capability registered twice.
-- **Skill names are bare** — `init`, `session`, `plan`, `roadmap`, `doctor` — with the directory name matching the frontmatter `name` exactly. Do **not** prefix them `cadence-`: the plugin namespace already prefixes everything with `cadence:`, so a prefix yields `/cadence:cadence-session`. That namespacing is also what stops a bare `session` here from shadowing an adopter's own `session` skill.
-- **Bundled-file references need `${CLAUDE_PLUGIN_ROOT}`.** A skill's working directory is the *consumer's* repo, so `flows/HOOKS.md` resolves to nothing there. Any path from a skill into the plugin must be written `${CLAUDE_PLUGIN_ROOT}/flows/HOOKS.md`. The failure mode is silent — the model improvises rather than erroring — so this is easy to reintroduce and hard to notice.
-- **Descriptions are the dispatch surface.** Each SKILL.md `description` must name the trigger phrases; that is how the skill gets selected.
-- Flow specs and configs are **Markdown with a YAML block**, read as prose by the skills — human-editable, not machine-validated. Keep them readable over strict.
-- Prose style throughout is deliberate: em-dashes, bolded lead-ins, a rationale for every rule. Match it — these docs are read by both people and models, and the rationale is what makes a rule survive contact with a novel case.
+- **One skill, one surface. There is no `commands/` directory.** A plugin skill
+  is both typeable as `/<plugin>:<name>` and selectable by Claude from its
+  description, so a command wrapper only registers every capability twice.
+- **Skill names are bare** (`init`, `session`, `doctor`), with the directory name
+  matching the frontmatter `name`. The plugin namespace already prefixes them.
+- **Bundled-file references need `${CLAUDE_PLUGIN_ROOT}`.** A skill's working
+  directory is the *consumer's* repo, so a bare relative path resolves to
+  nothing there and the model improvises rather than erroring.
+- Prose style in the plugins is deliberate — a rationale for every rule, because
+  these docs are read by models as well as people, and the rationale is what
+  makes a rule survive contact with a case nobody wrote down.
