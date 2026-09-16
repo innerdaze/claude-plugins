@@ -24,31 +24,11 @@ plugin straight out of this repository.
 Each has its own README. Once installed, a plugin's commands are namespaced
 under it — `/cadence:init`, `/work:on`, `/hub:status`, and so on.
 
-`innerdaze` is the marketplace name declared in
-`.claude-plugin/marketplace.json`; it differs from the repository name because
-Claude Code rejects marketplace names containing "claude" or "anthropic" as
-impersonating an official source.
-
 To try it from a local clone instead:
 
 ```
 /plugin marketplace add /path/to/claude-plugins
 ```
-
-## Where these are developed
-
-**Not here.** The plugins are developed in a separate monorepo and mirrored into
-this one by [`tools/sync_from_agent.py`](./tools/sync_from_agent.py), which
-copies each plugin's published file set, rewrites its manifests for this
-marketplace, regenerates `.claude-plugin/marketplace.json`, and opens a pull
-request. Merging that PR is what publishes.
-
-So an edit made directly to `plugins/**` here is lost at the next sync. Fixes
-belong upstream. `.upstream.json` records the commit this tree was mirrored
-from, and `CHANGELOG.md` — also mirrored — is the record of what changed.
-
-`tools/` is this repository's own infrastructure and is never part of a plugin
-payload.
 
 ## Licence
 
