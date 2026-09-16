@@ -434,6 +434,26 @@ def git_is_clean() -> bool:
     return run(["git", "status", "--porcelain"], cwd=ROOT) == ""
 
 
+def find_gh() -> str | None:
+    """Locate the GitHub CLI.
+
+    PATH first, then the places Windows installers put it. The fallback is not
+    fussiness: a shell started before `winget install gh` has the old PATH, so
+    the tool is on disk and invisible, and the only symptom is this script
+    quietly declining to open the PR it was asked for.
+    """
+    found = shutil.which("gh")
+    if found:
+        return found
+    for candidate in (
+        Path(os.environ.get("ProgramFiles", r"C:\Program Files")) / "GitHub CLI" / "gh.exe",
+        Path(os.environ.get("LOCALAPPDATA", "")) / "Programs" / "GitHub CLI" / "gh.exe",
+    ):
+        if candidate.is_file():
+            return str(candidate)
+    return None
+
+
 def open_pr(branch: str, sha: str, records: dict[str, dict], previous: dict) -> None:
     lines = [
         f"Mirrors `agent@{sha[:12]}` into this marketplace.",
@@ -456,7 +476,8 @@ def open_pr(branch: str, sha: str, records: dict[str, dict], previous: dict) -> 
     ]
     body = "\n".join(lines)
 
-    if shutil.which("gh") is None:
+    gh = find_gh()
+    if gh is None:
         print(
             "\ngh is not installed, so the PR was not opened. The branch is pushed;\n"
             "open it here:\n"
@@ -467,7 +488,7 @@ def open_pr(branch: str, sha: str, records: dict[str, dict], previous: dict) -> 
         )
         return
 
-    url = run(["gh", "pr", "create",
+    url = run([gh, "pr", "create",
                "--repo", GITHUB_REPO,
                "--base", "main",
                "--head", branch,
