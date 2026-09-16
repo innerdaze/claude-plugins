@@ -11,6 +11,22 @@ changing a hook's Input/Output, removing an adapter operation, or changing the
 meaning of a config key is a *major* change. Adding an optional hook, operation,
 field, or config key is *minor*.
 
+## [1.0.0] — 2026-09-16
+
+Published in the ecosystem-wide 1.0.0 release alongside `work`, `domains`, `intent` and
+`hub`. The major marks the first stable release of the five-plugin set; **no Cadence
+contract changed** — hooks, adapter operations and config keys are as in 0.5.x, so a
+0.5 project needs no migration.
+
+0.5.2 and 0.5.3 were republishes of the 0.5.1 payload by the release job while its
+commit step was being fixed; they carry no payload change and have no entry of their own.
+
+### Changed
+
+- The eval suite is expressed in the `claude plugin eval` schema 1.1 — one case format
+  run by either the harness or the plugin-eval runner. Test-only; nothing an adopter
+  installs is affected.
+
 ## [0.5.1] — 2026-09-11
 
 Published from the ecosystem release. The payload changes are described under

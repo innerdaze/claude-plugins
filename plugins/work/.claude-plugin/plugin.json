@@ -1,7 +1,7 @@
 {
   "name": "work",
   "description": "Portable domain-system + ticket-workflow skill. `work init` bootstraps per-project operational-knowledge files and the `prep` commands; `work on <TICKET>` delivers a tracked ticket end-to-end via subagent orchestration. Detects the environment, VCS, and ticket tracker rather than assuming them.",
-  "version": "0.2.1",
+  "version": "1.0.0",
   "author": {
     "name": "Lee Driscoll"
   },

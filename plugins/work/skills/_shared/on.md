@@ -94,27 +94,28 @@ phase with the right model + effort) and offer to persist it via `update-workflo
 three-phase spine is never up for negotiation; see `update-workflow.md`.
 
 The ticket id is the rest of `$ARGUMENTS`. Normalize a bare number (`42`) to
-`<PREFIX>-42` using the ticket prefix from PROJECT.md. If `$ARGUMENTS` has no id and
-the project has a tracker, ask which ticket. If PROJECT.md says the tracker is
-`none`, ask the user to describe the task instead and skip every fetch/comment/status
-step below.
+`<PREFIX>-42` using `Prefix` from the bus's `## Tracker` (no `Prefix` row ⇒ use the id as
+given). If `$ARGUMENTS` has no id and the project has a tracker, ask which ticket. If
+`## Tracker → Kind` is `none`, ask the user to describe the task instead and skip every
+fetch/comment/status step below.
 
 ## Config you read from PROJECT.md (substitute before pasting into subagents)
 
 | Placeholder | Source in PROJECT.md |
 |---|---|
 | `<repo path>` | **Not in PROJECT.md** — derived at runtime (`git rev-parse --show-toplevel`, else cwd). Pasted into every subagent prompt (subagents start with no cwd). |
-| `<PROJECT NAME>` | Project name. |
-| `<ENV>` | Environment label — e.g. "React 18 (Vite + TS)", "Python 3.12 (Django 5)". Sets the vocabulary. |
-| `<PREFIX>` | Ticket prefix, for normalizing ids and referencing the ticket. |
-| `<VCS>` / `<commit workflow>` | Version control + how commits happen. |
-| `<TRACKER>` + tracker operations | The tracker and its fetch / comment / status / create calls. |
-| `<verification>` | How "done" is proven — the commands/checks to run before completing a step. |
+| `<PROJECT NAME>` | `## Project → Name`. |
+| `<ENV>` | `## Environment → Stack` — e.g. "React 18 (Vite + TS)", "Python 3.12 (Django 5)". Sets the vocabulary. |
+| `<PREFIX>` | `## Tracker → Prefix` (row absent ⇒ no prefix). |
+| `<VCS>` / `<commit workflow>` | `## Version control → Kind` and `Commit workflow`. |
+| `<TRACKER>` | `## Tracker → Kind` and `Access` — which tracker, and the MCP namespace or CLI that reaches it. |
+| `<verification>` | `## Verification → Proven by` — the commands that prove "done" before a step completes. |
 
-**Tracker calls are not hard-coded here.** Wherever a step says "fetch the ticket",
-"post a comment", or "set status", use the concrete operation PROJECT.md lists for
-this project's tracker (a Linear/Jira/Notion MCP call, or a `gh`/`glab` CLI command).
-The shapes differ; PROJECT.md is the adapter.
+**Tracker calls are not in the bus.** The bus says *which* tracker and *how it is reached*;
+the operations — fetch, read comments, comment, status, create — are in `tracker-ops.md` (this
+directory), by `Kind`, with `<NS>` replaced by `Access`. Read it only when `Kind` is not `none`.
+Wherever a step below says "fetch the ticket", "post a comment" or "set status", that file is the
+adapter.
 
 ## Model & effort selection — why each tier
 

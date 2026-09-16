@@ -21,7 +21,7 @@ files it needs, never the whole history.
 
 `templates.md` declares two integers:
 
-- **Domain system version** (canonical) — the newest version; the highest `vN.md` here (**v12**).
+- **Domain system version** (canonical) — the newest version; the highest `vN.md` here (**v13**).
 - **Minimum supported version** (floor) — the oldest version `work migrate` will migrate
   *from*. A project stamped below the floor is too far behind to chain safely: it re-scaffolds
   instead of migrating.

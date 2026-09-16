@@ -8,7 +8,7 @@ strip anything that belongs to a different ecosystem.
 
 ## Domain system version
 
-**Domain system version: 12**
+**Domain system version: 13**
 **Minimum supported version: 1**
 
 This is the canonical version of the init **scaffolding** — the shape of the files
@@ -73,26 +73,53 @@ than minting v4/v5 — **once it ships, it freezes.**)
 > is that skeleton plus the rows `work` fills in. The two are compared mechanically by
 > `scripts/validate_payloads.py`; if they disagree, the vendored spec is right.
 
+**What goes in it, and what does not.** The bus is a map **for the plugins** — which tracker,
+which VCS, which command proves done, who owns which artifact. Every plugin loads it blind, first,
+on every run, and none of them reads prose. So:
+
+- **Facts, not instruction.** A value is a name, a path, a kind, a command, a stamp. Not a
+  sentence about how to use it. `git commit -m …` is a value; *"never commit to main"* is a
+  working agreement and belongs in the project's `CLAUDE.md`. A procedure belongs in the skill
+  that runs it. How `work on` drives the tracker is in `tracker-ops.md`, never here.
+- **A section is a heading, a marker and a table.** No prose beside the table, nothing under the
+  H1 but the schema marker. Write the file below **exactly** — the notes in this list are for you,
+  not for the file.
+- **Unknown is an absent row.** `none` is a fact and stays (*this project has no tracker* tells a
+  tool something). Never write `n/a`.
+- **Not an overflow for `CLAUDE.md`.** There is no notes section. Something worth stating once is
+  the project's to place, and the bus is the one file where it costs every plugin.
+
+**Writing rules the file itself does not carry** (they are here so two runs produce one diff):
+
+- **The six `shared` sections** — `## Project`, `## Environment`, `## Version control`,
+  `## Tracker`, `## Verification`, `## Bindings` — belong to no role, because any tool can be the
+  one that asked the user. Write a row that is absent, never overwrite a value another tool
+  wrote; a disagreement is a human's to resolve. `## Bindings` is additive (append rows); the
+  other five are not.
+- **Additive tables are appended to, never inserted into.** A new row goes after the last one.
+- **Marker spacing:** a section you create from this file — copy its heading line **verbatim**,
+  padding included. A marker you add to an existing heading — exactly one space. The whitespace
+  is not significant to any check; the rule exists so two runs agree.
+- **The `<!-- manifest schema: N -->` marker** under the H1 is frozen in presence and syntax; its
+  value is not. The `| manifest schema |` row in `## Versions` is not a substitute.
+- **`## Artifacts`: register only what `work` owns** — the ticket-flow rows. An absent row means
+  not registered, never forbidden. Registering someone else's artifact means detecting its path,
+  which is what the table exists to avoid. **Owner is a role id** (`knowledge` · `delivery` ·
+  `methodology` · `intent-layer` · `shared-memory`), never a tool name. A row whose path has
+  vanished is treated as absent and reported once — never guessed at.
+- **`## Bindings`: a kind, not a product path.** A tool resolves it as: project-local adapter for
+  that kind, else the kind's shipped fallback, else an error naming the command that generates
+  one. `none` is a real binding with a real fallback.
+- **`## Versions`: one row per component, stamped by its owner**, each owner with its own floor.
+  `work` stamps its two rows from the canonical integers at the top of this file.
+- **`## Commands`: each owner declares what migrates its own components.** The row shape is
+  **not** frozen (the Doctor column was added after the table shipped). A role with no row, or a
+  command not available in this session, is reported, never guessed.
+
 ```markdown
 # Project Configuration — {ProjectName}
 
 <!-- manifest schema: 1 -->
-
-Read by the `work on` skill at the start of every invocation, before anything else.
-It is the single source of truth for how this project is worked. Keep it in sync if
-the VCS changes or the tracker is reconfigured. (Note: no machine-specific repo path
-is stored here — it's unique per developer; `work on` derives it at runtime.)
-
-**Six sections belong to no role**, and are marked `shared`: `## Project`, `## Environment`,
-`## Version control`, `## Tracker`, `## Verification` and `## Bindings`. Every tool needs them —
-`domains` to seed topics, `work` for vocabulary, `work` **and** `cadence` to reach the tracker and
-to run the verification commands — and **any of them can legitimately be the one that asked the
-user**, because any of them can be installed first. So they follow the additive rule: **write a
-row that is absent, never overwrite a value another wrote**, and a disagreement is a human's to
-resolve.
-
-`[note]` A section every plugin needs and only one may write is a dependency wearing a marker.
-That is why these are not `delivery`'s, even though `work init` is usually what fills them in.
 
 ## Project              <!-- owner: shared -->
 
@@ -111,25 +138,21 @@ That is why these are not `delivery`'s, even though `work init` is usually what 
 | Key | Value |
 |---|---|
 | Kind | {git \| Diversion \| hg \| svn \| none} |
-| Commit workflow | {e.g. "via /commit skill" \| "git commit -m …" \| "dv commit — never git"} |
+| Commit workflow | {the command that commits, e.g. "git commit -m …" \| "via /commit skill" \| "dv commit"} |
 
 ## Tracker              <!-- owner: shared -->
-
-**Which tracker this project uses is an environment fact, not a methodology decision.** That is
-why no role owns this section: *what to work on next* is `cadence`'s and lives in `## Execution`,
-while *where the tickets are* is everyone's to read and anyone's to have asked about.
 
 | Key | Value |
 |---|---|
 | Kind | {Linear \| Jira \| GitHub \| GitLab \| Notion \| none} |
-| Access | {MCP namespace e.g. `mcp__linear-uft`, OR CLI e.g. `gh`/`glab`, OR "n/a"} |
-| Prefix | {e.g. `MACH`, `RD` — or "n/a" if the tracker doesn't use prefixes} |
+| Access | {MCP namespace e.g. `mcp__linear-uft`, or CLI e.g. `gh` / `glab` — omit the row when Kind is none} |
+| Prefix | {e.g. `MACH`, `RD` — omit the row when the tracker has no prefix} |
 
 ## Verification         <!-- owner: shared -->
 
 | Key | Value |
 |---|---|
-| Proven by | {how "done" is proven, e.g. "`yarn test` + `tsc --noEmit` + `yarn build`"} |
+| Proven by | {the commands that prove "done", e.g. "`yarn test` + `tsc --noEmit` + `yarn build`"} |
 
 ## Bindings             <!-- owner: shared, additive -->
 
@@ -139,46 +162,7 @@ while *where the tickets are* is everyone's to read and anyone's to have asked a
 | Intent | {`none`, or the binding for an intent layer} |
 | Shared knowledge | {`none` — or the binding for a shared-knowledge service, if the project has one} |
 
-Each binding row names a **kind**, not a product path. A tool resolves it as: a project-local
-adapter for that kind, else the kind's shipped fallback, else an error naming the command that
-generates one. `none` is a real binding with a real fallback — it answers "not configured",
-which is an answer.
-
 ## Artifacts            <!-- owner: shared, additive -->
-
-**Every section carries an owner marker.** That is frozen-core: a section without one is
-unowned, nothing will maintain it, and every doctor reports it as drifted. Write the marker
-even when the owner is `shared`.
-
-**Two writing rules keep the same edit producing the same diff**, which is what makes a
-migration reviewable and a second developer's run a no-op rather than a conflict:
-
-- **Additive tables are appended to, never inserted into.** A new row goes after the last
-  existing row. Row order carries no meaning, so any other placement is a coin flip that shows
-  up as a conflict in a table nobody chose to touch.
-- **Marker spacing has one rule per case, and the cases do not overlap.** A section you create
-  from this file: copy its heading line **verbatim**, padding included — the template is the
-  literal, so "as shown here" is unambiguous where "aligned" is not. A marker you add to a
-  heading that already exists: **exactly one space**, because there is no template line to copy
-  and computing a column from the file's other headings is arithmetic two runs do differently.
-
-  The whitespace itself is **not significant** — no check reads it — so it is never a reason to
-  rewrite a line you did not otherwise need to touch. That is also why the rule can be this
-  blunt: it exists to make two runs agree, not because a column matters.
-
-The same goes for the `<!-- manifest schema: N -->` marker under the H1. Its *presence and
-syntax* are frozen (the value is not), it is the first thing a reader checks to know it can
-parse this file at all, and the `| manifest schema |` row in `## Versions` is **not** a
-substitute — a version row is a component's stamp, the marker is the file's format.
-
-Shared, additive: **each tool registers the artifacts it owns, and no others.** `work` owns
-the workflow overlay row. Other rows appear when their owner runs — an absent row means the
-artifact is not registered, never that it is forbidden. Registering someone else's artifact
-would mean detecting its path, which is exactly what this table exists to avoid.
-
-**Owner is a role id, not a tool name** (`knowledge` · `delivery` · `methodology` ·
-`intent-layer` · `shared-memory`), so a rename or a handover does not break resolution. A row
-whose path has since vanished is treated as **absent and reported once** — never guessed at.
 
 | Artifact | Path | Owner |
 |---|---|---|
@@ -187,11 +171,6 @@ whose path has since vanished is treated as **absent and reported once** — nev
 | Ticket flow rules | {`.agent/work/rules/`, or omit the row when the overlay has no extracted rules} | delivery |
 
 ## Versions             <!-- owner: shared, additive -->
-
-Shared, additive: **one row per component, stamped by its owner.** Each owner also sets its own
-floor — the oldest version it will migrate *from* — so there is no single number a project can
-be "behind" on. A component with no row has never been stamped; treat it as the owner's oldest
-supported version.
 
 | Component | Version | Owner |
 |---|---|---|
@@ -202,41 +181,10 @@ supported version.
 
 ## Commands             <!-- owner: shared, additive -->
 
-Shared, additive: **each owner declares the command that migrates its own components.** This is
-what lets any tool's `migrate` act on the whole file without knowing another tool exists — it
-reads the rows above for what is stale, and this table for who to call.
-
-> **This table's row shape is _not_ part of the frozen core, unlike `## Artifacts` and
-> `## Versions` above.** It may gain columns. Do not infer otherwise from its neighbours.
-
 | Role | Migrate | Re-scaffold | Doctor |
 |---|---|---|---|
 | delivery | `work migrate` | `work init` | `work doctor` |
 | knowledge | {`domains migrate`} | {`domains init`} | {`/domains:doctor`} |
-
-The **Doctor** column is why the row shape is not frozen: it was added after the table shipped,
-which a frozen shape could not have allowed. A role with no doctor declared simply has none —
-report that rather than assuming a name.
-
-A role with no row, or a command that is not available in this session, is **reported, never
-guessed** — "`knowledge` is stale and its migrate command is not available here" is a complete
-answer.
-
-## Tracker operations   <!-- owner: shared -->
-
-How `work on` fetches, comments, and updates status in this tracker (fill the row
-that matches "Ticket tracker" above; delete the others):
-
-- **Fetch a ticket:** {`<NS>__get_issue id:"<ID>"` | `gh issue view <ID>` | `glab issue view <ID>` | …}
-- **Read comments:** {`<NS>__list_comments` | included in `gh issue view --comments` | …}
-- **Post a comment:** {`<NS>__save_comment` | `gh issue comment <ID> --body …` | …}
-- **Change status / close:** {`<NS>__save_issue id state` | `gh issue close` / `--add-label` | …}
-- **File a follow-up:** {`<NS>__save_issue` | `gh issue create` | …}
-
-## Notes                <!-- owner: shared -->
-
-- Bare ticket numbers normalize with the `{PREFIX}` prefix: `42` → `{PREFIX}-42`. {Delete if no prefix.}
-- {Any project-specific working agreements worth stating once — e.g. "Version control is Diversion, not git."}
 ```
 
 ---

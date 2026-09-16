@@ -49,20 +49,19 @@ actually supports (check `package.json` scripts, Makefile, CI config).
 | `.svn/` | Subversion | `svn` |
 | none | none | note it; `work on` will skip the commit step and just leave the diff |
 
-## Ticket trackers — detection & adapters
+## Ticket trackers — detection
 
-Detect from (a) MCP servers loaded in the session, (b) repo hints, then **confirm
-with the user** and capture the exact namespace/CLI + ticket-id prefix in PROJECT.md.
+Detect from (a) MCP servers loaded in the session, (b) repo hints, then **confirm with the
+user** and record `Kind`, `Access` and `Prefix` in the bus's `## Tracker`.
 
-| Tracker | Detect via | How `work on` talks to it |
+| Tracker | Detect via | `Access` |
 |---|---|---|
-| Linear | a `*linear*` MCP server is loaded | MCP tools under that namespace: `<NS>__get_issue`, `<NS>__list_comments`, `<NS>__save_comment`, `<NS>__save_issue` |
-| Jira | a Jira MCP server, or `.jira`/Atlassian config | the Jira MCP tools, or the `jira`/`acli` CLI if that's what's available |
-| GitHub Issues | `.github/`, a GitHub remote | the `gh` CLI: `gh issue view`, `gh issue comment`, `gh issue edit`, `gh issue create` |
-| GitLab Issues | `.gitlab-ci.yml`, a GitLab remote | the `glab` CLI: `glab issue view`, `glab issue note`, `glab issue update` |
-| Notion | a Notion MCP server | the Notion MCP tools, against the configured database |
-| none | nothing tracks tickets | `work on` runs in "describe-the-task-inline" mode: the user states the task, no fetch/comment/status steps |
+| Linear | a `*linear*` MCP server is loaded | that MCP namespace, e.g. `mcp__linear-uft` |
+| Jira | a Jira MCP server, or `.jira`/Atlassian config | the Jira MCP namespace, else the `jira`/`acli` CLI |
+| GitHub Issues | `.github/`, a GitHub remote | `gh` |
+| GitLab Issues | `.gitlab-ci.yml`, a GitLab remote | `glab` |
+| Notion | a Notion MCP server | the Notion MCP namespace |
+| none | nothing tracks tickets | — (omit the row) |
 
-The point of capturing this in PROJECT.md is that `work on` is otherwise
-tracker-agnostic — it asks PROJECT.md "how do I fetch / comment / set status here?"
-and uses whatever answer it finds.
+**How `work on` drives each one is not recorded in the bus.** It is in `tracker-ops.md`, by
+`Kind`. The bus says which tracker and how it is reached; the plugin knows the rest.

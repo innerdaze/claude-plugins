@@ -93,8 +93,10 @@ convention? If detection is ambiguous, ask. Capture the VCS and the commit workf
 4. If there's no tracker, that's fine: record `none`. `work on` will run in
    describe-the-task-inline mode.
 
-Fill the tracker-operations adapter in PROJECT.md (from `templates.md`)
-for the chosen tracker so `work on` knows the exact fetch/comment/status calls.
+Record only those three in the bus's `## Tracker` — `Kind`, `Access`, `Prefix` — and **omit a
+row you have nothing for** (no `Access` when `Kind` is `none`; no `Prefix` when the tracker has
+none). Never write `n/a`. **Do not write operations into the bus:** how `work on` fetches,
+comments and sets status is in `tracker-ops.md`, by `Kind`.
 
 ---
 
