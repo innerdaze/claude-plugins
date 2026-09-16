@@ -1,2 +1,6 @@
 # Packaged plugin archives — build artifacts, not sources
 *.zip
+
+# Python bytecode from tools/
+__pycache__/
+*.pyc
