@@ -79,7 +79,7 @@ process decision only you can make.
 | `active` | no | work is in flight | `/cadence:session start` does **not** change status |
 | `blocked` | no | started, but cannot proceed for a reason outside the work | a session cannot park a stuck item; it stays wherever it is |
 | `review` | no | awaiting review | no review step is implied |
-| `abandoned` | no | list of terminal-but-not-success lanes | nothing is treated as abandoned |
+| `abandoned` | no | list of terminal-but-not-success lanes — cadence's word for *finished but not Done*, not a verdict on the column. A column the tracker itself classifies terminal (`canceled`, `duplicate`) is already in the terminal set and needs no entry here | nothing is treated as abandoned beyond what the tracker classifies terminal |
 
 The **terminal set** is computed as `done` + `abandoned`. It is never declared
 separately, so it cannot drift. `list_open` is "not in the terminal set."
