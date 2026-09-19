@@ -27,6 +27,12 @@ field, or config key is *minor*.
 
 ### Fixed
 
+- **A column the tracker itself classifies terminal — `Canceled`, `Duplicate` — is accounted
+  for.** The doctor reported such columns as drifted on every run unless the config repeated what
+  the tracker already said; it now counts the tracker's category as the answer and reports them as
+  information at most. Init stops proposing the abandoned list for them, and `FLOW-SPEC` says the
+  `abandoned` role covers only what the tracker does not classify — cadence's word for *finished
+  but not Done*, not a verdict.
 - **A delivery command that no longer resolves is reported, and init proposes the replacement.**
   A real upgrade found `## Execution` → `Skill` still naming a command whose skill had since been
   packaged into a plugin under a new address; sessions would have handed off to nothing. The

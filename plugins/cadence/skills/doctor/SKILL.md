@@ -101,9 +101,16 @@ an empty result as normal.
 
 ## 2bb. Every column accounted for
 
-Take `statuses()` and check each one appears somewhere: mapped in `status_map`, listed in
-`tracker.hands_off`, or in the abandoned list. **A column in none of them is drifted** — name it
-and ask which it is.
+Take `statuses()` and check each one is accounted for **somewhere the reasons are already on
+record**: mapped in `status_map`, listed in `tracker.hands_off`, in the flow's abandoned list —
+**or classified terminal by the tracker itself** (`category` canceled, duplicate, completed and
+the like, per `statuses()`). The tracker's own classification is an answer: `ADAPTERS.md` says
+to believe a tool that reports a status terminal, `list_open` already excludes those columns, and
+writing the same fact into the config again would change nothing but this line. Report such
+columns **as information at most** — *"2 columns the tracker marks finished and the flow does not
+name: Canceled, Duplicate — fine"* — never as drift. **A column in none of those four places is
+drifted** — name it and ask which it is. Prose in `tracker.notes` that mentions a column does not
+account for it: a note is for a person, and nothing mechanical reads it.
 
 An unaccounted column is not cosmetic: nothing knows whether work sitting there is waiting on
 cadence, on a person, or on nothing at all. That is the difference between "handed to review, not

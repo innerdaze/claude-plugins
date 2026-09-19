@@ -96,7 +96,7 @@ The flow's lanes are **process vocabulary**. Your tracker has whatever columns i
    | unstarted | the `committed` role's lane, if the flow has one |
    | started | the `active` role's lane |
    | completed | the `done` role's lane |
-   | canceled, duplicate, and similar | the `abandoned` list |
+   | canceled, duplicate, and similar | **nothing to record** — the tool already classifies them terminal, `list_open` excludes them, and the doctor counts the category as the answer. Say so, and offer the `abandoned` list only for a finished-not-done column the tool files under some other category |
 
    This is **detection, not inference**: you are reading a classification the tool already made, showing it, and asking. Present it as *"here is what your board's own categories suggest — correct anything wrong"*, never as a decision already taken. Nothing is written until the user says so.
 
@@ -114,7 +114,7 @@ The flow's lanes are **process vocabulary**. Your tracker has whatever columns i
    |---|---|---|
    | **a lane** | cadence moves work into and out of it | `status_map` |
    | **hands-off** | the column is real and cadence does **nothing** there — someone else's step | `tracker.hands_off` |
-   | **abandoned** | terminal, not done — cancelled, duplicate, won't do | the abandoned list |
+   | **abandoned** | terminal, not done — cancelled, duplicate, won't do — **when the tool does not already say so**; cadence's word for *finished but not Done*, not a verdict on the column | the abandoned list |
 
    **Ask about anything you cannot draft confidently. Do not leave it out.** A column left out is
    indistinguishable from a column nobody thought about, and the difference shows up later as the
