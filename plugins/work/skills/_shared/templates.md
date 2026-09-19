@@ -153,7 +153,7 @@ on every run, and none of them reads prose. So:
 | Key | Value |
 |---|---|
 | Proven by | {the commands that prove "done", e.g. "`yarn test` + `tsc --noEmit` + `yarn build`"} |
-| Definition of Done | {path to the document that states the project's bar in its own words — items like "persistence", "no new warnings" — or omit the row when the project has not written one down. `Proven by` is what is automated; this is what must be true} |
+| Definition of Done | {path to the document that states the project's bar in its own words — items like "persistence", "no new warnings" — or `path#heading` when the bar is one section of a larger document, so only that section is read. Omit the row when the project has not written one down. `Proven by` is what is automated; this is what must be true} |
 
 ## Bindings             <!-- owner: shared, additive -->
 

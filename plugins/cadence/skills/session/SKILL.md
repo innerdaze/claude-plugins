@@ -140,7 +140,10 @@ checkpoint is the last thing that touches the repo.**
 
    **Read the project's Definition of Done for what each check means.** The bus's
    `## Verification → Definition of Done` row, when present, names the document where the bar is
-   written in the project's own words. A declared check is a *name* — `persistence`, `accessibility-reviewed` —
+   written in the project's own words — a `path`, or `path#heading` for one section of a larger
+   document (to the next heading of the same level; headings inside fenced code do not count). A
+   heading that does not resolve is reported and the check is judged from its name; never read the
+   whole file in its place. A declared check is a *name* — `persistence`, `accessibility-reviewed` —
    and the document is its meaning: judge the check against what the document says, and quote
    the passage in the report, so the gate holds the item to the project's bar rather than to
    whatever the name suggests. Absent row → the name is all there is; say so once. A check the
