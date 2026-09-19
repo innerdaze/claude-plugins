@@ -150,11 +150,35 @@ cheap ones directly: a grep that settles "no module imports another module's cod
 takes seconds and is worth more than a paragraph of hedging. **Verify what's cheap,
 log what's expensive.**
 
-Every mismatch becomes a row in `alignment.md` with a severity:
+**Establish provenance before severity.** Before logging a mismatch, ask whether the
+implementation is something the maintainer *chose* or something that *arrived* — with a
+framework template, a vendor plugin, a starter kit, sample content, a generated scaffold. Inherited
+code is evidence of nothing about the design: a sample project's default behaviour contradicting
+a stated rule is not the maintainer disagreeing with themselves. It is still worth a row, because
+it will shape the design by inertia if nobody decides about it — but it goes in the register's
+**Inherited, not chosen** section as scaffolding to keep or remove, never in the gap table as
+drift. Ask when unsure; a wrong severity here costs a round of withdrawals, and the pattern is
+general — `create-react-app` defaults, a cloud provider's starter IaC, a vendored SDK's example
+handlers, an engine's sample game.
+
+Every mismatch that *was* chosen becomes a row in `alignment.md` with a severity:
 
 - **blocker** — the intent is unachievable as built
 - **drift** — works, but the wrong shape
 - **cosmetic** — naming or docs only
+
+Key each row by a content slug — `<area>/<claim>`, never a number. A register is a list
+more than one pass appends to, and a sequential key is only correct for the writer who holds
+the current state; two passes in one tree will mint the same number from a stale read, silently.
+Same rule for any list the index grows (`references/templates.md`).
+
+**A register you find already keyed by number was written by an earlier version of this skill.**
+Offer to re-key it — this is the one workflow allowed to write the register, and the maintainer
+is present, which is the condition. Each row gets a slug from its subject; a permanent *Legacy
+numbering* table (`Was | Now`) goes at the foot so the numbers quoted in older commits and
+tickets still resolve; every cross-citation in the layer's other docs is rewritten. Content is
+untouched — you are changing keys, not claims — and say so when you show what you wrote. Decline
+to do it silently as a side effect of something else: it is a change to a doc set somebody cites.
 
 Also answer any factual questions they asked along the way ("are these kept up to
 date on CI?"). Getting a real answer often uncovers the most interesting gaps.
@@ -198,9 +222,11 @@ Docs nobody points at get ignored, and gaps nobody tracks get forgotten.
    may create it, none may wait for another):
 
    - `## Artifacts` → `| Intent | intent/ | intent-layer |`
-   - `## Versions` → `| intent scaffolding | 1 | intent-layer |` — a role owning an artifact with
-     no version row is drifted by the shared checks, and "no migrations yet" does not exempt it
-   - `## Commands` → `| intent-layer | n/a — no migrations yet | /intent:init | /intent:doctor |`
+   - `## Versions` → `| intent scaffolding | <floor> | intent-layer |` — a role owning an artifact
+     with no version row is drifted by the shared checks. A layer you are registering here
+     already existed, so it gets the **floor**, and `/intent:migrate` brings it up; both integers
+     are declared in `${CLAUDE_PLUGIN_ROOT}/skills/migrate/SKILL.md`
+   - `## Commands` → `| intent-layer | /intent:migrate | /intent:init | /intent:doctor |`
    - the `Intent` binding row → `markdown`, the kind the shipped fallback implements
 
    **This is what makes the layer visible to tooling at all.** Until it exists, the folder is

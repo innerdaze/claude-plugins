@@ -54,6 +54,23 @@ statement recorded in the config bus, not a redefinition of what `work` does.
 - **It must not repeat what `owns` claims.** That is the entire point of the declaration: a
   caller that commits again after `work` committed is the duplication this removes.
 
+## Status is the caller's, when there is a caller
+
+`status` is deliberately **not** in `owns`. Moving an item to its done lane is the step a
+methodology gates — a Definition of Done runs *before* it, or it is theatre — so when a project
+has a caller that runs that ritual, the transition belongs to the caller and `work` leaves it.
+
+The signal is a repo fact, never a plugin's presence: **the config bus has an `## Execution`
+section.** That section is written by whichever tool runs the session ritual, and it names what
+the execution skill owns. With it present, `work`'s wrap-up **does not change the item's status**;
+it says once that the transition is the session's and names the caller's end command. Without
+it, no ritual exists and `work` asks the user and sets the status as before.
+
+The one override is the project's: an `Owns` row in that section that names **`status`** says
+*the execution skill closes items itself*, and `work` then does. It is a statement the project
+makes knowing what it costs — a gate that runs after the item is already done — and the
+methodology's doctor reports it as a feature switched off.
+
 ## Two prohibitions
 
 - **Never work around a missing capability** by doing the work somewhere the contract does not

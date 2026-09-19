@@ -730,8 +730,16 @@ covering for each draft: file as-is / modify / skip — and the status change fo
 `<TICKET-ID>` (which state). Then act:
 - For each approved draft, create the ticket via the tracker's create op with the
   draft's fields (and the project's default team/project if the tracker has them).
-- Update `<TICKET-ID>`'s status via the tracker's status op.
+- Update `<TICKET-ID>`'s status via the tracker's status op — **only if the transition is
+  yours.** Read the bus for an `## Execution` section first. **Present → the transition belongs to
+  the session ritual that wrote it**: do not change the status, do not ask which state; say once
+  that closing is the session's step and name its end command (the `## Commands` row for the
+  role that owns the section). Unless that section's `Owns` row names `status`, in which case the
+  project has said the execution skill closes items itself, and you do. **Absent → no ritual
+  exists here**, and the status change is yours as below.
 Never change status without user permission — teams reserve different state names for "done".
+**And never change it past a gate you did not run**: closing inline when a session ritual owns
+the transition is how a Definition of Done gets run after the fact, which is not running it.
 
 ---
 

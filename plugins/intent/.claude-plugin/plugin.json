@@ -1,7 +1,7 @@
 {
   "name": "intent",
   "description": "Capture a project's design as an authoritative intent layer: what the maintainer says the system is FOR, dictated rather than read off the code, with every contradiction between stated intent and implementation logged as a tracked gap. Publishes an intent-read contract so a tool can ask what applies to what it is about to touch — and exposes no write operation at any tier, because the code gets no vote.",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "author": {
     "name": "Lee Driscoll"
   },

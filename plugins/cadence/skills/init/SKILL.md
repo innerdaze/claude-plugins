@@ -59,7 +59,7 @@ Inspect the repo and connected tools, present findings as one summary the user c
 
    So: read the project's own docs first, inspect the CLI to confirm the verbs and fill gaps, and **cite where each gotcha came from** so it can be re-checked when the tool changes. Capture only **tool-generic** behaviour in the adapter; machine- or workspace-specific quirks go in `config.vcs.gotchas`. Detect an existing commit skill to delegate to.
 
-3. **Execution skill.** Scan `.claude/skills/`, enabled plugins, and global skills for a ticket-execution skill. **Propose a candidate, but confirm three things with the user**: that it's the right one, how it's invoked, and what it `owns`. Also check it can actually run *here* — a skill that hardcodes another project's engine, tracker, or VCS will abort on first use, and `execution.skill: none` is better than a binding that fails. `none` is a first-class answer, not a fallback.
+3. **Execution skill.** Scan `.claude/skills/`, enabled plugins, and global skills for a ticket-execution skill. **Propose a candidate, but confirm three things with the user**: that it's the right one, how it's invoked, and what it `owns`. **Do not put `status` in `owns` unless the user asks for it in as many words** — the done transition is the session's, gated by the DoD, and an execution skill that closes items itself moves the gate to after the fact; say that cost if they ask. Also check it can actually run *here* — a skill that hardcodes another project's engine, tracker, or VCS will abort on first use, and `execution.skill: none` is better than a binding that fails. `none` is a first-class answer, not a fallback.
 
 4. **Tracker.** Detect connected tracker MCPs.
    - **Before binding any of them, confirm the workspace belongs to *this* repo.** MCPs are user-scoped and Cadence is installed once for every project, so the tracker you can see is very often somebody else's. Query the tool for its teams/projects and look for corroboration: a name matching this repo, an existing ticket prefix that matches, recent items referencing this codebase. **If you cannot confirm it, ask.** Do not bind a tracker on the strength of its being the only one connected — that is how tickets end up filed into another product's board.
@@ -185,6 +185,7 @@ Before writing, validate and **warn on any contradiction**:
 - Every `hooks:` entry names a real hook from `${CLAUDE_PLUGIN_ROOT}/flows/HOOKS.md` and points at a readable doc.
 - No step whose decision right is `human` has a hook returning an autonomous decision.
 - Every `config.<family>.kind` resolves to a generated adapter or a shipped fallback.
+- The bus's `Intent` binding, if present, resolves the same way (`adapters/intent/<kind>.md`). It is another role's row — read it, never write it (Phase 4).
 - Every priority-policy token's required field is supported by the tracker adapter — or the token is flagged as one that will be skipped.
 
 ## Phase 4 — Write
@@ -208,6 +209,9 @@ may wait for another, and none may invent that number. Then add only the section
   there, write what is absent, overwrite nothing. You need verification for the DoD gate, which
   is exactly why it cannot belong to one tool.
 - **The `Doc system` binding row** — read it. Write it only if absent.
+- **The `Intent` binding row** — read it, and **never write it**, not even when absent. It belongs
+  to the `intent-layer` role, whose own init writes it. A project with no intent layer has no row,
+  and that is the correct state rather than a gap for cadence to fill.
 - **`## Versions`** → `| cadence methodology | <this plugin's canonical> | methodology |`
 - **`## Commands`** → `| methodology | /cadence:migrate | /cadence:init |`
 
@@ -230,7 +234,7 @@ Do not overwrite existing docs — only fill gaps.
 
 ## Phase 6 — Dry-run
 
-Resolve config + flow + adapters and show what `/cadence:session start` would surface now, including **which steps are disabled** by unmapped lanes or unsupported capabilities. Finish by naming the next moves: `/cadence:roadmap`, then `/cadence:plan`, then `/cadence:session start`. Mention `/cadence:doctor` as the way to re-check the setup later.
+Resolve config + flow + adapters and show what `/cadence:session start` would surface now, including **which steps are disabled** by unmapped lanes or unsupported capabilities. Say whether `/cadence:plan` will check milestones against stated intent — it will when the bus binds `Intent` to anything but `none` — because the consequence of `none` is worth one line here rather than a discovery at planning time. Finish by naming the next moves: `/cadence:roadmap`, then `/cadence:plan`, then `/cadence:session start`. Mention `/cadence:doctor` as the way to re-check the setup later.
 
 **Then say what to run next, and where the team's own step sits in it.** A flow with
 `decision_rights.commit_scope: human` gets a planning *pack* rather than committed scope, because

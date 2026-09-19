@@ -144,6 +144,12 @@ level; a `human` gate is never auto-cleared.
 `config.dod_gates`. Union, not override — a project may raise the bar above what
 the flow requires, and can never silently lower it.
 
+**Plus the item's own checklist, which nobody declares here.** An item whose body
+carries acceptance boxes has stated its own bar, more specifically than any flow
+can; the session walks it before the declared checks, and an unmet box holds the
+gate regardless of them. It is always applicable — it is not a check that might
+have been scoped too widely, it is what the item *is*.
+
 **A check runs when it applies to the work done, and a skip is reported.** A
 docs check on a change that touched no documented surface does not fire; nor
 does a test check on a change with no testable behaviour. That is what makes a

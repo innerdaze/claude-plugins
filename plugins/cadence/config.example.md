@@ -81,6 +81,10 @@ vcs:      # ⇒ MOVED to the bus's `## Version control` section (read, not owned
 execution:  # ⇒ MOVED to the bus's `## Execution` section
   skill: <e.g. /work-on | none>           # the project's own ticket-execution skill
   owns: [implement, test, docs, commit]   # what /cadence:session END must VERIFY, not repeat
+                                          # `status` is deliberately absent: the done transition
+                                          # is the session's, gated by the DoD. A project may add
+                                          # it — the execution skill then closes items itself and
+                                          # the gate runs after the fact; the doctor says so
 
 doc_system: # ⇒ MOVED to the bus's `Doc system` binding row
   kind: <none | docs | ...>
@@ -88,6 +92,11 @@ doc_system: # ⇒ MOVED to the bus's `Doc system` binding row
   index: <e.g. docs/INDEX.md | omit>
   ticket_to_docs: "<rule mapping labels to docs | omit>"
   roadmap: docs/ROADMAP.md          # where /cadence:roadmap reads and writes
+
+# There is no `intent` key, and there will not be one. Stated design is read from the bus's
+# `Intent` binding row and the `intent-layer` artifact row — another role writes both; cadence
+# reads them and stops planning a milestone that contradicts what they point at. `none`, or no
+# row, means milestones go unchecked, and cadence says so once at init's dry-run.
 
 session_state:
   file: .agent/local/cadence-session-<worktree>.md   # Cadence's OWN scratchpad — LOCAL, ignored

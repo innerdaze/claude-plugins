@@ -11,6 +11,42 @@ changing a hook's Input/Output, removing an adapter operation, or changing the
 meaning of a config key is a *major* change. Adding an optional hook, operation,
 field, or config key is *minor*.
 
+## [Unreleased]
+
+### Added
+
+- `/cadence:plan` **checks the milestone against stated intent before breaking it down, and
+  the proposed items after**, and stops on a contradiction — statement, clashing clause, why,
+  and no verdict, because ruling on intent is a person's job. `/cadence:roadmap` runs the same
+  check when a milestone is drafted or revisited. Cadence consumes the intent-read seam the way
+  `work` does: the bus's `Intent` binding names the kind, the `intent-layer` artifact row names
+  the folder, and two consumer-side fallbacks ship (`adapters/intent/none.md`, `markdown.md`).
+  Nothing is written to the layer, ever. `none` is the normal case and says nothing.
+- `/cadence:plan` **searches before it creates.** Every proposed item is classified against
+  existing work — new, duplicate (linked, never recreated) or dependent (created with
+  `depends_on` and the direction stated) — and the overlap rides in the proposal before scope is
+  committed. Holds under `commit_scope: ai` too. New optional tracker operation
+  `search(text, filter?)`, implemented by the `markdown` fallback; a skill's own operation, so
+  the contract version does not move.
+- `/cadence:doctor` reports an intent layer registered but unbound (milestones go unchecked) and
+  an `Intent` binding whose artifact is missing.
+- **The DoD gate walks the item's own checklist**, before the declared checks. Every unchecked
+  box in the item's body is met with named evidence or waived by the user with the reason
+  recorded on the item; an unmet box holds the gate whatever the project gates said. The
+  checklist is the most specific bar an item has, and project-level gates are usually the wrong
+  questions for it. `/cadence:doctor` reports a closed item still carrying an unchecked box with
+  no waiver.
+- **`/cadence:session start` snapshots the working tree** into the session-state file, and end
+  reads it before the checkpoint: a path dirty at start, or one that appeared without this
+  session editing it, is another writer's — never staged, named once. Turns the shared-tree
+  warning that lived in config prose into a fact the session acts on.
+- **Session end's comment opens with `Session end — gate.<name> passed|held`**, so an item's
+  history says which ritual closed it, and `/cadence:doctor` reports a done item without that
+  line as closed outside the session path. `status` is documented as deliberately absent from
+  `execution.owns`; a project that adds it is reported as having switched the gate off. The
+  matching half in `work`: its wrap-up leaves the status change alone whenever the bus carries an
+  `## Execution` section.
+
 ## [1.0.0] — 2026-09-16
 
 Published in the ecosystem-wide 1.0.0 release alongside `work`, `domains`, `intent` and

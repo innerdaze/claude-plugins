@@ -1,6 +1,6 @@
 {
   "name": "cadence",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "A configurable project-management methodology: vision -> roadmap -> epics -> tickets -> gates, worked in bounded sessions. Binds to your tracker/VCS/docs via adapters, and to your team's process via a flow spec (solo, team-sprints, live-oncall, or your own authored flow). Includes /cadence:doctor to check a project's setup.",
   "author": {
     "name": "Lee Driscoll"

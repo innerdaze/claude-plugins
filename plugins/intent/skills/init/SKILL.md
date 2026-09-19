@@ -51,8 +51,11 @@ is an answer given without the work in view.
    `${CLAUDE_PLUGIN_ROOT}/checks/BUS-CHECKS.md` § *Creating the bus, when nothing has*, then add:
 
    - `## Artifacts` → `| Intent | intent/ | intent-layer |`
-   - `## Versions` → `| intent scaffolding | 1 | intent-layer |`
-   - `## Commands` → `| intent-layer | n/a — no migrations yet | /intent:init | /intent:doctor |`
+   - `## Versions` → `| intent scaffolding | <version> | intent-layer |` — **canonical for a layer
+     this command creates, the floor for a folder that already existed and is only now being
+     registered.** Both integers are declared once, in
+     `${CLAUDE_PLUGIN_ROOT}/skills/migrate/SKILL.md`; read them there rather than remembering them.
+   - `## Commands` → `| intent-layer | /intent:migrate | /intent:init | /intent:doctor |`
    - the `Intent` binding row → `markdown`, the kind the shipped fallback implements
 
    **The version row is not optional, and "no migrations yet" is not a reason to omit it.** A
@@ -62,24 +65,17 @@ is an answer given without the work in view.
    never needed a migration" from "somebody's folder is on disk and nothing owns it". Those are
    the two states the registry exists to tell apart.
 
-   Canonical is **1**: this plugin ships no migrations, so 1 is both the floor and the current
-   number, and a later migration raises it the way every other role's does. A stamp is a claim
-   about what wrote the files, and that claim is exactly as true here as anywhere else.
+   A stamp is a claim about what wrote the files. **A folder that predates this command is
+   stamped at the floor, never at canonical**, so its pending migrations are genuinely pending
+   rather than silently skipped — `/intent:migrate` then raises it, the way every other role's
+   does.
 
-   ⚠️ **`n/a — no migrations yet` is a cell that will go stale, and re-running this command is
-   what fixes it.** The day this plugin ships a `migrate` skill, every project already registered
-   still has `n/a` in its bus, and an orchestrator reads the bus — so nothing would ever invoke
-   the new command, and the version stamp that makes migration possible would sit there unused.
-
-   So: **write the cell from what this payload actually ships.** If a `migrate` skill exists
-   beside this one, the cell is its command; if not, `n/a — no migrations yet`. Re-running
-   `/intent:init` on a registered project is a supported, idempotent re-scaffold, and repointing
-   that cell is one of the things it is for. `/intent:doctor` reports the disagreement so nobody
-   has to notice it themselves.
-
-   When migrations do arrive, the convention is every other role's: a layer that predates the
-   migration is stamped at the **floor**, never at canonical, so the first migration is genuinely
-   pending rather than silently skipped.
+   **Write the `## Commands` cell from what this payload actually ships.** Projects registered
+   before the `migrate` skill existed carry `n/a — no migrations yet` in that cell, and an
+   orchestrator reads the bus — so until the cell is repointed nothing will ever invoke the
+   migration. Re-running `/intent:init` on a registered project is a supported, idempotent
+   re-scaffold, and repointing that cell is one of the things it is for. `/intent:doctor` reports
+   the disagreement so nobody has to notice it themselves.
 
    **This is what makes the layer visible to tooling at all.** Until these rows exist the folder
    is readable by humans and invisible to every tool, because no other tool may register an

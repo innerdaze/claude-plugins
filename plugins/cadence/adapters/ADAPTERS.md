@@ -105,6 +105,10 @@ Optional:
   Unsupported is fine and common — see *Ownership* below for what a skill does then.
 - **`list_closed(filter?)`** → terminal items. Needed by `session_state.prune` (to tell what's really finished) and by roadmap milestone progress.
 - **`list_cycles()` / `current_cycle()`** → for sprint flows. Unsupported degrades to milestone scope.
+- **`search(text, filter?)`** → open items whose title or body match `text`, with the same `filter`
+  keys as `list_open`. Used by `/cadence:plan` to find existing work **before** it creates any — a
+  skill's own operation that no hook can rely on and no flow can declare, so adding it moved no
+  contract number. Unsupported degrades to `list_open()` filtered by the caller, and says so.
 
 **`set_status` must resolve to exactly one status, or refuse.** If the target
 matches no status in `statuses()`, stop and report it — never approximate to a
@@ -134,6 +138,36 @@ being cleaned of.
 - **`locate(topics)`** → which existing docs a skill should read before working on those topics (may be empty).
 - **`record(note)`** → persist a durable gotcha/convention where the project keeps knowledge.
 - **`taxonomy()`** → the project's label vocabulary: the set of context labels an item can carry, so the execution skill can load the right docs from an item's labels alone. **May be empty** — that's a normal answer, not an error. This is where a doc system's structure becomes tracker labels (a `domains` adapter returns its INDEX headings; `none` returns nothing).
+
+## Intent-read contract — consumed, never owned
+
+Cadence **consumes** the intent-read seam the way `work` does; it owns nothing here. The contract
+belongs to the intent tool. What cadence needs from it is one question — *does this milestone, or
+this proposed item, contradict anything the maintainer has stated?* — and it asks that question in
+`/cadence:plan` (before breakdown, and again over the proposed items) and `/cadence:roadmap` (when a
+milestone is drafted or revisited).
+
+- **`locate(topics, paths?)`** → ranked stated intent that applies, **with attribution markers
+  intact**. Required at every tier: a layer that cannot say what applies is not answering its only
+  question.
+- **`check(plan)`** → what a plan contradicts — the statement, the clashing part, why — and **never
+  a verdict**. May be `unsupported`; the shipped fallback says so, and the skill does the same
+  comparison from `locate` in the proposal a person reads.
+- **There is no write operation, at any tier.** Not `record`, not "note that a milestone
+  disagreed". The layer's first rule is that the code gets no vote, and a tool that could edit the
+  thing it is measured against would edit it at the moment it was found wrong. A contradiction is
+  reported outward and ruled on by a person.
+
+**Resolution** is the same as every other family: the bus's `## Bindings` → `Intent` row names the
+kind; a project-local adapter at `.agent/cadence/adapters/intent/<kind>.md` outranks the shipped
+`${CLAUDE_PLUGIN_ROOT}/adapters/intent/<kind>.md`; no row means `none`. **The folder comes from the
+`## Artifacts` row whose Owner is `intent-layer`** — matched on the role id, never on a name, and
+never guessed from a folder that looks like design documentation. Cadence writes neither row: both
+belong to the intent tool's own init.
+
+**`none` is the normal case and says nothing.** Most projects have no intent layer. The one place
+the absence is stated is the proposal's *Intent conflicts* section, which reads *"none — this
+project has no intent layer"* so nobody downstream mistakes silence for a pass.
 
 ## Where adapter data lives
 
@@ -178,10 +212,16 @@ next:    <item-id> — <one line, or "none">
 ## Milestone note
 <at most a couple of lines on where the milestone actually stands, when that
 differs from what the tracker implies>
+
+## Tree at start
+<`clean`, or the paths `status()` reported dirty when this session began — one per
+line, nothing else. Written by start, read by end's checkpoint, cleared by end.>
 ```
 
 **Budget: about 40 lines.** Past that, `session_state.prune` is under-pruning —
-the fix is to delete, not to extend the schema. Anything durable belongs in the
+the fix is to delete, not to extend the schema. `## Tree at start` is exempt in
+spirit — it is a snapshot for one session, not memory — but a long one is itself a
+finding: a working copy that dirty at start is being shared with something. Anything durable belongs in the
 doc system via `record()`; anything about one item belongs on that item.
 
 A **trap** is the only thing that survives its item being closed, and it has a

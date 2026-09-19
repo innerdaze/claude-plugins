@@ -10,6 +10,7 @@ Maintains the project's living north-star doc, from the plugin's `${CLAUDE_PLUGI
 ## Load
 
 - Read the config (for `decision_rights` and the tracker adapter) and the flow.
+- **The intent binding**, if this project has one — resolved exactly as `/cadence:plan` does it: the bus's `Intent` row names the kind, the `intent-layer` artifact row names the folder, `none` says nothing. See *Against stated intent* below.
 - **The roadmap lives at `config.doc_system.roadmap`** (default `docs/ROADMAP.md`) — one place, so `/cadence:plan` and `/cadence:session` can find it too. If the file doesn't exist yet, start from the template. If there's no config at all, that's fine: see Boundaries.
 
 ## Mode A — Create (no roadmap yet)
@@ -23,16 +24,29 @@ Fill the template by facilitating, section by section. Either interview the user
 5. **Where we are** — honest built-vs-missing.
 6. **Milestones** — sequence toward the nearest meaningful, de-risking outcome. **Each milestone gets exactly one goal, concrete exit criteria, and an explicit "cut" list.** The cut list matters as much as the scope.
 
+Before writing, run *Against stated intent* (below) on every drafted milestone.
+
 Write the doc. Record any settled forks in the **Key decisions** table with their *why*, so they aren't relitigated.
 
 ## Mode B — Update (roadmap exists)
 
 Read it first, then revisit — typically at a milestone boundary:
-- Mark a finished milestone done; sharpen or add the next.
+- Mark a finished milestone done; sharpen or add the next — and run *Against stated intent* on anything you sharpen or add. A milestone revisited months after the design moved is exactly where stale scope survives.
 - Add newly-locked decisions to the Key decisions table.
 - Move firmed-up "open questions" into milestones or hand them to `/cadence:plan`.
 
 Keep it a **living doc, not a changelog** — no ticket IDs or dates in here; those live in the tracker.
+
+## Against stated intent
+
+The roadmap is a knowledge-layer artifact: it outranks nothing, and stated intent outranks it. So a milestone is checked against the intent layer at the two moments its scope is written — drafted (Mode A) or revisited (Mode B) — with the binding loaded above.
+
+- Binding `none` → skip, and say nothing. Most projects have no intent layer.
+- Otherwise `locate()` the statements the milestone's goal, scope and exit criteria touch, and compare. **A contradiction stops the edit**: present the statement (attribution marker intact), the clause that collides, and why — **no verdict**. The person restates the milestone here, or restates the intent through the layer's own workflow; this skill does neither for them. Never write to the intent layer.
+- **An empty result is not an endorsement.** Say nothing was found to conflict; never that the milestone agrees with the design.
+- `Intent` bound but the folder gone → say so once and continue.
+
+Why here as well as in `/cadence:plan`: plan catches a stale milestone the moment it becomes tickets, which is late. Catching it as it is written costs one read and saves a planning pass.
 
 ## Mode C — Milestone progress sync
 
