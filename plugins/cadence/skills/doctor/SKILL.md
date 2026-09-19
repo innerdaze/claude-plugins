@@ -150,6 +150,14 @@ other gate — and look at each entry that declares `applies_when`:
 The two together answer the question this section exists for: *which of the checks this
 project declares could actually stop a session?*
 
+**And the project's own document, when there is one.** Read `## Verification → Definition of
+Done`. Row pointing at a file that does not exist → **drifted**: the gate falls back to check
+names alone, silently. Document present → compare its items with the effective DoD: an item the
+document names that neither the flow nor `config.dod_gates` declares → **drifted**, *written but
+not gated* — name it and the one-line `dod_gates` entry that would gate it. A declared check the
+document never explains → informational: the session will judge it from its name. Row absent →
+say once that the gate has only check names to go on; not a defect.
+
 ## 2c. Can ownership be determined?
 
 Where the flow is team-shaped — a `review` role, `wip_limit: per-person`, `commit_scope: human`,

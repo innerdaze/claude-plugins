@@ -160,6 +160,14 @@ This is the one thing a repo scan cannot answer, and it is worth being precise a
 
 **A menu of plausible checks is not neutral.** Offering `accessibility` · `perf-budget` · `security-review` invites someone to pick the ones that sound responsible, and every pick is a gate their sessions must satisfy forever. One of them being unsatisfiable here is then discovered by cadence rather than by them — which is exactly what happened on a real init, where a selected `linter passes` met a repo with no lint script and no linter config. Ask open, and let the answer be theirs.
 
+**Look for the bar already written down.** A file or heading called *Definition of Done*, a
+feature-process or contributing document that lists what every change must satisfy — propose it,
+confirm, and write it as `## Verification → Definition of Done` in the bus (a `shared` row: write
+it only when absent). It is what session end quotes when it judges each declared check, and what
+the delivery skill plans against. Checks the document lists that the user does not add here are
+reported by the doctor as written-but-not-gated, so name them now: *"your document also lists
+`accessibility-reviewed`; gate it, or leave it as guidance?"*
+
 Whatever they name becomes `config.dod_gates`, which **adds to** the flow's `gates.dod.checks` rather than replacing it. Keep the shipped menu domain-neutral; a project's own bar arrives through "define your own."
 
 **Check each named gate is satisfiable here before writing it**, and say so when it is not: a `linter passes` check in a repo with no lint script is a gate that fails every session or is quietly ignored, and both are worse than not declaring it. Offer to fold it into a check that exists, keep it and record that it is unsatisfiable for now, or add the missing tooling — their call, not yours.
@@ -207,7 +215,7 @@ may wait for another, and none may invent that number. Then add only the section
   rather than repeat.
 - **`## Version control` and `## Verification`** — also `shared`. Same rule: read what is
   there, write what is absent **or blank** (a present row with no value is a question nobody
-  answered — ask it, fill that one row, touch nothing else), overwrite nothing. You need verification for the DoD gate, which
+  answered — ask it, fill that one row, touch nothing else), overwrite nothing. `## Verification` carries two rows, `Proven by` (what is automated) and `Definition of Done` (the path to the bar in the project's words); write either only when absent. You need verification for the DoD gate, which
   is exactly why it cannot belong to one tool.
 - **The `Doc system` binding row** — read it. Write it only if absent.
 - **The `Intent` binding row** — read it, and **never write it**, not even when absent. It belongs

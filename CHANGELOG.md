@@ -13,6 +13,16 @@ field, or config key is *minor*.
 
 ## [Unreleased]
 
+### Added
+
+- **The gate reads the project's Definition of Done document.** `## Verification` gains a
+  `Definition of Done` row — a path to the bar in the project's own words; `Proven by` stays for
+  what is automated. Session end judges each declared check against what the document says it
+  means and quotes it; init infers a candidate document and writes the row when absent; the
+  doctor reports a documented check nobody gates, and a row pointing at a missing file. The
+  delivery skill plans and verifies against the same row, so both plugins hold a ticket to one
+  bar.
+
 ### Fixed
 
 - **A delivery command that no longer resolves is reported, and init proposes the replacement.**

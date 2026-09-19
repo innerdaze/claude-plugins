@@ -138,6 +138,15 @@ checkpoint is the last thing that touches the repo.**
 
    **Walk the item's own checklist too, and first.** `get(id)` the item and read its body for the bar its author set: checkbox lines (`- [ ]`, `- [x]`), or a section headed *Acceptance criteria*, *Definition of Done*, *Done when* or the like. That list is the most specific standard the item will ever be held to, and the project gates are usually the wrong questions for it — a persistence check passes a documentation ticket that fixed one of its three named locations. So every unchecked box is either **met** (name the evidence in the change, and tick it in the body where the adapter can write the description) or **explicitly waived by the user** with the reason recorded on the item — never inferred waived, and never ticked because the session ran out. **An item whose own checklist is unmet does not reach `done`, whatever the project gates said.** The checklist is always applicable: it is not a check somebody might have declared too broadly, it is what this item is. No checklist → nothing to walk, and nothing to say.
 
+   **Read the project's Definition of Done for what each check means.** The bus's
+   `## Verification → Definition of Done` row, when present, names the document where the bar is
+   written in the project's own words. A declared check is a *name* — `persistence`, `accessibility-reviewed` —
+   and the document is its meaning: judge the check against what the document says, and quote
+   the passage in the report, so the gate holds the item to the project's bar rather than to
+   whatever the name suggests. Absent row → the name is all there is; say so once. A check the
+   document lists that neither the flow nor `config.dod_gates` declares is **not run** — it is
+   the doctor's finding, not a gate you invent at end.
+
    **Decide applicability the way each check says to, then report every skip.** Everything is judged against **the change the gate is being run on** — the work since the item entered the active lane, not merely the files still uncommitted. Four modes (`FLOW-SPEC.md` § *Declaring what makes a check applicable*):
 
    - a **bare string** or `applies: always` — it runs. Nothing to decide.

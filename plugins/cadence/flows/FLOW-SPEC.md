@@ -278,6 +278,13 @@ and kanban work, wrong for a sprint team, where "nothing is committed" is the
 correct answer and picking anyway breaks the process. The shipped presets
 deliberately omit it; add it if your process wants it.
 
+**A token outside this table is legitimate only under a `session.select_goal` hook.** The
+table is what the *default* selection reads; a flow that names its own priorities — *weakest
+claim first*, *next outline item* — must also supply the hook that interprets them, as the
+shipped `author-your-own-flow` example does. Without the hook the default reads an unknown token
+as prose and selects nothing, silently. The validator warns on exactly that combination and is
+quiet when the hook is present.
+
 An unlisted token is legal — it is interpreted as prose — but the validator
 warns, because a token nothing understands silently does nothing.
 
