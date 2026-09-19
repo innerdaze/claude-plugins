@@ -42,6 +42,20 @@ the person who dictated the docs.
 longest. A gap that nobody has looked at in months is a finding about the *process*, not about
 the code.
 
+**Rows are keyed by content, never by ordinal.** A register row whose key is a bare number or
+letter (`| 12 |`, `| D7 |`, `| C |`) → **drifted**. A sequential key can only be assigned by a writer
+holding the current state, so two capture passes in one tree mint the same number from a stale
+read and collide silently; a `<area>/<claim>` slug cannot. The remedy is `/intent:migrate` (v2),
+which re-keys every such row to `legacy/<key>` — unique, stable, deterministic — and writes the
+permanent *Legacy numbering* table so commits and tickets quoting the old numbers still resolve.
+Say how many rows, and stop there. A register whose stamp already reads `2` and still carries
+ordinal keys was edited by hand after migrating; same finding, same remedy.
+
+**`legacy/` keys are placeholders, reported as a count, not a defect.** They are unique and
+cannot collide, which is all the migration promised; the *subject* slug is a judgement about
+what the row is about, which is why the migration did not choose it and this doctor does not
+either. `/intent:capture` offers them with the maintainer present. List how many remain.
+
 **The binding.** The `Intent` row should name a kind whose adapter or fallback exists. `none`
 while an intent layer is present → **disabled**: the layer is readable by humans and unreachable
 through the contract, so nothing checks a plan against it.

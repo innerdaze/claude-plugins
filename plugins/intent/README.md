@@ -12,7 +12,10 @@ the contradiction becomes tracked work.
 
 | Command | Does |
 |---|---|
+| `/intent:init` | Create the empty layer — index, rules, register — and register the `intent-layer` role on the bus. Captures nothing |
 | `/intent:capture` | Interview or structure dictated intent into `intent/`, and open an alignment register for the gaps |
+| `/intent:migrate` | Bring the layer's scaffolding up to the installed release and re-stamp its version. Structure only, never a claim |
+| `/intent:doctor` | Report what is broken, drifted or disabled. Reads only |
 
 ## What it owns
 

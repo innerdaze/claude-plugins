@@ -5,7 +5,7 @@
 ## Capabilities
 
 ```
-supports:    statuses(), list_open(), list_closed(), get(), create(), comment(), update()
+supports:    statuses(), list_open(), list_closed(), get(), create(), comment(), update(), search()
 fields:      epic, milestone, labels, order, depends_on, severity, updated_at
 costly:      —
 unsupported: list_cycles(), current_cycle(), me(), cycle, assignee
@@ -75,6 +75,10 @@ inferred value would be confidently wrong.
 - **`statuses()`** — return the distinct values of `config.tracker.status_map`. The one mapped from the flow's `done` role (plus any `abandoned`) is terminal.
 - **`list_open(filter?)`** — glob `<path>/*.md`, parse each front-matter block, keep items whose `status` is not in the caller-supplied terminal set. Apply any of `milestone`, `epic`, `type`, `status_in`, `status_not_in`, `updated_since`, `limit` that are given; ignore `cycle`/`assignee` and report that you did. Return the item record for each. (Glob + Read; don't load bodies unless asked.)
 - **`list_closed(filter?)`** — the same, inverted: items whose `status` *is* in the terminal set.
+- **`search(text, filter?)`** — grep `<path>/*.md` for `text` in `title:` and the description,
+  case-insensitively, then apply `filter` as `list_open` does. Plain files make this cheap, which
+  is the point: a breakdown that skipped the search because it was expensive is how duplicates get
+  created.
 - **`get(id)`** — Read `<path>/<id>.md`; return front-matter + description + comments.
 - **`create(fields)`** — compute the next id; Write `<path>/<id>.md` from the template above; create `<path>/` if absent. Set `updated`. Return the new id.
 - **`comment(id, text)`** — Edit the file: append `- <today> <text>` under `## Comments` (add the heading if missing), and refresh `updated:`. A comment is a modification; leaving `updated:` stale would make `updated_since` filters miss the item.

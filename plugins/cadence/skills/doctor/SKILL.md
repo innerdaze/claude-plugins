@@ -167,7 +167,7 @@ design, and a repo-backed backlog with one author has nothing to disambiguate.
 
 ## 3. Adapters
 
-For each of `tracker`, `vcs`, `doc_system`:
+For each of `tracker`, `vcs`, `doc_system` — and `intent`, whenever the bus's `Intent` binding is present and not `none`:
 
 - Resolve `kind` → project-local `.agent/cadence/adapters/<family>/<kind>.md`,
   else the shipped fallback. Neither → **broken**.
@@ -244,6 +244,11 @@ Cheap reads that catch real corruption:
   titles containing a colon**, which is the specific way an item file silently
   becomes unreadable.
 - `epic` or `milestone` references pointing at items that don't exist.
+- **Items in a terminal lane whose body still carries an unchecked box** (`- [ ]`) and whose
+  comments record no waiver for it — report as **drifted**, naming the item and the box. Either
+  the item was closed outside the session path, or before the gate walked checklists. The
+  remedy is a person's: tick it with evidence, waive it with a reason, or reopen. Where
+  `list_closed` is unsupported, say the check could not run.
 
 ## 6. Session state
 
@@ -260,6 +265,16 @@ Cheap reads that catch real corruption:
 - Files under `.agent/cadence/` that `ADAPTERS.md` says should be committed but
   are untracked — the config, adapters, a custom flow, the backlog. Being
   untracked risks them being swept into an unrelated commit.
+- **Was every done item closed through the session path?** Where `list_closed` is supported,
+  read the items in the `done` lane — recent ones, or all if cheap — and look for the
+  `Session end — gate.<name> …` comment session end writes. **An item in `done` with no such
+  comment → drifted**, named: it reached done without the gate, either by an inline status change
+  or before this marker shipped; the fix is a person's, since the work may well be fine. Where
+  `list_closed` is unsupported, say the check could not run.
+- **Does the bus's `## Execution` `Owns` row name `status`?** → **disabled**, and say what it
+  costs: the execution skill closes items itself, so the DoD gate runs after the item is already
+  done. A legitimate project statement, reported so nobody is surprised by a held gate on a closed
+  item.
 - **Does `execution.owns` match what the repo shows?** If it claims `commit` but
   recent items have no checkpoint referencing them, report it as **drifted**: the
   execution skill is failing, or `owns` overstates what it actually does. Either
@@ -269,6 +284,12 @@ Cheap reads that catch real corruption:
   namespaced `cadence-*` so they can't be shadowed, but two live session rituals
   is worth naming rather than discovering mid-flow.
 - Does `config.doc_system.roadmap` point at a file that exists?
+- **An `## Artifacts` row owned by `intent-layer` with the `Intent` binding `none` or absent** →
+  **disabled**, and say what it costs: a design layer exists and neither `/cadence:plan` nor
+  `/cadence:roadmap` will check a milestone against it. The remedy is the intent role's own
+  re-scaffold command from `## Commands`; cadence writes no binding row it does not own. Report
+  the reverse too — `Intent` bound to a kind whose artifact row or folder is missing → **drifted**,
+  the check will silently skip.
 
 ## Reporting
 

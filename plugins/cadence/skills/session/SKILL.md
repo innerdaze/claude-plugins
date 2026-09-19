@@ -64,6 +64,8 @@ with the work in limbo.
    are invisible, name the fix (link `.agent/local/` to the shared target), and carry on.
 
 1. **`session.start`** (default): read the session-state file (`config.session_state.file`) — Cadence's own local scratchpad, *not* the project's memory. Determine the current milestone from the roadmap (`config.doc_system.roadmap`) and the tracker.
+
+1b. **Snapshot the tree.** Call `status()` and write what is dirty *now* — path per line, or `clean` — into the session-state file's `## Tree at start` block, replacing whatever the last session left there. This is the one fact end cannot recover later: which changes were already sitting in the working copy before this session wrote anything. A shared working tree — a second session, a colleague on the same checkout, a capture pass running beside you — is the hazard, and `checkpoint` cannot tell its edits from yours by looking at a file list. The snapshot is what turns *"note the file count at session start"* from advice nobody follows into a fact end reads.
 2. **`session.select_goal`** (default): walk `flow.intake.priority_policy` in order, gathering candidates via the tracker adapter.
 
    **On a sprint flow, scope the search to the active cycle first.** If the flow's priority policy
@@ -134,6 +136,8 @@ checkpoint is the last thing that touches the repo.**
 
    The **effective DoD** is `flow.gates.dod.checks` ∪ `config.dod_gates` — a union; a project may raise the flow's bar, never lower it. Honour each gate's approver: a `human` gate is **never** auto-cleared — `needs-human` is not a pass.
 
+   **Walk the item's own checklist too, and first.** `get(id)` the item and read its body for the bar its author set: checkbox lines (`- [ ]`, `- [x]`), or a section headed *Acceptance criteria*, *Definition of Done*, *Done when* or the like. That list is the most specific standard the item will ever be held to, and the project gates are usually the wrong questions for it — a persistence check passes a documentation ticket that fixed one of its three named locations. So every unchecked box is either **met** (name the evidence in the change, and tick it in the body where the adapter can write the description) or **explicitly waived by the user** with the reason recorded on the item — never inferred waived, and never ticked because the session ran out. **An item whose own checklist is unmet does not reach `done`, whatever the project gates said.** The checklist is always applicable: it is not a check somebody might have declared too broadly, it is what this item is. No checklist → nothing to walk, and nothing to say.
+
    **Decide applicability the way each check says to, then report every skip.** Everything is judged against **the change the gate is being run on** — the work since the item entered the active lane, not merely the files still uncommitted. Four modes (`FLOW-SPEC.md` § *Declaring what makes a check applicable*):
 
    - a **bare string** or `applies: always` — it runs. Nothing to decide.
@@ -166,8 +170,14 @@ checkpoint is the last thing that touches the repo.**
 
    Only move **forward** along the declared path. If the item already sits past the lane you were going to move it to — an `active` role naming a lane the item left three transitions ago — do not move it backwards; say so once and leave it. A status that walks backwards misrepresents the board more than a status that stands still.
 3. **Prune the session state** — run `session_state.prune`. The default rule lives in `${CLAUDE_PLUGIN_ROOT}/flows/HOOKS.md`; in short, reconcile the scratchpad **against the tracker** (not against what the file claims) and drop anything the tracker already tells you, keeping only non-obvious traps.
-4. **Decide the next goal and record it** via the tracker adapter (`comment`), and record any durable gotcha through the doc adapter's `record()`. **Any DoD check that did not apply goes in that comment too**, with its reason — the terminal output is gone by morning, and *which checks this item was actually held to* is the thing a reviewer needs later. Both of these write files that may be under version control, which is why they come *before* the checkpoint.
+4. **Decide the next goal and record it** via the tracker adapter (`comment`), and record any durable gotcha through the doc adapter's `record()`. **The comment opens with `Session end — gate.<name> passed|held`** for every gate on the path, so an item's history says which ritual closed it: this line is what `/cadence:doctor` looks for on a done item, and an item in the done lane without one was closed outside the session path. **Any DoD check that did not apply goes in that comment too**, with its reason — the terminal output is gone by morning, and *which checks this item was actually held to* is the thing a reviewer needs later. Both of these write files that may be under version control, which is why they come *before* the checkpoint.
 5. **Checkpoint — the last repo write.** First call `status()` and look at what is actually there: running the gates may have produced artefacts the gates themselves created (`__pycache__`, coverage output, a build directory). Ignore or remove those before committing rather than attributing them to this item — the tree being clean afterwards is only meaningful if you didn't commit rubbish to achieve it.
+
+   **Then compare against `## Tree at start`.** Three kinds of dirty path, and only one is yours:
+   - **dirty at start, untouched by this session** — somebody else's, or a previous session's leftovers. Never staged; named once.
+   - **appeared since start, and this session did not edit it** — another writer in the same tree. Never staged, and **surfaced by name**: *"`docs/roadmap-notes.md` changed under this session without it; left uncommitted."* A correct file count is not evidence of correct content, and this is the case the snapshot exists for.
+   - **this session's work** — what it edited for the item, and what the item's change shows on `diff()`. Staged, by explicit path.
+   Where you cannot tell — a path you touched that was also dirty at start — `diff()` it and say which hunks are the item's; if they cannot be separated, stage it and say that too, rather than silently taking the other writer's edit under this item's message. Under `execution.owns: commit`, the same comparison is how you verify the execution skill's checkpoint took only its own work.
    Then take one of two branches.
 
    **If `config.execution.owns` includes `commit` — verify, don't repeat.** Use `log()` to confirm a checkpoint referencing this item exists, and `status()` to confirm the tree is clean.
@@ -180,7 +190,7 @@ checkpoint is the last thing that touches the repo.**
    **Otherwise — including whenever `execution.skill` is `none`** — run the checkpoint yourself via the `checkpoint` hook / VCS adapter, and **confirm it landed** with `log()` afterwards. A checkpoint you performed is not more trustworthy than one you verified; it just failed more recently if it failed.
 
    **In either branch, if no checkpoint exists at the end of this step, the item must not stay advanced.** Step 2 has already moved it, so offer to revert the status — a tracker claiming work is finished when nothing was committed is worse than either failure alone.
-6. **`session.end`** (default): write the pruned session state to `config.session_state.file`, per the schema in `${CLAUDE_PLUGIN_ROOT}/adapters/ADAPTERS.md`. This file is git-ignored, so it is the one write that may safely follow the checkpoint.
+6. **`session.end`** (default): write the pruned session state to `config.session_state.file`, per the schema in `${CLAUDE_PLUGIN_ROOT}/adapters/ADAPTERS.md`. This file is git-ignored, so it is the one write that may safely follow the checkpoint. Clear `## Tree at start` — it describes a session that is over, and the next start writes its own.
 
 7. **If the item landed in a hands-off status, you are finished with it.** Say so in one line —
    *"handed to review; nothing further from me"* — and do not carry it into the next session's

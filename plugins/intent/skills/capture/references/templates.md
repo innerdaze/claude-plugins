@@ -39,6 +39,10 @@ not read off the code.
 Keep the status table current — it's how the maintainer sees progress, and it stops
 a half-captured folder reading as finished.
 
+The four rules above are a fixed list and stay numbered. Anything the index *grows* — a list
+of rules the doc set has produced, a decisions table — is keyed by slug, like the register:
+nothing appended to by more than one pass may be keyed by ordinal.
+
 ## A topic stub (phase 2)
 
 ```markdown
@@ -82,13 +86,23 @@ shape) · **cosmetic** (naming/docs only).
 
 ## Open
 
-| # | Intent | What the code does | Severity | Status |
+| Row | Intent | What the code does | Severity | Status |
 |---|---|---|---|---|
-| 1 | <claim + link to the doc> | <specific: file, symbol, line> | blocker | <open / fix decided / needs your decision> |
+| `<area>/<claim>` | <claim + link to the doc> | <specific: file, symbol, line> | blocker | <open / fix decided / needs your decision> |
 
 ## Resolved
 
 - **<claim>** — <why it turned out not to be a gap, or how it was fixed>
+
+## Inherited, not chosen
+
+<code that contradicts or pre-empts a statement above but arrived with a template, vendor plugin,
+starter kit or sample content — the maintainer never decided it. Listed so keeping or removing it
+becomes a deliberate decision rather than a default that shapes the design by inertia.>
+
+| Row | What arrived | From | Statement it collides with | Decision |
+|---|---|---|---|---|
+| `<area>/<claim>` | <the behaviour or asset, specifically> | <template / plugin / sample, named> | <link> | <keep / remove / undecided> |
 
 ## Decided, not yet checked against code
 
@@ -103,8 +117,18 @@ Two things make rows useful: **specificity** on the code side (name the file and
 symbol, not "the collectors"), and a **status** that says what happens next rather
 than restating the problem.
 
-Number rows so they can be cited in tickets and commits. When a gap spawns a
-dependency, `2a`-style sub-rows keep the numbering stable.
+**Inherited code is not a gap.** A mismatch the maintainer never chose — it came with the
+template, the vendor plugin, the sample project — goes in *Inherited, not chosen*, with its
+provenance named, not in the gap table with a severity. The gap table says "the code disagrees
+with the design"; inherited code says nothing about the design at all, and logging it as drift
+produces rows that have to be withdrawn the moment somebody asks where the code came from.
+
+Key rows by a slug derived from the row's subject — `bus/neutral-path`,
+`gates/applicability` — never by a sequential number. A number can only be assigned
+correctly by a writer holding the current state, and a second pass in the same tree will
+mint the same one from a stale read; a slug cannot collide by accident and tells the reader
+what the row is about. Cite the slug in tickets and commits. When a gap spawns a dependency,
+give it its own slug under the same area (`bus/neutral-path-migration`).
 
 ## Commit messages
 

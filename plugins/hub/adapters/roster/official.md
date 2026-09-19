@@ -34,7 +34,7 @@ the user does not have. Nothing here needs to check for one.
 | `delivery` | `work@innerdaze` | `work migrate` | `work init` | `work doctor` |
 | `knowledge` | `domains@innerdaze` | `domains migrate` | `domains init` | `domains doctor` |
 | `methodology` | `cadence@innerdaze` | `/cadence:migrate` | `/cadence:init` | `/cadence:doctor` |
-| `intent-layer` | `intent@innerdaze` | *(none yet)* | `/intent:init` | `/intent:doctor` |
+| `intent-layer` | `intent@innerdaze` | `/intent:migrate` | `/intent:init` | `/intent:doctor` |
 
 The ids are marketplace-qualified because that is what `claude plugin install` and
 `claude plugin list --json` both use. A bare name reads fine in a doc and is not a thing you can
