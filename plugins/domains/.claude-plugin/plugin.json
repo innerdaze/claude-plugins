@@ -1,7 +1,7 @@
 {
   "name": "domains",
   "description": "Project memory: per-topic operational-knowledge files a repo authors about itself, with a manifest that maps a task's topics to the files worth loading. `domains init` scaffolds the knowledge system; `domains migrate` upgrades it. Publishes a doc-system contract so any tool can find what applies without reading this plugin's files.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": {
     "name": "Lee Driscoll"
   },

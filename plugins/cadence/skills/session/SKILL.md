@@ -16,7 +16,7 @@ This skill assumes **nothing** about the environment or the process. It reads th
 
 1. **Read the config** at `.agent/cadence/config.md` — one location, always. If it isn't there, tell the user to run `/cadence:init` and stop. (A config at some other path is a pre-0.2 layout; say so and point at `/cadence:doctor`.)
 2. **Load the flow spec** named in `config.flow` — a shipped preset at `${CLAUDE_PLUGIN_ROOT}/flows/<name>.flow.md`, or a project-local path resolved relative to the config file.
-3. **Resolve adapters** from `config.tracker.kind`, `config.vcs.kind`, `config.doc_system.kind`. For each family, look first for a project-local adapter at `.agent/cadence/adapters/<family>/<kind>.md`, else the shipped fallback at `${CLAUDE_PLUGIN_ROOT}/adapters/<family>/<kind>.md`. Read each adapter's **Capabilities** block — it tells you which operations and fields actually exist here.
+3. **Resolve adapters** from the bus: `## Tracker` → `Kind`, `## Version control` → `Kind`, and the `Doc system` binding row. The kind is always the bus's value — cadence never invents a name for a family. For each family, look first for a project-local adapter at `.agent/cadence/adapters/<family>/<kind>.md`, else the shipped fallback at `${CLAUDE_PLUGIN_ROOT}/adapters/<family>/<kind>.md`. Read each adapter's **Capabilities** block — it tells you which operations and fields actually exist here.
 4. **Resolve the lane roles.** Every status this skill sets comes from `flow.states.roles.<role>` mapped through `config.tracker.status_map` to a real status. Never write a literal status name.
 5. **Note `config.execution`** — the project's execution skill and what it `owns`.
 

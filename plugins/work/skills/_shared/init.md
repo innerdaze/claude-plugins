@@ -107,7 +107,11 @@ scan procedure first, wire up CLAUDE.md, then run the scan that fills in the
 knowledge files.
 
 **3a — Write the config bus at `.agent/PROJECT.md`.** One place, always — no alternative path,
-no private copy. If a legacy `domains/PROJECT.md` is present, do **not** write a second bus:
+no private copy. **On a bus that already exists, a `shared` row that is present but blank counts
+as absent**: ask for that one value, write it, and change nothing else — not the rows around it,
+not another role's sections. This is the only thing re-running init does to a live bus's shared
+sections, and it is why a doctor may name this command for a blank row without sending someone
+through a full re-scaffold. If a legacy `domains/PROJECT.md` is present, do **not** write a second bus:
 stop and tell the user to run `work migrate`, which moves it. Fill the template from
 `templates.md`
 with the confirmed environment, VCS + commit workflow, tracker + access +

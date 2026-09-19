@@ -108,6 +108,19 @@ scale — a disabled feature is not "less bad" than a broken one, it is a differ
   `shared, additive` table you append *rows*, and you edit only rows whose `Owner` is your own
   role. A disagreement between two values, or two rows claiming one owner, is a **finding**, not
   something to resolve by picking one.
+- **A `shared` row that is present with an empty value** → **drifted**. Absent is a state every
+  reader handles; blank looks answered and is not. The remedy is a person's — the shared rows
+  are the project's to edit — **or** the `delivery` or `methodology` role's re-scaffold command
+  from `## Commands`, both of which ask for a blank they find and write nothing else. Never name
+  a migrate for it: no migration fills in a value a person has to supply.
+- **`## Configuration` is a parking section, not a home.** A delivery migration creates it for
+  legacy keys it did not recognise, so nothing is lost and a reviewer can move each one. A row
+  there whose **value** also appears in one of the five `shared` settings sections or in
+  `## Bindings` → **drifted**: the bus states one fact twice. Remedy: the `delivery` role's
+  migrate command **while that role's stamp is behind its canonical**; once it is current, the
+  fix is a hand edit — say so, and name no command. A row whose value appears nowhere else is
+  reported as *parked*, with the section it most plausibly belongs to, and is a hand edit
+  regardless: no migration can know which section owns a key the template never had.
 - An owner marker naming something that is **not a known role id** → **drifted**, and report the
   value verbatim. Do not normalise it, and do not assume it means a plugin: role ids exist
   precisely so a rename cannot break resolution.
@@ -276,6 +289,12 @@ For each binding row (`Doc system`, `Intent`, `Shared knowledge`, and any other)
 
 Every finding names **exactly one command** — the single writing command for that artifact — or
 says plainly that none is available. A finding with no next action is a complaint.
+
+**And the command must act.** A `migrate` named for a role whose stamp already equals its
+canonical will do nothing; a `re-scaffold` named for a blank row re-asks what init already asked.
+Before naming a command, ask what it would change here. Where the honest answer is *nothing — a
+person edits this row*, say that: the shared rows are the project's, and a hand edit is a
+legitimate remedy. A finding that sends someone to run a no-op teaches them to ignore findings.
 
 **A doctor never writes.** Not a fix, not a re-stamp, not a "helpful" missing section. It reads
 and reports; the named command changes things.

@@ -79,7 +79,10 @@ vcs:      # ⇒ MOVED to the bus's `## Version control` section (read, not owned
   gotchas: "<optional: quirks specific to THIS machine or workspace>"
 
 execution:  # ⇒ MOVED to the bus's `## Execution` section
-  skill: <e.g. /work-on | none>           # the project's own ticket-execution skill
+  skill: </your-ticket-skill | none>      # the project's own ticket-execution skill — a COMMAND
+                                          # that exists here. A skill that moved into a plugin
+                                          # addresses as `/<plugin>:<name>`; when a stored value
+                                          # stops resolving, the doctor says so and init re-detects
   owns: [implement, test, docs, commit]   # what /cadence:session END must VERIFY, not repeat
                                           # `status` is deliberately absent: the done transition
                                           # is the session's, gated by the DoD. A project may add

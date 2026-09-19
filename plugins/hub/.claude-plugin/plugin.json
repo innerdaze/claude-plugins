@@ -1,7 +1,7 @@
 {
   "name": "hub",
   "description": "The stack's front door: reports what is installed and what each component's version is, runs the guided upgrade across every owner in order, and collates every other plugin's doctor into one report. Resolves a role to the plugin that serves it via a published roster contract, so an in-house plugin is bootstrapped the same way an official one is. Declares no dependencies and is required by nothing.",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "author": {
     "name": "Lee Driscoll"
   },

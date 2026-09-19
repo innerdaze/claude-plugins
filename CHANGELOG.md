@@ -13,6 +13,31 @@ field, or config key is *minor*.
 
 ## [Unreleased]
 
+### Fixed
+
+- **A delivery command that no longer resolves is reported, and init proposes the replacement.**
+  A real upgrade found `## Execution` → `Skill` still naming a command whose skill had since been
+  packaged into a plugin under a new address; sessions would have handed off to nothing. The
+  doctor now checks the command exists here (broken → `/cadence:init`), and init, finding a stale
+  value, proposes the same-named skill inside an installed plugin and confirms before writing.
+  The config example also stops shipping another plugin's old command as its example value —
+  which is where at least one project's stale value came from.
+- **The doc-system adapter is named by the bus's `Doc system` kind, never a name cadence
+  invents.** An older `/cadence:init` generated `adapters/docs/domains.md` for a knowledge folder
+  it recognised, while the knowledge tool's own init writes the bus row as `markdown` — so a
+  project with both resolved to nothing on cadence's side and to an unimplemented kind on the
+  other. Cadence now ships a consumer-side `adapters/docs/markdown.md` (locate and taxonomy over
+  the registered knowledge folder; `record` into cadence's own notes), init reads the row rather
+  than proposing a name, and **migration v4** renames a mis-named adapter file to the row's kind.
+  Methodology scaffolding **3 → 4**. Found upgrading a real project with `/hub:upgrade`.
+
+## [2.0.0] — 2026-09-19
+
+Published in the ecosystem-wide 2.0.0 release alongside `work`, `domains`, `intent` and `hub`.
+The major is the ecosystem's; **no Cadence contract changed** — the hook and flow contract stays
+at 0.6, and `search(text)` is a skill's own operation. A 1.0 project needs no migration for this
+release beyond what its stamp already says is pending.
+
 ### Added
 
 - `/cadence:plan` **checks the milestone against stated intent before breaking it down, and

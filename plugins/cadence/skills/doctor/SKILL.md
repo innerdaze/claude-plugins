@@ -171,6 +171,12 @@ For each of `tracker`, `vcs`, `doc_system` — and `intent`, whenever the bus's 
 
 - Resolve `kind` → project-local `.agent/cadence/adapters/<family>/<kind>.md`,
   else the shipped fallback. Neither → **broken**.
+- **A project-local adapter file whose name is not the bus's kind** — `docs/domains.md` beside
+  a row reading `markdown` — → **drifted**: an older init invented the name. Remedy
+  `/cadence:migrate` (v4 renames it). **A `Doc system` row naming a kind nothing implements**
+  — no shipped fallback, no project-local file — → **broken**, and say what to change it to: the
+  row is shared and yours to hand-edit; `markdown` when a knowledge folder is registered, `none`
+  otherwise. Then `/cadence:migrate`.
 - Check the adapter covers every operation in
   `${CLAUDE_PLUGIN_ROOT}/adapters/ADAPTERS.md` for its family, or declares it
   unsupported in a `## Capabilities` block. A missing block is **drifted** —
@@ -271,6 +277,13 @@ Cheap reads that catch real corruption:
   comment → drifted**, named: it reached done without the gate, either by an inline status change
   or before this marker shipped; the fix is a person's, since the work may well be fine. Where
   `list_closed` is unsupported, say the check could not run.
+- **Does `## Execution` → `Skill` name a command that exists here?** `none` → pass. Otherwise
+  look for it: a skill in an installed, enabled plugin (`/<plugin>:<name>`), a project skill under
+  `.claude/skills/`, a user skill. **Not found → broken**: session start will hand off to nothing.
+  Say what usually happened — a skill was packaged into a plugin and now addresses as
+  `/<plugin>:<name>`, and a skill of the same bare name inside an installed plugin is the likely
+  replacement — and name `/cadence:init`, which re-detects the delivery skill and confirms it
+  before writing. Report the candidate; never write it.
 - **Does the bus's `## Execution` `Owns` row name `status`?** → **disabled**, and say what it
   costs: the execution skill closes items itself, so the DoD gate runs after the item is already
   done. A legitimate project statement, reported so nobody is surprised by a held gate on a closed
