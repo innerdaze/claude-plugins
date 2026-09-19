@@ -117,7 +117,10 @@ stop and tell the user to run `work migrate`, which moves it. Fill the template 
 with the confirmed environment, VCS + commit workflow, tracker + access +
 prefix, and the verification method (no repo path — it's machine-specific; `work on`
 derives it at runtime) (pick the commands the repo actually supports —
-check `package.json` scripts / Makefile / CI). Set the `## Artifacts` `Ticket flow` row to
+check `package.json` scripts / Makefile / CI). **Look for a written Definition of Done** — a
+file or heading so named, a feature-process or contributing doc that lists what every change
+must satisfy — propose it, confirm, and write `## Verification → Definition of Done` as its path;
+none found → ask once, and omit the row if the project has not written one down. Set the `## Artifacts` `Ticket flow` row to
 `none` and write no `Ticket flow rules` row (a fresh project has no extracted rules yet).
 
 **Add `.agent/local/` to the project's ignore file** while you are creating `.agent/` — one entry,

@@ -501,10 +501,16 @@ def check_flows(hook_names: set[str], wildcards: list[str]) -> None:
             if right not in APPROVERS:
                 err("flow", f"{name}: decision_rights.{step} = {right!r} is not a valid level")
 
+        # A token outside FLOW-SPEC's table is legitimate only when the flow hooks
+        # `session.select_goal`: the hook then owns what each token means, and the default
+        # selection - the only thing that reads the table - never runs. Without that hook the
+        # default reads the token as prose and it silently selects nothing.
+        selects_itself = "session.select_goal" in (d.get("hooks") or {})
         for tok in ((d.get("intake") or {}).get("priority_policy") or []):
-            if tok not in documented_tokens:
+            if tok not in documented_tokens and not selects_itself:
                 warn("flow", f"{name}: priority-policy token {tok!r} is not documented in FLOW-SPEC.md "
-                             f"- it will be read as prose and may silently do nothing")
+                             f"and the flow does not hook session.select_goal - the default selection "
+                             f"will read it as prose and it will silently do nothing")
 
         for hk, doc in (d.get("hooks") or {}).items():
             known = hk in hook_names or any(re.fullmatch(w, hk) for w in wildcards)

@@ -110,6 +110,7 @@ fetch/comment/status step below.
 | `<VCS>` / `<commit workflow>` | `## Version control → Kind` and `Commit workflow`. |
 | `<TRACKER>` | `## Tracker → Kind` and `Access` — which tracker, and the MCP namespace or CLI that reaches it. |
 | `<verification>` | `## Verification → Proven by` — the commands that prove "done" before a step completes. |
+| `<dod>` | `## Verification → Definition of Done` — the path to the project's own bar, read in full and pasted to the Planner and Implementer. Row absent ⇒ `none`: plan against `<verification>` alone, and say so once in the plan. |
 
 **Tracker calls are not in the bus.** The bus says *which* tracker and *how it is reached*;
 the operations — fetch, read comments, comment, status, create — are in `tracker-ops.md` (this
@@ -402,7 +403,12 @@ Produce a plan with these sections:
 ## Files to touch
 ## Risks / open questions
 ## Out of scope   (what you're deliberately not doing — prevents drift)
-## Verification  (how we'll know it works, using this project's checks: <verification>)
+## Verification  (how we'll know it works: the checks to run — <verification> — and, against
+              the project's Definition of Done below, which of its items this ticket must show
+              and how each will be shown. An item that does not apply is named with why. "No
+              Definition of Done is registered" is one line when <dod> is none.)
+== Definition of Done ==
+<paste the document at <dod> verbatim, or "none">
 
 If the ticket is too large to plan confidently, propose a smaller first slice and say so.
 ```
@@ -490,7 +496,9 @@ Do not commit — the orchestrator handles that (<commit workflow>).
 <paste Ticket Analyst report verbatim>
 
 Work through the steps. For each, edit the relevant files, then run the verification
-the plan specifies (<verification>) before moving on.
+the plan specifies (<verification>) before moving on. Before you return as done, show each
+Definition of Done item the plan listed — what you did and where — or say which is not yet met;
+never quietly drop one.
 
 If you STOP early, return instead:
 ## STOP class   (A additive / B invalidating)
@@ -500,7 +508,8 @@ If you STOP early, return instead:
 
 When done, return:
 ## What changed   (file-by-file)
-## Verification run   (what you ran and what it showed)
+## Verification run   (what you ran and what it showed; then each Definition of Done item the
+                       plan listed — met, with the evidence, or not yet met)
 ## Surprises   (anything that diverged from the plan, even small — be specific)
 ## Suggested commit message   (one-line conventional commit referencing <TICKET-ID>)
 ## Follow-ups   (anything that came up but is out of scope)
@@ -719,7 +728,7 @@ it so a teammate scanning history immediately gets what shipped and why:
 - **What shipped** — commit id + headline file groups.
 - **Follow-ups** — pointers to the ticket ids you're about to file (or "pending user
   confirmation").
-- **Verification** — one line on how it was tested.
+- **Verification** — the `Proven by` result, and each Definition of Done item the plan listed: met with its evidence, or waived by the user with the reason. This is what a reviewer, or the session ritual's gate, reads later.
 Include the Curator's `ticket_comment` items if they add context not already covered.
 Plain markdown, real newlines. Orchestrator-inline.
 
@@ -736,7 +745,10 @@ covering for each draft: file as-is / modify / skip — and the status change fo
   that closing is the session's step and name its end command (the `## Commands` row for the
   role that owns the section). Unless that section's `Owns` row names `status`, in which case the
   project has said the execution skill closes items itself, and you do. **Absent → no ritual
-  exists here**, and the status change is yours as below.
+  exists here**, and the status change is yours as below — **so the gate is yours too.** Before
+  offering any state, walk the Definition of Done items the plan listed against the Implementer's
+  report: every one is met with evidence or waived by the user with a reason on the ticket. An
+  unmet item means you do not offer "done"; say what is missing.
 Never change status without user permission — teams reserve different state names for "done".
 **And never change it past a gate you did not run**: closing inline when a session ritual owns
 the transition is how a Definition of Done gets run after the fact, which is not running it.
