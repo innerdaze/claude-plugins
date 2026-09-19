@@ -159,8 +159,15 @@ against a bar meant for something else. Name the checklists you found and the fi
 at the section (`path#heading`), or give the ticket bar its own file. Document present → compare its items with the effective DoD: an item the
 document names that neither the flow nor `config.dod_gates` declares → **drifted**, *written but
 not gated* — name it and the one-line `dod_gates` entry that would gate it. A declared check the
-document never explains → informational: the session will judge it from its name. Row absent →
-say once that the gate has only check names to go on; not a defect.
+document never explains → informational: the session will judge it from its name. **Row absent →
+disabled**, and say what it costs: the gate judges every check from its name alone, and the
+delivery skill plans without a bar. Then look for a candidate before naming the remedy — a file
+whose name says *definition of done*, a `Definition of Done` heading in a process or contributing
+document — and name it in the finding: *"`docs/DEFINITION_OF_DONE.md` looks like one; `/cadence:init`
+confirms it and writes the row."* No candidate → the remedy is still `/cadence:init`, which asks.
+This is a finding rather than a note because no migration can write the row: which file is the
+bar is a question for a person, and a finding comes back every run until it is answered, where a
+line in an upgrade report does not.
 
 ## 2c. Can ownership be determined?
 
