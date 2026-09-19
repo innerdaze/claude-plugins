@@ -2,6 +2,22 @@
 
 Read once, at the start of `status` and `upgrade`. Nothing here writes.
 
+## 0. Is the copy of `hub` that is running the one that is installed?
+
+Read your own version from `${CLAUDE_PLUGIN_ROOT}/.claude-plugin/plugin.json`, then find `hub`'s
+entry in `claude plugin list --json`. **Installed newer than loaded → this session is running a
+stale `hub`**: an older roster, older detection rules, an older sequence. Say so first — *"running
+hub 1.0.0; 2.0.0 is installed — run `/reload-plugins`, then re-run this command"* — and for
+`upgrade` **stop there**: a migration sequence driven by a stale orchestrator is the failure this
+step exists to prevent. `status` and `doctor` may continue after saying it, because reporting
+from an old copy is still reporting; put the line at the top of the report so nothing below it
+is read as current.
+
+Found on a real upgrade: `/hub:upgrade` and `/hub:doctor` loaded from the `hub/1.0.0` cache while
+2.0.0 was installed. The content happened to be identical that day; the trap is the one § *Loaded
+is not the same as installed* below already describes for every other plugin, and `hub` is not
+exempt from its own rule.
+
 ## 1. Installed *and enabled*, not merely present
 
 ```bash

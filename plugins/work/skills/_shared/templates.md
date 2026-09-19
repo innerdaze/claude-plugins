@@ -8,7 +8,7 @@ strip anything that belongs to a different ecosystem.
 
 ## Domain system version
 
-**Domain system version: 13**
+**Domain system version: 16**
 **Minimum supported version: 1**
 
 This is the canonical version of the init **scaffolding** — the shape of the files

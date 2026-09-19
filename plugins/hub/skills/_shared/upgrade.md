@@ -92,6 +92,11 @@ finished and is not.
 
 `claude plugin update <id>`, then `/reload-plugins` if the update needs it.
 
+**If `hub` itself was among the plugins updated, stop here.** The rest of this procedure would
+run from the copy that was loaded before the update — an older roster and an older sequence —
+which is exactly what [`detect.md`](./detect.md) step 0 refuses at the start. Say `/reload-plugins`,
+then re-run `/hub:upgrade`; it resumes from the state it finds, and nothing done so far is lost.
+
 ### 4. Run each owner's own commands, in this order per role
 
 | Order | When | Command |
