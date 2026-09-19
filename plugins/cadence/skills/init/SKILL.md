@@ -163,7 +163,11 @@ This is the one thing a repo scan cannot answer, and it is worth being precise a
 **Look for the bar already written down.** A file or heading called *Definition of Done*, a
 feature-process or contributing document that lists what every change must satisfy — propose it,
 confirm, and write it as `## Verification → Definition of Done` in the bus (a `shared` row: write
-it only when absent). It is what session end quotes when it judges each declared check, and what
+it only when absent) — as a `path`, or `path#heading` when the bar is one section of a larger
+document, so the gate and the delivery skill read the checklist and not the manual around it. A
+document holding more than one checklist (an epic bar beside a ticket bar) needs the heading form
+or a split; say so. **Offer this on re-run too** when the row is absent: it is how an existing
+project gets the row without a re-scaffold. It is what session end quotes when it judges each declared check, and what
 the delivery skill plans against. Checks the document lists that the user does not add here are
 reported by the doctor as written-but-not-gated, so name them now: *"your document also lists
 `accessibility-reviewed`; gate it, or leave it as guidance?"*

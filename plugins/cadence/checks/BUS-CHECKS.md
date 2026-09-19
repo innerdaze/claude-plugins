@@ -113,6 +113,14 @@ scale — a disabled feature is not "less bad" than a broken one, it is a differ
   are the project's to edit — **or** the `delivery` or `methodology` role's re-scaffold command
   from `## Commands`, both of which ask for a blank they find and write nothing else. Never name
   a migrate for it: no migration fills in a value a person has to supply.
+- **`## Verification → Definition of Done` resolves.** Its value is a path, or `path#heading`.
+  The file must exist; with a heading, a heading of that exact text must exist **outside fenced
+  code** — the section it names runs to the next heading of the same level. Either failing →
+  **drifted**, and say which half: a document that has moved, or a heading that has been renamed
+  or only ever existed inside a template's code fence. Never fall back to the whole file when the
+  heading is missing — a bar quietly widened to an entire process document is the failure this
+  form exists to prevent. Remedy: a hand edit of the row, or the `delivery` or `methodology`
+  role's re-scaffold command, which re-asks for it.
 - **`## Configuration` is a parking section, not a home.** A delivery migration creates it for
   legacy keys it did not recognise, so nothing is lost and a reviewer can move each one. A row
   there whose **value** also appears in one of the five `shared` settings sections or in

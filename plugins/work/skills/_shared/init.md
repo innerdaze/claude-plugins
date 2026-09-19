@@ -119,8 +119,13 @@ prefix, and the verification method (no repo path — it's machine-specific; `wo
 derives it at runtime) (pick the commands the repo actually supports —
 check `package.json` scripts / Makefile / CI). **Look for a written Definition of Done** — a
 file or heading so named, a feature-process or contributing doc that lists what every change
-must satisfy — propose it, confirm, and write `## Verification → Definition of Done` as its path;
-none found → ask once, and omit the row if the project has not written one down. Set the `## Artifacts` `Ticket flow` row to
+must satisfy — propose it, confirm, and write `## Verification → Definition of Done` as its path — **or as
+`path#heading` when the bar is one section of a larger document**, so the plan receives the
+checklist and not the process manual around it. A document that holds more than one checklist
+(an epic bar beside a ticket bar) needs the heading form or a split; say so when you see it.
+None found → ask once, and omit the row if the project has not written one down. **On a bus that
+already exists without the row**, offer it the same way — this is how an existing project gets the
+row without a re-scaffold, and it is the one absent row you may ask about on re-run. Set the `## Artifacts` `Ticket flow` row to
 `none` and write no `Ticket flow rules` row (a fresh project has no extracted rules yet).
 
 **Add `.agent/local/` to the project's ignore file** while you are creating `.agent/` — one entry,

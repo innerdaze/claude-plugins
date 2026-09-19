@@ -110,7 +110,7 @@ fetch/comment/status step below.
 | `<VCS>` / `<commit workflow>` | `## Version control → Kind` and `Commit workflow`. |
 | `<TRACKER>` | `## Tracker → Kind` and `Access` — which tracker, and the MCP namespace or CLI that reaches it. |
 | `<verification>` | `## Verification → Proven by` — the commands that prove "done" before a step completes. |
-| `<dod>` | `## Verification → Definition of Done` — the path to the project's own bar, read in full and pasted to the Planner and Implementer. Row absent ⇒ `none`: plan against `<verification>` alone, and say so once in the plan. |
+| `<dod>` | `## Verification → Definition of Done` — the project's own bar. `path` ⇒ the whole file. `path#heading` ⇒ **only that section**: from the heading of that exact text (outside fenced code — templates keep headings in fences) to the next heading of the same level. Heading not found ⇒ **stop and say so**; never widen to the whole file. Pasted to the Planner and Implementer. Row absent ⇒ `none`: plan against `<verification>` alone, and say so once in the plan. If what you pasted holds more than one checklist — an epic bar and a ticket bar — tell the Planner which applies to a single ticket, and say in the plan that the row should name the section. |
 
 **Tracker calls are not in the bus.** The bus says *which* tracker and *how it is reached*;
 the operations — fetch, read comments, comment, status, create — are in `tracker-ops.md` (this

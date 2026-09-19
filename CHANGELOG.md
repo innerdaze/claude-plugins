@@ -21,7 +21,9 @@ field, or config key is *minor*.
   means and quotes it; init infers a candidate document and writes the row when absent; the
   doctor reports a documented check nobody gates, and a row pointing at a missing file. The
   delivery skill plans and verifies against the same row, so both plugins hold a ticket to one
-  bar.
+  bar. The value is a `path` or `path#heading` (one section, fenced headings ignored, an unresolved
+  heading fails loudly); a file holding more than one checklist is a doctor finding; init offers
+  the row on re-run.
 
 ### Fixed
 
