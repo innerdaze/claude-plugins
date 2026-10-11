@@ -17,16 +17,23 @@ Every existing adopter is in that state.
 - **Resolve a contradiction by picking.** Two buses, two real paths for one artifact: stop, show
   what differs, offer the resolutions, apply the chosen one. A central plugin is the worst
   possible place for a silent choice.
-- **Run a role's *usage* command.** An upgrade runs **setup** commands only — the migrate,
-  re-scaffold and doctor a role declares. `/intent:capture`, `/cadence:plan`,
+- **Run a role's *usage* command.** An upgrade runs **setup** commands — the migrate and
+  re-scaffold a role declares — and its **diagnostic** doctor, which writes nothing. `/intent:capture`, `/cadence:plan`,
   `/cadence:session start` and `work on` are the work itself, and the work is not something to
   perform on somebody's behalf while they are waiting for a migration to finish. Name them as
   next steps; never invoke them.
 
-  The tell is whether the command needs to know **what the user wants to do today**. A migration
-  does not. An interview does — which is how a first attempt at this sequence ended up asking
-  *"how should the content be captured — interview, brain-dump, or draft from the code?"* in the
-  middle of registering a role.
+  The line is **the command's role, not whether it asks questions.** A role's migrate and init
+  are setup; its doctor is **diagnostic** and writes nothing; its capture, plan, session and
+  `work on` are usage. A first attempt at this
+  sequence ran `/intent:capture` while registering a role — that is the mistake this rule exists
+  for.
+
+  **Asking questions does not make an init a usage command.** An init that asks which flow the
+  project follows, confirms a detected tracker, or needs tracker auth to read the board's
+  statuses is asking about the project's *configuration*. That is setup, and step 4 runs it.
+  Never decline an init on the grounds that it is "its own command" — every command `hub` runs is
+  somebody else's.
 
 ## Procedure
 
@@ -41,30 +48,38 @@ payload is current, what the bus says, and any knowledge-shaped folder nobody re
 
 ### 2. Ask what scope of upgrade they want
 
-First sort the missing plugins into two piles, because they are not the same question:
+First sort **every role from the roster's `roles()`** by one question: **is this project using
+it?** Whether its plugin is absent, disabled or installed does not decide the pile — it only
+decides whether the action needs an install (or `claude plugin enable`) step in front.
 
-| The plugin is missing and… | It belongs to | Because |
+| The role… | It belongs to | Because |
 |---|---|---|
-| **this repo has its artifact** — a knowledge folder on disk, unregistered | **the upgrade itself** | the content is already committed; the plugin is the tool needed to migrate it. Leaving it out does not leave the repo alone, it leaves it half-migrated |
-| **this repo has no artifact for that role** | **a stack decision** | nothing here needs it, and adding it changes what this project runs |
+| **is registered here** | **the upgrade itself** — migrate | it is in use |
+| **is unregistered, but this repo has its artifact** — a knowledge folder on disk | **the upgrade itself** — install the plugin if needed, init, migrate | the content is already committed; the plugin is the tool needed to migrate it. Leaving it out does not leave the repo alone, it leaves it half-migrated |
+| **is not used here** — no row, no artifact | **a stack decision** — install the plugin if needed, then init | nothing here needs it, and adding it changes what this project runs. A plugin installed for other repos is not consent to scaffold this one, and not a reason to leave it out of the question either |
 
 Then offer three answers:
 
-1. **Upgrade** — every registered role brought up to date, **plus install what is needed to
-   finish the artifacts already here**. Name each such plugin in the option itself: *"installs
+1. **Upgrade** — every role in use brought up to date, **plus install what is needed to finish
+   the artifacts already here**. Name each such plugin in the option itself: *"installs
    `domains@…` so `domains/` can be registered and migrated"*. Never silent, never a surprise.
-2. **Upgrade, and install anything missing** — as (1), plus every role in the roster this repo
-   has no artifact for.
-3. **Upgrade, and install these** — as (1), plus a list they choose from. Show the roles, what
-   each owns, and that this repo has no artifact for them.
+2. **Upgrade, and set up everything else** — as (1), plus every role not used here: install its
+   plugin if needed, then scaffold it. Name each, and which have an install step.
+3. **Upgrade, and set up these** — as (1), plus a list they choose from. Show the roles, what
+   each owns, and whether choosing it means an install.
 
-**Collapse the options when they resolve to the same action.** If nothing is missing beyond what
-the artifacts here entail — one plugin, or none — then (1), (2) and (3) are the same sequence
-written three ways, and offering all three implies a choice that does not exist. Ask the single
-question that is actually open: *"`domains/` is committed here and unregistered;
-`domains@…` is the plugin that registers and migrates it. Install it as part of this upgrade?"*
-Say in one line what the other options would have added and why they are empty here, so the
-person can see the scope rather than trust it.
+**Collapse the options only when no role is in the stack-decision pile.** Then (1), (2) and (3)
+are the same sequence written three ways, and offering all three implies a choice that does not
+exist. Ask the single question that is actually open: *"`domains/` is committed here and
+unregistered; `domains@…` is the plugin that registers and migrates it. Install it as part of
+this upgrade?"* Say in one line what the other options would have added and why they are empty
+here, so the person can see the scope rather than trust it.
+
+**A role with no artifact never disappears from the question.** Found on a real upgrade: a repo
+with `work` and `domains` set up, `cadence` installed but unregistered and `intent` not
+installed. The run reported "nothing left to apply", mentioned `intent` nowhere, and treated
+`cadence` as something it could not do. Every role in `roles()` is either registered, set up by
+this run, declined by the user, or named in the report as available — there is no fifth state.
 
 **Do not offer "migrate only what is here" as a headline option.** On the repo this command
 exists for it means *leave the knowledge folder committed, unregistered and unmigrated*, which
@@ -102,7 +117,7 @@ then re-run `/hub:upgrade`; it resumes from the state it finds, and nothing done
 | Order | When | Command |
 |---|---|---|
 | 1 | the role's plugin is behind | its update (step 3) |
-| 2 | the role owns an artifact but has no `## Versions` row, **or** the user asked for the role to be scaffolded | that role's **init** — it registers itself and stamps itself, at its floor when the files predate it |
+| 2 | the role owns an artifact but has no `## Versions` row, **or** the user chose the role in step 2 | that role's **init** — it registers itself and stamps itself, at its floor when the files predate it |
 | 3 | always | that role's **migrate** |
 
 **Scaffolding a role that owns nothing here still means its init.** When the user has asked for a
@@ -110,6 +125,13 @@ role to be set up — a knowledge system, an intent layer — run that role's in
 its artifact, empty. An empty registered layer is a real outcome: the folder exists, the bus names
 it, and every tool can see it. **The absence of content is not a reason to skip the setup**, and
 filling it is the user's next command rather than this sequence's business.
+
+**An init that stops is outstanding, not out of scope.** An init may stall on something only the
+person can supply — tracker auth, a choice between flows — and they may interrupt it. Report it
+as an outstanding item: the role, the init command, and what it was waiting for (*"`/cadence:init`
+— needs Jira auth to read the board's statuses"*). On a re-run, offer it again with that
+precondition named so they can clear it first. Never re-describe a stalled init as a command
+`hub` cannot run; it is the same command it was before it stalled.
 
 **Delivery first when it is in scope.** Its migrations do the structural moves — the bus, the
 overlay, the extracted rules — and other roles' migrations repoint what those moves broke. This
@@ -133,7 +155,7 @@ transcript above for anyone who wants it. Repeating it here buries the answer in
 |---|---|
 | **Headline** | one line: what state the project is in now |
 | **What changed** | one line per role, with the versions it moved between. *Not* one line per migration — ten applied migrations is one line saying `delivery 2 → 12` |
-| **Outstanding** | one line per item, each naming the command that clears it and whose it is |
+| **Outstanding** | one line per item, each naming the command that clears it and whose it is. Includes every role from `roles()` that is still not set up here — declined, stalled, or not offered because the user picked a narrower scope — with whether its plugin is installed. One line each; never omit one because the scope left it out |
 | **Next** | the commands to run, in order, copy-pasteable. At most four. Or one line: nothing pending |
 
 A behaviour change — a migration that changed what happens, not where a file lives — is one line

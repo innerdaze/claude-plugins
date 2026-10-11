@@ -34,6 +34,7 @@ an adopter sees the full picture without running four tools.
 | owner installed, below its floor | its **re-scaffold** command, not its migrate |
 | owner not installed | its stamp and the command the bus declares — no judgement, because you cannot know its canonical |
 | **role owns an artifact but has no row** | **present but unversioned** — that role's own init registers it. Say so; this is the row that is otherwise invisible |
+| **role not used here — no row, no artifact** | **not used here** — one line per role, whatever its plugin's state, so the reader sees the whole roster. `hub upgrade` offers it: install if needed, then init. Not a fault |
 
 ### Bindings and artifacts
 
