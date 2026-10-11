@@ -157,8 +157,9 @@ Three `work`-specific things worth calling out when present, because each is sil
   verification against `Proven by` alone, and the session gate (if the project has one) judges
   each check from its name. Report as **disabled**. Look for a candidate first — a file named
   for it, a `Definition of Done` heading in a process document — and name it; the remedy is
-  `work init`, which offers the row on re-run and writes nothing else. Not a migration's job: which
-  file is the bar is a person's answer, so it stays a finding until they give it.
+  `work init`, which offers the row on re-run and writes nothing else. `work`'s own migrations do
+  not write it: which file is the bar is a person's answer, so it stays a finding until they give
+  it.
 - **`domains/` exists but no doc-system is bound** — knowledge will not load. This is the known
   regression from the plugin split, and it is invisible at runtime apart from one line during a
   run, so a diagnostic that stays quiet about it is failing at its only job.

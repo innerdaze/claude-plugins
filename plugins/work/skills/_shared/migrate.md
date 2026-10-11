@@ -44,8 +44,8 @@ the working tree is clean so the migration lands as its own reviewable change).
    (`floor`).
 
 4. **Decide:**
-   - `stamp >= canonical` → report "domain system is up to date (v{stamp})" and stop. No
-     changes.
+   - `stamp >= canonical` → report "domain system is up to date (v{stamp})" and go to step 7b.
+     No scaffolding changes — but the overlay is a separate component and may still be behind.
    - `stamp < floor` → too far behind to chain safely. Tell the user to **re-scaffold instead
      of migrating**, naming the command from `## Commands` for *this* role (`delivery` →
      re-scaffold) rather than a generic "run init". A component owned by someone else that is
@@ -73,6 +73,23 @@ the working tree is clean so the migration lands as its own reviewable change).
    correct it. This is the last step — only stamp after every migration
    in the range succeeded. If one failed or was declined, stamp to the highest fully
    applied version instead and tell the user which migrations remain.
+
+7b. **The overlay — `delivery`'s other component.** Read the overlay's own `Overlay schema
+   version:` header, the `ticket-flow overlay` row, and the canonical **Overlay schema version**
+   from `templates.md`. No `.agent/work/workflow.md` (after any move a migration just made) →
+   nothing to refresh, say nothing. Header at canonical but row behind or missing → the overlay
+   was refreshed by an older release that stamped only the header: write the row to match the
+   header, nothing else. Header at canonical and row matching → nothing to do. **Header behind or
+   missing → run `update-workflow`'s refresh mode** (`update-workflow.md` § *Refresh
+   mode*) now, in this run: it re-expresses the existing steps in the current schema, shows the
+   diff, asks before writing, and stamps the row itself.
+
+   This is `work migrate`'s job because `## Commands` declares **one** migrate per role, and
+   `delivery` owns both components. A migrate that brought the scaffolding current and left the
+   overlay behind would make every orchestrator — `hub upgrade`, step 9's loop — report the role
+   current while its overlay is not, because none of them can see a second command nobody
+   declared. Found on a real upgrade. Refresh still asks before it writes; a declined refresh is
+   reported with `work update-workflow refresh` as its next step, and the row stays where it was.
 
 8. **Report — short, and ending in what to do.** One line of headline (`delivery 2 → 12`), then
    only what changes what the reader does next: any migration that **declined** and what it is
@@ -158,17 +175,17 @@ another migration needs.
   moves whole sections into the bus may relocate sections whose owner is not installed, because
   the alternative leaves a repo half-migrated for as long as one tool is missing. That covers
   **moving** a section, never editing what is inside it.
-- **Scaffolding only.** This touches the init artifacts (`PROJECT.md`, `INDEX.md`,
-  `meta.md`, `prep-refresh-guide.md`) and the CLAUDE.md sections. It does **not** upgrade
-  the workflow overlay — that has its own version and its own upgrade path
-  (`work update-workflow refresh`). If the overlay is also stale, mention it, but don't
-  migrate it here.
+- **Scaffolding migrations touch scaffolding; the overlay goes through refresh.** The `v{N}.md`
+  migrations touch the init artifacts (`PROJECT.md`, `INDEX.md`, `meta.md`,
+  `prep-refresh-guide.md`) and the CLAUDE.md sections. The workflow overlay has its own version
+  and is upgraded by refresh mode — which step 7b invokes, so one `work migrate` brings both of
+  `delivery`'s components current.
 
-  Two things a migration may still do to the overlay *file*, because the alternative is a repo
-  that no longer works: **move it**, and **repoint references to paths the same migration
+  Two things a scaffolding migration may do to the overlay *file*, because the alternative is a
+  repo that no longer works: **move it**, and **repoint references to paths the same migration
   moved** (v4 does both). Neither reads or rewrites what the steps say — after a repoint, every
-  line that is not one of those paths is byte-identical. Anything beyond that is the overlay's
-  own upgrade path, not this one's.
+  line that is not one of those paths is byte-identical. Re-expressing the steps is refresh's
+  job, never a migration's.
 - **Destructive steps are permitted, because the diff is reviewed** — a migration may delete
   and restructure what `work` owns. Three limits: never touch user-authored content outside
   `work`'s own sections; keep deletions **legible** (never bury one in reflowing or renaming —

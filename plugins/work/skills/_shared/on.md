@@ -80,7 +80,7 @@ none). Read the skill's *current* schema version — the `Overlay schema version
 or lower than the current version, the overlay predates the latest skill conventions (e.g.
 it may lack per-step effort levels or parallel-group marks). **Warn the user in one line and
 keep going** — e.g. "⚠️ `.agent/work/workflow.md` is schema vN (skill is vM); run `work
-update-workflow refresh` to upgrade it." Don't block or auto-edit it: the core spine here is live
+migrate` (or `work update-workflow refresh`) to upgrade it." Don't block or auto-edit it: the core spine here is live
 and already applies the current model+effort+parallelisation rules, so a stale overlay only
 means its *injected* steps miss the newest annotations — degraded, not broken. Pick the scenario whose match condition fits this
 ticket (issue type / branch / keywords); if none match, run the plain spine. Weave that
@@ -110,7 +110,7 @@ fetch/comment/status step below.
 | `<VCS>` / `<commit workflow>` | `## Version control → Kind` and `Commit workflow`. |
 | `<TRACKER>` | `## Tracker → Kind` and `Access` — which tracker, and the MCP namespace or CLI that reaches it. |
 | `<verification>` | `## Verification → Proven by` — the commands that prove "done" before a step completes. |
-| `<dod>` | `## Verification → Definition of Done` — the project's own bar. `path` ⇒ the whole file. `path#heading` ⇒ **only that section**: from the heading of that exact text (outside fenced code — templates keep headings in fences) to the next heading of the same level. Heading not found ⇒ **stop and say so**; never widen to the whole file. Pasted to the Planner and Implementer. Row absent ⇒ `none`: plan against `<verification>` alone, and say so once in the plan. If what you pasted holds more than one checklist — an epic bar and a ticket bar — tell the Planner which applies to a single ticket, and say in the plan that the row should name the section. |
+| `<dod>` | `## Verification → Definition of Done` — the project's own bar. `path` ⇒ the whole file. `path#heading` ⇒ **only that section**, resolved by the one rule in `${CLAUDE_PLUGIN_ROOT}/checks/BUS-CHECKS.md` § *`## Verification → Definition of Done` resolves*: the heading whose exact text, or GitHub-style slug, matches (outside fenced code — templates keep headings in fences), to the next heading of the same level. File missing, no match, or more than one ⇒ **stop and say so**, naming the near miss if there is one; never widen to the whole file. Pasted to the Planner and Implementer. Row absent ⇒ `none`: plan against `<verification>` alone, and say so once in the plan. If what you pasted holds more than one checklist — an epic bar and a ticket bar — tell the Planner which applies to a single ticket, and say in the plan that the row should name the section. |
 
 **Tracker calls are not in the bus.** The bus says *which* tracker and *how it is reached*;
 the operations — fetch, read comments, comment, status, create — are in `tracker-ops.md` (this

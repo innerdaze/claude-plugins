@@ -141,9 +141,11 @@ checkpoint is the last thing that touches the repo.**
    **Read the project's Definition of Done for what each check means.** The bus's
    `## Verification → Definition of Done` row, when present, names the document where the bar is
    written in the project's own words — a `path`, or `path#heading` for one section of a larger
-   document (to the next heading of the same level; headings inside fenced code do not count). A
-   heading that does not resolve is reported and the check is judged from its name; never read the
-   whole file in its place. A declared check is a *name* — `persistence`, `accessibility-reviewed` —
+   document, resolved by the one rule in `${CLAUDE_PLUGIN_ROOT}/checks/BUS-CHECKS.md` § *`## Verification → Definition of Done` resolves* (exact heading text or its slug, outside fenced
+   code, to the next heading of the same level). **A row that does not resolve stops the gate**:
+   say which half failed and that the item cannot reach `done` until the row is fixed. Never judge
+   the checks from their names in its place, and never read the whole file — a bar that was
+   written down and cannot be found is lost, not absent. A declared check is a *name* — `persistence`, `accessibility-reviewed` —
    and the document is its meaning: judge the check against what the document says, and quote
    the passage in the report, so the gate holds the item to the project's bar rather than to
    whatever the name suggests. Absent row → the name is all there is; say so once. A check the

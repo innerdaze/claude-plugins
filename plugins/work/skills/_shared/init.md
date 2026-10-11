@@ -121,7 +121,7 @@ check `package.json` scripts / Makefile / CI). **Look for a written Definition o
 file or heading so named, a feature-process or contributing doc that lists what every change
 must satisfy — propose it, confirm, and write `## Verification → Definition of Done` as its path — **or as
 `path#heading` when the bar is one section of a larger document**, so the plan receives the
-checklist and not the process manual around it. A document that holds more than one checklist
+checklist and not the process manual around it. **Write the heading's exact text, not a slug** — `docs/PROCESS.md#Definition of Done`, spaces and all — and resolve it before writing: the heading must exist outside fenced code, once. A document that holds more than one checklist
 (an epic bar beside a ticket bar) needs the heading form or a split; say so when you see it.
 None found → ask once, and omit the row if the project has not written one down. **On a bus that
 already exists without the row**, offer it the same way — this is how an existing project gets the

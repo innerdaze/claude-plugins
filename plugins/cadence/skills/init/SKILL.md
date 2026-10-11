@@ -164,13 +164,33 @@ This is the one thing a repo scan cannot answer, and it is worth being precise a
 feature-process or contributing document that lists what every change must satisfy — propose it,
 confirm, and write it as `## Verification → Definition of Done` in the bus (a `shared` row: write
 it only when absent) — as a `path`, or `path#heading` when the bar is one section of a larger
-document, so the gate and the delivery skill read the checklist and not the manual around it. A
+document, so the gate and the delivery skill read the checklist and not the manual around it.
+**Write the heading's exact text, not a slug** — `docs/PROCESS.md#Definition of Done`, spaces and all — and resolve it before writing: the heading must exist outside fenced code, once. A
 document holding more than one checklist (an epic bar beside a ticket bar) needs the heading form
 or a split; say so. **Offer this on re-run too** when the row is absent: it is how an existing
 project gets the row without a re-scaffold. It is what session end quotes when it judges each declared check, and what
 the delivery skill plans against. Checks the document lists that the user does not add here are
 reported by the doctor as written-but-not-gated, so name them now: *"your document also lists
 `accessibility-reviewed`; gate it, or leave it as guidance?"*
+
+**No document anywhere, and gates declared → offer to write one, from the gates.** A project
+with `dod_gates` and no document has checks with names and no meanings: the doctor reports the
+row disabled every run, and a session judges `persistence` from the word alone. Offer once:
+*"there is no written Definition of Done; write `docs/DEFINITION_OF_DONE.md` from the checks
+already declared — <list> — with one line each on what it means here?"* On yes:
+
+- **Its items are exactly the effective DoD** — `flow.gates.dod.checks` ∪ `config.dod_gates` —
+  one heading or checkbox per check, named as declared, with the meaning the user gives (propose
+  one; they correct it). **Never add an item that is not a declared check.** A new bar is a new
+  `dod_gates` entry first, asked about like any other, and only then a line in the document.
+- **Write the row in the same step**: `## Verification → Definition of Done` →
+  the path. A document with no row is invisible to the gate and the delivery skill.
+- On no: leave the row absent and say what that costs in one line. The doctor keeps reporting it,
+  which is correct — it is an open question, not a mistake.
+
+Found on a real upgrade: the document was written by the orchestrator rather than by init, with
+checks the config did not declare and no row — three artifacts disagreeing, and then described
+as unrelated.
 
 Whatever they name becomes `config.dod_gates`, which **adds to** the flow's `gates.dod.checks` rather than replacing it. Keep the shipped menu domain-neutral; a project's own bar arrives through "define your own."
 
