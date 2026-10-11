@@ -168,7 +168,11 @@ On approval:
   `templates.md` and write that exact number into the overlay's
   `Overlay schema version:` header line (replacing `{N}`). This is what lets `work on`
   detect when a project's overlay has fallen behind a later skill version — without it the
-  overlay reads as pre-versioning and will always warn as stale.
+  overlay reads as pre-versioning and will always warn as stale. **Write the same number into
+  the bus's `## Versions` `ticket-flow overlay` row** (owner `delivery`; add the row if
+  missing). The header is what `work on` reads; the row is what every orchestrator reads —
+  `work migrate`, `hub status`, `hub upgrade` — and a header bumped without the row leaves the
+  overlay reported stale by all of them after it was refreshed.
 - If you chose extract in step 4, write the `.agent/work/rules/<topic>.md` files (the
   load-bearing nuance only).
 - If you chose move, ensure the skill is under `<repo>/.claude/skills/` and reference that

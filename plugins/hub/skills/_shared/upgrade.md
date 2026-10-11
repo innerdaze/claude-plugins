@@ -12,6 +12,16 @@ Every existing adopter is in that state.
 - **Apply another owner's migration.** It invokes `domains migrate`; it never does what that
   migration does. A version stamp is a claim about what wrote the files, and only the thing that
   wrote them may make it.
+- **Write a file itself — any file.** Not a missing document a finding pointed at, not a config
+  key, not a "quick fix" between two owners' commands. Found on a real upgrade: cadence's
+  `dod_gates` were set and no Definition of Done document existed, so the run wrote one — with
+  gates the config did not declare — left the config alone, and then explained the mismatch as
+  the two having *"no link"*. They are linked, by the bus's `## Verification → Definition of
+  Done` row, which the owner's own init writes. Every gap a run finds is closed by the command of
+  the role that owns it (step 4, row 4) or reported as outstanding; there is no third route
+  where `hub` improvises the content. **And never explain a gap by asserting two artifacts are
+  unrelated** — if you cannot see the link, the owner's doctor or contract can; say you do not
+  know and run it.
 - **Install anything the user did not choose.** Step 2 asks. A `hub` that installed the stack on
   the way to answering something else would be making a stack decision on someone's behalf.
 - **Resolve a contradiction by picking.** Two buses, two real paths for one artifact: stop, show
@@ -68,12 +78,27 @@ Then offer three answers:
 3. **Upgrade, and set up these** — as (1), plus a list they choose from. Show the roles, what
    each owns, and whether choosing it means an install.
 
-**Collapse the options only when no role is in the stack-decision pile.** Then (1), (2) and (3)
-are the same sequence written three ways, and offering all three implies a choice that does not
-exist. Ask the single question that is actually open: *"`domains/` is committed here and
-unregistered; `domains@…` is the plugin that registers and migrates it. Install it as part of
-this upgrade?"* Say in one line what the other options would have added and why they are empty
-here, so the person can see the scope rather than trust it.
+**Never skip this question** — not when every plugin is installed, not when every role is
+registered, not when the answer looks obvious. The question is where the person sees what is
+about to change and agrees to it; a run that skips it has made the scope decision for them.
+Found on a real upgrade: every plugin installed, the question skipped, and the person learned
+the scope from the report.
+
+**The shape may collapse; the question may not.** When no role is in the stack-decision pile,
+(1), (2) and (3) are the same sequence written three ways, so do not offer three. Ask instead:
+
+1. **Upgrade all of these** — one line per role: its stamp now, the command that will move it,
+   and any install or enable it needs, named (`delivery 14 — work migrate`). **Never print a
+   target version.** The canonical lives in the owner's payload, which `hub` does not read
+   ([detect.md](./detect.md) § 1b); a number here would be a guess presented as a plan. The
+   owner's migrate says where it landed, and the report carries that.
+2. **Upgrade only these** — the same list, to pick from.
+3. **Dry run** — print the sequence and change nothing.
+
+Say in one line why there is no "set up everything else" option — every role is already in
+use — so the person can see the scope rather than trust it. **Nothing to do is still asked**:
+*"everything is current — run the doctors anyway?"* is the question then, and the answer is
+theirs.
 
 **A role with no artifact never disappears from the question.** Found on a real upgrade: a repo
 with `work` and `domains` set up, `cadence` installed but unregistered and `intent` not
@@ -119,6 +144,15 @@ then re-run `/hub:upgrade`; it resumes from the state it finds, and nothing done
 | 1 | the role's plugin is behind | its update (step 3) |
 | 2 | the role owns an artifact but has no `## Versions` row, **or** the user chose the role in step 2 | that role's **init** — it registers itself and stamps itself, at its floor when the files predate it |
 | 3 | always | that role's **migrate** |
+| 4 | the role's migrate or doctor names its own **init** or **re-scaffold** as the remedy for something | that command, now — see below |
+
+**A remedy an owner names for its own role is part of the upgrade.** When a migrate declines with
+*"run `/cadence:init`"*, or a doctor reports *"row absent — `/cadence:init` confirms it and writes
+the row"*, that is the owner saying which of its setup commands finishes the job. Run it, in this
+run, and let it ask what it asks. Never end the run telling the person to go and run an init the
+sequence could have run itself — found on a real upgrade, which closed by suggesting
+`/cadence:init` to fix cadence findings it had just watched appear. An init re-run on a
+registered role fills gaps and overwrites nothing; that is what makes it safe to run here.
 
 **Scaffolding a role that owns nothing here still means its init.** When the user has asked for a
 role to be set up — a knowledge system, an intent layer — run that role's init and let it create
@@ -144,6 +178,12 @@ A migration may **decline** because a precondition is unmet, and become ready on
 has run. So run another pass over everything still pending. **Stop when a whole pass applies
 nothing** — on lack of progress, not on a count — and report each remaining item with what it
 said it was waiting for.
+
+**Then run each touched role's doctor** — diagnostic, writes nothing — and act on what it says
+about its own role: a finding whose remedy is that role's migrate, init or re-scaffold is step 4,
+row 4, and goes back into the loop. Only a finding whose remedy is a *usage* command, a person's
+hand edit, or another plugin is outstanding. The report is written after this, so it never names
+a setup command the run could have run.
 
 ### 6. Report — four parts, and nothing else
 
@@ -172,7 +212,6 @@ Then, and only where they exist:
   Name the file and the replacement where you can see it; a doctor will keep reporting them
   either way.
 - **What is deliberately not done here.** Topic-content accuracy needs a re-scan (`prep refresh`
-  or its equivalent) and cannot be judged by a migration; the workflow overlay has its own
-  upgrade path.
+  or its equivalent) and cannot be judged by a migration.
 
 Then suggest `hub doctor`, which is how they check the result rather than take your word for it.

@@ -46,7 +46,7 @@ access and prefix are the bus's.
 ## The shape
 
 ```yaml
-cadence_version: "0.5"             # the contract version this config is written against
+cadence_version: "0.6"             # the contract version this config is written against
 
 # `project` is gone: name and ticket prefix are the bus's `## Project` -> Name and
 # `## Tracker` -> Prefix. Two copies of one fact is what the bus exists to prevent.
@@ -152,6 +152,14 @@ A lane with **no entry here is fine.** It means your tool can't represent that
 step, so Cadence skips it and says so once. If your board is just Backlog and
 Done, map those two and leave the rest out; sessions simply won't mark work
 in-flight. Cadence never creates a column in your tracker.
+
+**`dod_gates` and the Definition of Done document are linked through the bus.** The checks are
+declared here; their meaning, in the project's words, is in the document the bus's
+`## Verification → Definition of Done` row names. The row is the link — it is a `shared` bus
+row, not a cadence key, which is why it is not in this block. The two must agree: an item the
+document lists that no gate declares is reported by the doctor as *written but not gated*, and a
+declared gate the document never explains is judged from its name. Change one, change the other,
+in the same commit.
 
 **`dod_gates` adds, it never replaces.** The effective Definition of Done is the
 flow's `gates.dod.checks` **∪** this list. You can raise the bar for your project;

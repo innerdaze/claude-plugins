@@ -8,8 +8,8 @@ description: >-
   migration from the registry, and re-stamps only what it migrated. Use whenever the user
   says "work migrate", "apply migrations", "upgrade the domain system", "move the config
   bus", "my domain system is behind", or acts on the stale-scaffolding warning `work on`
-  prints. The workflow overlay's schema upgrades separately via
-  `work update-workflow refresh`.
+  prints. Also brings the workflow overlay current by running `update-workflow`'s refresh mode
+  when its schema stamp is behind, so one run covers both of `delivery`'s components.
 user-invokable: true
 argument-hint: ""
 ---

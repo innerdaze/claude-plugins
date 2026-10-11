@@ -47,8 +47,10 @@ not re-derive that here.
   against a *newer* contract than the plugin is **broken**, not drifted: it may
   use shapes the installed skills cannot read — a qualified `status_map` entry
   against a plugin that only understands plain names, say — and the older skill
-  has no way to recognise why. Say which side is behind. A config with no
-  `cadence_version` at all predates 0.3; report it and suggest re-running init.
+  has no way to recognise why. Say which side is behind. **A config one or more minors
+  behind** within the same major is **drifted**, and the remedy is `/cadence:migrate`, which
+  raises it — not init. A major behind → `/cadence:init`. A config with no `cadence_version` at
+  all predates 0.3; report it and suggest re-running init.
 - If there is no config there but one exists at another path (a `PROJECT.md` in a
   docs folder, say), report the **pre-0.2 layout** and its remedy: move it to
   `.agent/cadence/config.md`, or re-run init.
@@ -158,8 +160,9 @@ The two together answer the question this section exists for: *which of the chec
 project declares could actually stop a session?*
 
 **And the project's own document, when there is one.** Read `## Verification → Definition of
-Done`. Row pointing at a file that does not exist, or a `#heading` that does not resolve outside
-fenced code → **drifted**: the gate falls back to check names alone. **A named file, or section,
+Done`, and resolve it by the rule in `${CLAUDE_PLUGIN_ROOT}/checks/BUS-CHECKS.md` § *`## Verification → Definition of Done` resolves*. File missing, no heading matching (exact text or
+slug, outside fenced code), or more than one → **broken**: session end stops on it, and so does
+the delivery skill. Name the half that failed and, for a near miss, the heading that was meant. **A named file, or section,
 that holds more than one checklist** — an epic bar written in the same shape as the ticket bar,
 a template with fill-in blanks — → **drifted**: the delivery skill will plan a single ticket
 against a bar meant for something else. Name the checklists you found and the fix: point the row
@@ -171,10 +174,12 @@ disabled**, and say what it costs: the gate judges every check from its name alo
 delivery skill plans without a bar. Then look for a candidate before naming the remedy — a file
 whose name says *definition of done*, a `Definition of Done` heading in a process or contributing
 document — and name it in the finding: *"`docs/DEFINITION_OF_DONE.md` looks like one; `/cadence:init`
-confirms it and writes the row."* No candidate → the remedy is still `/cadence:init`, which asks.
-This is a finding rather than a note because no migration can write the row: which file is the
-bar is a question for a person, and a finding comes back every run until it is answered, where a
-line in an upgrade report does not.
+confirms it and writes the row."* — and name the remedy by stamp: **`cadence methodology` below
+v5 → `/cadence:migrate`**, whose v5 asks for the row (and, with no candidate, offers to write the
+document from the declared checks); **at v5 or above → `/cadence:init`**, because migrate has
+already asked and the person left it open. Either way it stays a finding rather than a note:
+which file is the bar is the person's answer, and a finding comes back every run until it is
+given, where a line in an upgrade report does not.
 
 ## 2c. Can ownership be determined?
 

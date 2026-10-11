@@ -176,7 +176,8 @@ them.
 > The generated files a project holds *are* snapshots, tracked by two independent version
 > stamps in `templates.md`:
 > - **Overlay schema version** → the `.agent/work/workflow.md` overlay. When it moves ahead of
->   a project's stamp, `/work on` tells you to run `/work update-workflow refresh`.
+>   a project's stamp, `/work on` tells you to run `/work migrate` (which runs refresh for it) or
+>   `/work update-workflow refresh` directly.
 > - **Domain system version** → the init scaffolding (`PROJECT.md`, `INDEX.md`, `meta.md`,
 >   `prep-refresh-guide.md`, and the CLAUDE.md sections). When it moves ahead of a
 >   project's stamp (in `PROJECT.md`), `/work on` tells you to run `/work migrate`, which
