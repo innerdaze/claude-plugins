@@ -2,7 +2,7 @@
 name: upgrade
 description: >-
   Bring a project and the plugins it needs up to date together — detect what is installed, ask
-  what scope of upgrade they want (finish what is here, add everything missing, or pick), update each plugin before
+  what scope of upgrade they want (finish what is here, set up every role not yet here, or pick), update each plugin before
   running its migrations, then run each owner's own init and migrate in order until nothing more
   applies. Stops on contradictions and offers the resolutions rather than picking. Use when the
   user runs `/hub:upgrade`, says the stack or the project is out of date, is upgrading a repo

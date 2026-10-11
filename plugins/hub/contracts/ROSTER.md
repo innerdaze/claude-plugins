@@ -35,7 +35,7 @@ Returns, when known:
 |---|---|
 | `plugin` | the id to install, **exactly as `claude plugin install` takes it** — `name@marketplace` wherever the plugin comes from a marketplace, which is every case that is not a local directory |
 | `marketplace` | optional: `{name, add_url}` for the marketplace that serves this entry. Only meaningful for a **project adapter** naming a plugin from somewhere else — the shipped roster's own marketplace is, necessarily, already added |
-| `commands` | that role's `migrate`, `re-scaffold` and `doctor` commands, as the plugin itself would declare them in `## Commands`. **Setup commands only, by design** — a roster carries what an orchestrator may run unattended, and a role's actual work (`/intent:capture`, `/cadence:plan`) never qualifies, because it needs to know what the user wants to do today |
+| `commands` | that role's `migrate`, `re-scaffold` and `doctor` commands, as the plugin itself would declare them in `## Commands`. **Setup and diagnostic commands only, by design** — a roster carries what an orchestrator may run on the user's behalf: migrate and re-scaffold (setup, including an init that asks configuration questions) and doctor (diagnostic, never writes). A role's actual work (`/intent:capture`, `/cadence:plan`) never qualifies, because it is usage |
 | `source` | where this entry came from: `project` (a generated adapter) or `shipped` |
 
 **A bare name is not an installable id.** It reads fine in prose and fails at the command line,
