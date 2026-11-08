@@ -47,21 +47,38 @@ with the work in limbo.
 
 ## `/cadence:session start`
 
+**First, make sure `.agent/local` is set up in this worktree.** The session file and the claims
+file both live there, so it has to exist, be ignored, and — where it can — be shared, before step
+0 reads anything from it. Read `${CLAUDE_PLUGIN_ROOT}/checks/LOCAL-DIR.md` and apply it: ignore the
+path, and link it to the shared folder. **Ask only in the one case it asks** — a plain folder that
+already holds files, since moving them is the person's call. Every other state is acted on and
+reported in **one line** (*"linked `.agent/local` to the shared folder"*, *"`.agent/local` already
+shared"*); a dangling link or a file where the folder should be is reported as that file says, and
+the session carries on unshared rather than stopping. A new worktree is where this matters most: it is the first
+session there that links it.
+
 0. **Claim the session before anything else.** Read the session-state file's `claimed-by` and
    `claimed-at` header. Yours, absent, or older than a day → take it (write your token and
    timestamp; say one line if you took over a stale one). **Recent and not yours → stop**: another
    session is live in this working copy. Offer to continue its goal, to start a separate session
-   file beside it (`cadence-session-2.md`), or to stop — and until they answer, pick no goal, move
-   no item and write nothing. See *Sessions across worktrees* in `${CLAUDE_PLUGIN_ROOT}/adapters/ADAPTERS.md`.
+   file beside it, or to stop — and until they answer, pick no goal, move no item and write
+   nothing. See *Sessions across worktrees* in `${CLAUDE_PLUGIN_ROOT}/adapters/ADAPTERS.md`.
 
    The session file is **keyed by worktree** — `.agent/local/cadence-session-<worktree>.md` —
-   because `.agent/local/` is meant to be shared across worktrees and therefore does not separate
-   them itself.
+   because `.agent/local` is shared across worktrees and therefore does not separate them itself.
+   **A separate session keeps the key**: `cadence-session-<worktree>-2.md`, then `-3`, each
+   number taken by the same claim rule — skip one that another live session holds. Never a bare
+   `cadence-session-2.md`: in the shared folder that name is every worktree's second session at
+   once. **From here to the end of the session, "the session-state file" means the file you
+   claimed** — the snapshot in step 1b, the prune and the write at end all go there, not to
+   `config.session_state.file`.
 
-   Then work out whether cross-worktree coordination is even possible: ask the VCS adapter for
-   **`shared_local_dir()`** and compare it with where `.agent/local/` resolves. Shared → read the
-   claims file there. Not shared, or unsupported → say **once** that sessions in other worktrees
-   are invisible, name the fix (link `.agent/local/` to the shared target), and carry on.
+   Then work out whether cross-worktree coordination is even possible. `.agent/local` is
+   **shared** when it is a symlink that resolves to an existing folder outside this working tree —
+   any such folder, not only the one `shared_local_dir()` names, so an older link a person made
+   still counts. Shared → read the claims file, `.agent/local/cadence-claims.md`. Not shared, or
+   `shared_local_dir()` unsupported → say **once** that sessions in other worktrees are
+   invisible, name why (the setup step above said what it found), and carry on.
 
 1. **`session.start`** (default): read the session-state file (`config.session_state.file`) — Cadence's own local scratchpad, *not* the project's memory. Determine the current milestone from the roadmap (`config.doc_system.roadmap`) and the tracker.
 
@@ -100,11 +117,12 @@ with the work in limbo.
    degradation — with `me()` or `assignee` unsupported you cannot tell, so say so once and treat
    assignment as advisory rather than guessing identity from a git email.
 
-   **Skip a candidate another worktree is holding**, per the cross-worktree claims file, and say
+   **Skip a candidate another worktree is holding**, per the cross-worktree claims file
+   (`.agent/local/cadence-claims.md`, read only when `.agent/local` is shared), and say
    which worktree holds it — a candidate that vanishes without explanation reads as a priority
    bug. When you take an item, record it there; when the session ends or releases it, remove the
-   entry. With `shared_local_dir()` unsupported, there is no claims file and no skipping: that is
-   the degraded mode you announced at start.
+   entry. With `.agent/local` not shared, or `shared_local_dir()` unsupported, there is no claims
+   file and no skipping: that is the degraded mode you announced at start.
 
    **Exclude items whose status maps to no lane.** A real board carries statuses the flow never named — `Blocked`, `Needs Design`, `Waiting on Vendor`. Those items are neither terminal nor ready, and you do not know what the status means, so they are not candidates. Say how many you set aside and in which statuses; a board where most work is invisible to the process is worth surfacing rather than silently narrowing.
 
@@ -128,6 +146,33 @@ The order of these steps matters and is explained below — do not reorder them.
 The governing rule: **every tracker write happens before the checkpoint, and the
 checkpoint is the last thing that touches the repo.**
 
+0. **Find the session file you are closing, before anything else.** If this conversation holds a
+   claim token — it ran `start`, or took a file over earlier — the file that token claims is the
+   session-state file, whatever else is in the folder. **A token you hold always wins.**
+
+   **Holding no token** — a restart, a `/clear`, a compaction that dropped it — you find the file
+   by its goal. The candidates are this worktree's session file and its numbered files
+   (`cadence-session-<worktree>.md`, `-2`, `-3`, …), never another worktree's. Read the item id on
+   each candidate's `## Goal` → `current:` line and compare it, as a whole id, to the item being
+   closed: the one the user named, or — when they named none — whatever each candidate records, so
+   every candidate with a current goal matches. Normalise both ids to the form the tracker
+   adapter's `Ids` line declares before comparing — under one that says plain numbers, `7`, `#7`
+   and a stored `7` are the same id — and compare as written when it declares none. `TT-7`
+   matches `TT-7`, not `TT-70`, and a title is never matched.
+
+   - **Exactly one matches → take it over.** Rewrite its `claimed-by` to this session's token and
+     its `claimed-at` to now **before you write anything else**, however recent the claim you are
+     replacing, and say so in one line — *"took over `cadence-session-<worktree>-2.md` (goal TT-7)
+     from an earlier conversation."* A recent claim on the file whose goal is this item is not
+     another live session: the goal says it is this one. From here that file is the session-state
+     file, and step 8 releases it.
+   - **None matches, or several do → ask once**, naming each candidate with its goal and how old its
+     claim is, and write nothing until they answer. Never break the tie by recency or by which file
+     is the main one.
+
+   Files that do not match are left exactly as they are. See *Ending from a new conversation* in
+   `${CLAUDE_PLUGIN_ROOT}/adapters/ADAPTERS.md`.
+
 1. **Gate(s).** Work out the flow's **declared path** from the item's current lane to the lane you are moving it to, following `gated_transitions`. Run **every gate attached to any transition on that path** — including transitions whose lanes this tracker cannot represent.
 
    **An unmapped lane skips the status write. It must never skip a gate.** Otherwise a board with fewer columns silently lowers the quality bar, and the fewer columns a team has, the fewer checks they get — exactly backwards. A flow that gates `Supported -> Reviewed -> Final` still owes you both gates on a board that only has `Outline` and `Final`.
@@ -141,7 +186,7 @@ checkpoint is the last thing that touches the repo.**
    **Read the project's Definition of Done for what each check means.** The bus's
    `## Verification → Definition of Done` row, when present, names the document where the bar is
    written in the project's own words — a `path`, or `path#heading` for one section of a larger
-   document, resolved by the one rule in `${CLAUDE_PLUGIN_ROOT}/checks/BUS-CHECKS.md` § *`## Verification → Definition of Done` resolves* (exact heading text or its slug, outside fenced
+   document, resolved by the one rule in `${CLAUDE_PLUGIN_ROOT}/checks/DOD-ANCHOR.md` (exact heading text or its slug, outside fenced
    code, to the next heading of the same level). **A row that does not resolve stops the gate**:
    say which half failed and that the item cannot reach `done` until the row is fixed. Never judge
    the checks from their names in its place, and never read the whole file — a bar that was
@@ -183,7 +228,7 @@ checkpoint is the last thing that touches the repo.**
    **Only an explicit statement parks an item.** Never infer blockage — not from a gate failing, not from a short session, not from work looking incomplete. Cadence cannot tell "stuck" from "unfinished", and guessing wrong writes a status the user never chose.
 
    Only move **forward** along the declared path. If the item already sits past the lane you were going to move it to — an `active` role naming a lane the item left three transitions ago — do not move it backwards; say so once and leave it. A status that walks backwards misrepresents the board more than a status that stands still.
-3. **Prune the session state** — run `session_state.prune`. The default rule lives in `${CLAUDE_PLUGIN_ROOT}/flows/HOOKS.md`; in short, reconcile the scratchpad **against the tracker** (not against what the file claims) and drop anything the tracker already tells you, keeping only non-obvious traps.
+3. **Prune the session state** — run `session_state.prune` on the file this session claimed — at start, or by taking it over in step 0 (a separate session's is its numbered `-<n>` file). The default rule lives in `${CLAUDE_PLUGIN_ROOT}/flows/HOOKS.md`; in short, reconcile the scratchpad **against the tracker** (not against what the file claims) and drop anything the tracker already tells you, keeping only non-obvious traps.
 4. **Decide the next goal and record it** via the tracker adapter (`comment`), and record any durable gotcha through the doc adapter's `record()`. **The comment opens with `Session end — gate.<name> passed|held`** for every gate on the path, so an item's history says which ritual closed it: this line is what `/cadence:doctor` looks for on a done item, and an item in the done lane without one was closed outside the session path. **Any DoD check that did not apply goes in that comment too**, with its reason — the terminal output is gone by morning, and *which checks this item was actually held to* is the thing a reviewer needs later. Both of these write files that may be under version control, which is why they come *before* the checkpoint.
 5. **Checkpoint — the last repo write.** First call `status()` and look at what is actually there: running the gates may have produced artefacts the gates themselves created (`__pycache__`, coverage output, a build directory). Ignore or remove those before committing rather than attributing them to this item — the tree being clean afterwards is only meaningful if you didn't commit rubbish to achieve it.
 
@@ -204,7 +249,7 @@ checkpoint is the last thing that touches the repo.**
    **Otherwise — including whenever `execution.skill` is `none`** — run the checkpoint yourself via the `checkpoint` hook / VCS adapter, and **confirm it landed** with `log()` afterwards. A checkpoint you performed is not more trustworthy than one you verified; it just failed more recently if it failed.
 
    **In either branch, if no checkpoint exists at the end of this step, the item must not stay advanced.** Step 2 has already moved it, so offer to revert the status — a tracker claiming work is finished when nothing was committed is worse than either failure alone.
-6. **`session.end`** (default): write the pruned session state to `config.session_state.file`, per the schema in `${CLAUDE_PLUGIN_ROOT}/adapters/ADAPTERS.md`. This file is git-ignored, so it is the one write that may safely follow the checkpoint. Clear `## Tree at start` — it describes a session that is over, and the next start writes its own.
+6. **`session.end`** (default): write the pruned session state to the session-state file this session claimed at start or took over in step 0 — `config.session_state.file`, or the numbered `-<n>` file a separate session took — per the schema in `${CLAUDE_PLUGIN_ROOT}/adapters/ADAPTERS.md`. This file is git-ignored, so it is the one write that may safely follow the checkpoint. Clear `## Tree at start` — it describes a session that is over, and the next start writes its own.
 
 7. **If the item landed in a hands-off status, you are finished with it.** Say so in one line —
    *"handed to review; nothing further from me"* — and do not carry it into the next session's
@@ -212,7 +257,7 @@ checkpoint is the last thing that touches the repo.**
    silence about it is what makes a user wonder whether the tool is still waiting on something.
 
 8. **Release what you claimed.** Remove this item's entry from the cross-worktree claims file
-   (`shared_local_dir()`), and clear `claimed-by` / `claimed-at` from the session-state header.
+   (`.agent/local/cadence-claims.md`, when shared), and clear `claimed-by` / `claimed-at` from the session-state header.
    A released claim is what lets the next session — here or in another worktree — pick this item
    up without asking anybody.
 
@@ -302,4 +347,4 @@ the items, carry on.
 - **Never repeat execution-owned work.** `config.execution.owns` is the seam that keeps this skill and the execution skill from duplicating commit/doc steps — and it cuts both ways: what execution doesn't own, this skill must do.
 - **Stay fast.** ~5 minutes each end. The value is the goal in and the verified close out, not ceremony.
 - **Delegate the grunt work.** Batchy adapter reads/writes can go to the `mechanical` subagent, spawned per the calling convention in `${CLAUDE_PLUGIN_ROOT}/adapters/ADAPTERS.md`. The goal *decision* and gate *judgment* stay on the session model.
-- **Session state is Cadence's own local file.** Read and write only `config.session_state.file`. Never read, write, or depend on the project's own memory (`CLAUDE.md`, agent `MEMORY.md`), and never reach outside `.agent/cadence/`.
+- **Session state is Cadence's own local file.** Read and write only `config.session_state.file`. Never read, write, or depend on the project's own memory (`CLAUDE.md`, agent `MEMORY.md`), and never reach outside `.agent/cadence/` and `.agent/local` (plus the ignore files and link `${CLAUDE_PLUGIN_ROOT}/checks/LOCAL-DIR.md` sets up).

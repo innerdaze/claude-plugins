@@ -131,7 +131,15 @@ being cleaned of.
 - **`log(n?, paths?)`** → the last `n` checkpoints as `{ref, message, item_refs}`. Needed to verify that a checkpoint referencing a given item exists — which `/cadence:session end` requires and previously had no way to do.
 - **`add_untracked(paths)`** → stage new/untracked files (some VCS need this explicitly).
 - **`checkpoint(message, item_ref)`** → create a commit whose message references `item_ref`. Never push unless asked.
-- **`ignore(paths)`** → append paths to the ignore file the `kind` implies (`.gitignore` / `.dvignore` / …), idempotently. Used at init to keep Cadence's local session-state file out of the repo.
+- **`ignore(paths)`** → append paths to the ignore file the `kind` implies (`.gitignore` / `.dvignore` / …), idempotently. Used at init to keep `.agent/local` — which holds Cadence's session state — out of the repo. Write a path in the form that matches **whatever is there**, a folder or a link to one: for git that means no trailing slash, since `.agent/local/` stops matching once the folder is a symlink.
+
+Optional:
+
+- **`shared_local_dir()`** → the absolute path of a folder **shared by every worktree of this
+  repository and never committed** — the target `.agent/local` is linked to so one developer's
+  local files follow them across checkouts. It names the folder; it does not create it (see
+  *Sessions across worktrees*). `unsupported` for a VCS with no such concept, and then
+  cross-worktree coordination is off.
 
 ## Doc-system contract
 
@@ -171,20 +179,22 @@ project has no intent layer"* so nobody downstream mistakes silence for a pass.
 
 ## Where adapter data lives
 
-Everything Cadence owns sits under **`.agent/cadence/`** — the config, generated adapters, a custom flow, and any data a fallback adapter needs. Nothing is written outside that root (the sole exception is a call to the VCS adapter's `ignore()`, which by definition must edit the project's ignore file).
+Everything Cadence owns sits under **`.agent/cadence/`** — the config, generated adapters, a custom flow, and any data a fallback adapter needs. Nothing is written outside that root, with three exceptions, each of which by definition lives elsewhere: `.agent/local` and the files in it (below); the project's ignore files, through the VCS adapter's `ignore()` — `.gitignore` and, for git, the shared `info/exclude`; and the folder `shared_local_dir()` names, which `.agent/local` is linked to.
 
 Within that root there are two kinds of file, and the difference is whether the project's collaborators need it:
 
 | | Examples | Committed? |
 |---|---|---|
 | **Shared** — project state a teammate or a future you must see | `config.md`, `adapters/**`, `*.flow.md`, `backlog/**` (the `markdown` tracker), `notes.md` (the `none` doc adapter) | **yes** — versioned alongside the code |
-| **Local** — one author's working scratchpad, in this working copy | `.agent/local/cadence-session.md` | **no** — the whole of `.agent/local/` is ignored, added at init via `ignore()` |
+| **Local** — one developer's working scratchpad | `.agent/local/cadence-session-<worktree>.md`, `.agent/local/cadence-claims.md` | **no** — the whole of `.agent/local` is ignored, added at init via `ignore()` |
 
 **The directory marks the second kind**, not a filename suffix. One ignore entry covers
 everything uncommitted, which matters because the previous convention needed an entry per file:
 an ignore line that has stopped matching looks exactly like one that works, and v1 of this
-plugin's migration exists partly to repair one. It is also **not shared between worktrees**, so
-two checkouts of one repo no longer overwrite each other's session. The split matters most for the `markdown` tracker: its items are *meant* to be committed, so a backlog diffs and reviews like code — that's the main reason to choose it over a hosted tracker on a small project. Session state is the opposite: high-churn, single-author, and a guaranteed conflict on any shared branch.
+plugin's migration exists partly to repair one. The entry is `.agent/local`, **without a trailing
+slash**, for the same reason — the folder is meant to be a link, and a slash-form entry matches a
+directory but not a symlink to one. It is shared between worktrees, so the session file carries
+the worktree in its name and two checkouts of one repo do not overwrite each other's session. The split matters most for the `markdown` tracker: its items are *meant* to be committed, so a backlog diffs and reviews like code — that's the main reason to choose it over a hosted tracker on a small project. Session state is the opposite: high-churn, single-author, and a guaranteed conflict on any shared branch.
 
 ## The one store Cadence owns — `session_state`
 
@@ -229,16 +239,20 @@ specific shape: *the shipped work deliberately departs from the ticket text, and
 restoring it to match the ticket would reintroduce a bug.* "Ticket X was hard" is
 not a trap.
 
-The file is **local and never committed** — it lives under `.agent/local/`, which is ignored as
-a directory. It is high-churn, single-author, and a guaranteed conflict on any shared branch.
+The file is **local and never committed** — it lives under `.agent/local`, which is ignored as a
+path. It is high-churn, single-author, and a guaranteed conflict on any shared branch.
 `flows/HOOKS.md` owns the prune rule that keeps it honest.
 
 ## Sessions across worktrees, and two sessions at once
 
-`.agent/local/` is **meant to be shared across worktrees** — it holds this developer's
+`.agent/local` is **meant to be shared across worktrees** — it holds this developer's
 preferences, and those belong to the developer rather than to a checkout. Sharing it takes a
-symlink the user creates (see the setup notes in the framework reference), so a plugin cannot
-assume it either way.
+symlink to the folder `shared_local_dir()` names, and **cadence creates it**: `/cadence:init` and
+every `/cadence:session start` apply `${CLAUDE_PLUGIN_ROOT}/checks/LOCAL-DIR.md` to this
+worktree — link it when it is absent,
+leave a working link alone, and ask before moving files out of an existing plain folder. Even so,
+a skill cannot assume the link is there: a platform that refuses symlinks gets a plain folder, and
+a person can decline the move.
 
 That means **the directory does not separate worktrees**, and the session file has to separate
 them itself:
@@ -277,25 +291,75 @@ goal, do not move an item, and do not overwrite the file. Offer, and act on the 
 
 1. **continue that session** — read its goal and keep going, which is what someone who opened a
    second terminal actually wanted;
-2. **start a separate session** — write `cadence-session-2.md` (then `-3`, and so on) beside it
-   and claim that;
+2. **start a separate session** — in a numbered file beside it, claimed the same way;
 3. **stop.**
+
+**A numbered file keeps the worktree key.** It is this worktree's session file name with `-<n>`
+before the extension, counting from 2:
+
+```
+.agent/local/cadence-session-<worktree>-2.md     (then -3, and so on)
+```
+
+A bare `cadence-session-2.md` would undo the keying above: the folder is shared, so two worktrees
+that each open a second session would pick the same name and each read the other's claim as a
+live session in its own working copy. Keyed, the count is per worktree — another worktree's
+`-2` is never this one's.
+
+**Choose the number by the same claim table.** Walk `-2`, `-3`, … and take the first file that
+is absent, unclaimed, yours, or claimed more than a day ago — saying so in one line if you took a
+stale one. A recent foreign claim on a numbered file is a third live session; skip it and try
+the next number rather than asking again.
+
+**The claimed file is this session's file until it ends.** Everything the session reads and
+writes as "session state" — the tree snapshot at start, the prune and the write at end — goes to
+the file it claimed, not back to `session_state.file`. Writing a second session's goal into the
+first session's file is the collision this section exists to prevent.
 
 **It is deliberately a claim rather than a lock.** A lock has to be released, and a session that
 ends in a crashed terminal never releases anything — so the file would need repairing by hand,
 which is worse than the problem. A claim only has to be *read*, and a stale one is
 self-resolving.
 
+#### Ending from a new conversation
+
+The token is opaque and lives in the conversation that generated it. A restart, a `/clear`, or a
+compaction that drops it leaves `session end` holding no token, so every claim in the folder —
+its own included — reads as foreign. The claim table above cannot tell it which file is its own.
+
+**The goal can.** On `session end`, with no token held:
+
+| What you find | Do |
+|---|---|
+| exactly one of this worktree's session files — the main one and its numbered `-<n>` files — has the item being closed as its `## Goal` → `current:` id | take that file over: rewrite `claimed-by` to this session's token and `claimed-at` to now **before writing anything else**, whatever the old claim's age, and **say so in one line** |
+| none does, or several do | **ask once**, naming each candidate with its goal and claim age; write nothing until answered |
+
+The item being closed is the id the user named; when they named none, every candidate with a
+current goal matches, so a single one is taken and several are asked about. The comparison is on
+the whole id, never on a title — `TT-7` is not `TT-70`, and a goal that merely reads alike is not
+this session's. Both sides are first normalised to the form the tracker adapter's `Ids` line
+declares (plain numbers makes `7`, `#7` and a stored `7` one id), and compared as written when it
+declares none. Another worktree's files are never candidates.
+
+**A token this conversation does hold always wins.** The goal match is for the conversation that
+lost its token, not a second way to pick a file. And files that do not match are left exactly as
+they are — a recent claim on one of them is a live session, and the start table's rules for it
+stand.
+
 ### Two worktrees on the same item — only when the directory is really shared
 
 Two worktrees can pick the same item, and a claims file only helps if both can see it. When
-`.agent/local/` is linked to a shared target, it is exactly the right home; when it is not, a
+`.agent/local` is linked to a shared target, it is exactly the right home; when it is not, a
 claims file sitting in it coordinates nothing while looking as though it does — which is worse
 than having none.
 
-So **check, do not assume**: ask the VCS adapter for **`shared_local_dir()`** (git: inside the
-common `.git`) and compare it with where `.agent/local/` actually resolves. Shared → keep one
-small file there:
+So **check, do not assume**. `.agent/local` is **shared** when it is a symlink that resolves to an
+existing folder **outside this working tree**. That is the whole test — it does not demand the
+link point at exactly `shared_local_dir()`, so a link a person made earlier to some other shared
+place (an older `<common .git>/cadence/`, say) still counts, and there is nothing to migrate.
+`shared_local_dir()` `unsupported` means the VCS has no shared place to link to, and the test is
+not run. Shared → keep one small file beside the session files, at
+**`.agent/local/cadence-claims.md`**:
 
 ```markdown
 <item-id>  <worktree path>  <branch>  <ISO timestamp>
@@ -308,8 +372,8 @@ explanation looks like a priority bug.
 **Not shared — or `shared_local_dir()` `unsupported` for a VCS without the concept — and the
 mechanism is off.** Sessions still keep their own files, since those are keyed by worktree, but
 nothing detects two worktrees on one item. Say so **once** at session start, not per candidate,
-and name the one-line fix (link `.agent/local/` to the shared target). Degrading loudly beats
-coordinating wrongly.
+and name the fix (`/cadence:session start` links `.agent/local` per `checks/LOCAL-DIR.md`; a plain
+folder with files in it needs the person's yes). Degrading loudly beats coordinating wrongly.
 
 ## Ownership — whose work is it
 

@@ -38,8 +38,12 @@ an adopter sees the full picture without running four tools.
 
 ### Bindings and artifacts
 
-Each `## Artifacts` row and whether its path exists. Each binding row and whether it resolves to
-an adapter something can load. `none` is reported only when something would have used it.
+Each `## Artifacts` row and whether its path exists. Each binding row and the kind it names —
+**not whether it resolves.** That is a fact per consumer: a kind one plugin reads can be unreadable
+to the next, and the only way to know is to look inside each consumer's payload, which `hub` may
+not do. Each consumer's doctor reports its own seams, so say *"whether each binding resolves is
+reported per consumer — run `/hub:doctor`"*, once. `none` is reported only when something would
+have used it.
 
 ### Unregistered knowledge
 

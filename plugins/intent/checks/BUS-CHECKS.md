@@ -2,6 +2,7 @@
 
 **One spec, vendored by every plugin.** This file is the authority; each plugin ships a
 byte-identical copy at `checks/BUS-CHECKS.md` and its doctor runs it.
+A caller that runs several doctors in one report has one of them run it: `checks/BUS-CHECKS-OWN.md`.
 
 ## Why vendored rather than shared at runtime
 
@@ -113,26 +114,9 @@ scale — a disabled feature is not "less bad" than a broken one, it is a differ
   are the project's to edit — **or** the `delivery` or `methodology` role's re-scaffold command
   from `## Commands`, both of which ask for a blank they find and write nothing else. Never name
   a migrate for it: no migration fills in a value a person has to supply.
-- **`## Verification → Definition of Done` resolves.** Its value is a path, or `path#heading`.
-  **How `#heading` resolves — the one rule every consumer follows:** strip one pair of
-  surrounding backticks from the value, split at the first `#`, and look in the file for a
-  Markdown heading **outside fenced code** whose text equals the part after `#` **exactly**, or
-  whose GitHub-style slug does (lower-case, spaces to `-`, punctuation other than `-` and `_`
-  dropped — `Definition of Done` ⇄ `definition-of-done`). Exact text is tried first; the slug
-  form is accepted because it is what editors and renderers generate, and a slug that silently
-  failed to resolve is how this rule was found. The section runs to the next heading of the same
-  level. **Writers write the exact text** and resolve it before writing; the slug form is for
-  rows written by hand.
-  - **File missing, no heading matches, or more than one heading matches** → **broken**, and say
-    which: a document that has moved, a heading renamed or only ever inside a template's code
-    fence, or an ambiguous anchor (name every match). Broken, not drifted, because every
-    consumer **stops** on it: the delivery skill before planning, the methodology gate before
-    judging. A row naming a bar nobody can find is not a project without a bar — it is one
-    whose bar is lost — so **no consumer falls back**: not to the whole file (a bar quietly
-    widened to an entire process document) and not to check names alone (a bar quietly lowered
-    to the words). Both are the silent degradation this form exists to prevent.
-  - Remedy: a hand edit of the row, or the `delivery` or `methodology` role's re-scaffold
-    command, which re-asks for it.
+- **`## Verification → Definition of Done` resolves**, by the one rule in `checks/DOD-ANCHOR.md`.
+  File missing, no heading matching, or more than one → **broken**, not drifted, because every
+  consumer stops on it; name the half that failed. Remedy: as that file says.
 - **`## Configuration` is a parking section, not a home.** A delivery migration creates it for
   legacy keys it did not recognise, so nothing is lost and a reviewer can move each one. A row
   there whose **value** also appears in one of the five `shared` settings sections or in
@@ -265,14 +249,32 @@ row you do not own is reported, never assessed.
 
 ### 5b. Uncommitted things are actually uncommitted
 
-If **`.agent/local/`** exists, the project's ignore file must ignore it. Present and **not**
-ignored → **broken** for that path, and name your own role's re-scaffold command, which adds the
-entry.
+If **`.agent/local`** exists in any form — folder, link, or a stray file — run
+`git check-ignore -v .agent/local`. It judges the path itself, not where a link points:
+
+- No match → **broken**: whatever is in it will be committed.
+- The matching pattern ends in `/` → **drifted**: a directory-only pattern stops matching once
+  the folder becomes a link.
+- A dangling link → **broken**: everything that reads local state finds nothing.
+- A plain folder while `git worktree list --porcelain` shows more than one worktree →
+  **drifted**: each worktree has its own, so what one session left is missing in the next.
+
+Absent, but `.gitignore` has `.agent/local/` or `/.agent/local/` → **drifted**, for the slash
+reason above.
+
+Remedy, for every one, and the same from every doctor (so a doctor that collates the others does
+not report two of them disagreeing): the `delivery` or `methodology` role's
+re-scaffold command from `## Commands`. Those are the roles whose init applies
+`checks/LOCAL-DIR.md`; `knowledge`, `intent-layer` and the hub never touch `.agent/local`. Neither
+row present → `checks/LOCAL-DIR.md`'s steps as a hand fix. Under a VCS other than git, check that its
+ignore mechanism covers the path; the link and worktree findings do not apply.
 
 This is one check rather than a nicety because of how it fails: an ignore entry that has stopped
 matching looks exactly like one that works, and the first symptom is somebody's local state
 arriving in a diff — a session scratchpad, a personal preference, a half-finished goal — where it
-then becomes everyone's. `cadence`'s first migration exists partly to repair such an entry.
+then becomes everyone's. The slash form is the quiet case of it: correct for years, then wrong
+the moment the folder becomes a link. `cadence`'s first migration exists partly to repair such an
+entry.
 
 Report any **local file outside that directory** — a `*.local.*` under a plugin's own folder —
 as **drifted**, naming the owning role and its migrate command. Its owner moves it; you do not,
@@ -296,11 +298,18 @@ finding is a local value for a key the committed config already answers.
 
 ### 6. Bindings resolve to something
 
-For each binding row (`Doc system`, `Intent`, `Shared knowledge`, and any other):
+For each binding row (`Doc system`, `Intent`, `Shared knowledge`, and any other) **whose seam
+your plugin consumes or provides**:
 
-- Names a kind with a project-local adapter or a shipped fallback → pass.
+- Names a kind with a project-local adapter or a fallback **your own payload** ships → pass.
 - Names a kind with **neither** → **broken** for that seam: name the command that generates an
-  adapter.
+  adapter, or say none is available and that a release of your plugin is what would add one.
+
+**A seam you neither consume nor provide is not yours to judge — skip it.** You can see only your
+own payload, so for another plugin's seam both answers are wrong: a kind it reads would be
+reported broken because you do not read it, and a file of the same name in your payload that
+serves a different seam would report a pass nothing earned. Whether a binding resolves is a fact
+per consumer, and each consumer's doctor reports its own.
 - `none` → **disabled**, and only mention it when something you do would have used it. `none` is
   the correct state for most projects and most seams; announcing every unbound seam on every run
   is how a real finding gets lost.

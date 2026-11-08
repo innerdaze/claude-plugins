@@ -8,7 +8,7 @@ strip anything that belongs to a different ecosystem.
 
 ## Domain system version
 
-**Domain system version: 16**
+**Domain system version: 17**
 **Minimum supported version: 1**
 
 This is the canonical version of the init **scaffolding** — the shape of the files
@@ -61,9 +61,9 @@ resolve in Phase 1 and the shared-knowledge check in Phase 3, both no-ops when t
 neither; and each step now declares `Kind: slot | hook`, with a hook over a gate or a
 domain-integration step rejected outright. v3 is unreleased, so all three fold into it rather
 than minting v4/v5 — **once it ships, it freezes.** v4 = each step may declare `Settings` —
-options it reads, typed and defaulted, with values in `.agent/local/` and never in the overlay
+options it reads, typed and defaulted, with values in `.agent/local` and never in the overlay
 — so a project's own step has the discoverable, checkable preferences a plugin gets from its
-manifest's `userConfig`; shipped beside delivery v12, which created `.agent/local/`. Optional,
+manifest's `userConfig`; shipped beside delivery v12, which created `.agent/local`. Optional,
 so a v3 overlay with no settings means the same at v4; refresh adds the field to the normative
 schema section and changes no step.)
 
@@ -265,7 +265,7 @@ naming a seam that is not in the catalog is naming nothing.
 | `Gate` | yes | `none`, or what must be true to proceed — a gate pauses for the user |
 | `Parallel` | yes | `independent`, or `serial — depends on <step-id>` |
 | `Detail` | yes | a pointer: `.agent/work/rules/<topic>.md` or `<skill> § "<section>"`. **Never an inlined step body** |
-| `Settings` | no | options this step reads, one per line: `<name>: <boolean\|string\|number> = <default> — <what it does>`. Values live in `.agent/local/`, never here |
+| `Settings` | no | options this step reads, one per line: `<name>: <boolean\|string\|number> = <default> — <what it does>`. Values live in `.agent/local`, never here |
 
 `step-id` is kebab-case and unique within the file. It is the only name a scenario may use.
 
@@ -288,8 +288,9 @@ The default is what applies when nobody has set anything, and a step must work w
 an option whose absence breaks the step is a required input, and a required input belongs in the
 step's `Detail`, not in a setting somebody may never set.
 
-**Values are read from `.agent/local/`** — one ignored directory for everything uncommitted, so a
-preference cannot be committed and two worktrees do not share one. A step that reads a setting
+**Values are read from `.agent/local`** — one ignored directory for everything uncommitted, so a
+preference cannot be committed; and because `.agent/local` is linked to one shared folder (the
+default `${CLAUDE_PLUGIN_ROOT}/checks/LOCAL-DIR.md` sets up), every worktree reads the same values. A step that reads a setting
 from a committed file is misdeclared: that value is the project's, and it belongs in the config
 bus or the plugin's own config.
 

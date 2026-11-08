@@ -16,13 +16,32 @@ presentation, not analysis.
 1. **Detect** — [`detect.md`](./detect.md), because a report from a stale plugin is a stale
    report, and that has to be said at the top rather than discovered later.
 
-2. **Invoke each doctor the bus declares.** Read `## Commands`; for every role with a `Doctor`
-   cell whose plugin is installed and enabled, run it. A role with an empty `Doctor` cell has
-   none declared — report that, and do not go looking for one by name.
+2. **Invoke each doctor the bus declares, so the shared checks run once.** Read `## Commands`;
+   for every role with a `Doctor` cell whose plugin is installed and enabled, run it. A role with
+   an empty `Doctor` cell has none declared — report that, and do not go looking for one by name.
+
+   Run them **one at a time, with the Skill tool, in this conversation** — not in subagents. The
+   doctors after the first rely on the first one's shared-check result, so they must be able to
+   see it. The flags are defined in `${CLAUDE_PLUGIN_ROOT}/checks/BUS-CHECKS-OWN.md`; you pass
+   them and run nothing yourself:
+
+   - **The first doctor, in `## Commands` order:** pass `--shared-checks-lead`. It runs the shared
+     checks in full and ends its report with `shared-checks-digest: <digest>`.
+   - **Every other doctor:** pass `--shared-checks-done=<digest> --shared-checks-by=<role>`, with
+     the first doctor's digest and role. Each compares the digest with its own copies and either
+     runs only its own share of the checks or, on a mismatch, runs them all and says why.
+   - **No digest line from the first doctor** — a release older than this procedure → run the
+     others with no flag, and say once that the shared checks ran per doctor this time.
+
+   A doctor that ignores the flag runs everything, which is correct and only costs more. De-duplicate
+   its shared bands as usual. Never treat a missing flag as an error.
 
 3. **Collate.**
-   - **De-duplicate the shared bands.** Every doctor runs the same config-bus checks, so four
-     doctors produce four copies of the same bus findings. Report each shared band **once**.
+   - **De-duplicate the shared bands.** The first doctor reports them, and any doctor that fell
+     back to a full run reports them again. Report each shared band **once**.
+   - **A digest mismatch is a finding**, raised against the stale copy: two plugins in this stack
+     vendor different shared rules. Name the older plugin from the detect step's versions as
+     context, and give `/hub:upgrade` as the remedy: "`<plugin>` is older; run `/hub:upgrade`".
    - **Keep every plugin-specific finding attributed** to the doctor that raised it. A finding
      without its source cannot be followed up.
    - **Two doctors disagreeing on a shared band is itself a finding.** They vendor the same

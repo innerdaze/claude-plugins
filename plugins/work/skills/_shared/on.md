@@ -69,6 +69,17 @@ where the change happens. Do **not** open `migrations/` here; naming individual 
 is `work migrate`'s job. (This is coarse, scaffolding-level drift; the overlay check below
 is the fine-grained, workflow-only one — the two are independent.)
 
+**Then make sure `.agent/local` reaches the shared folder in this worktree.** A step's settings
+have their values there, and `work init` linked it only in the checkout where init ran. A fresh
+worktree has no `.agent/local` at all, so without this step every setting quietly falls back to
+its default. Apply `${CLAUDE_PLUGIN_ROOT}/checks/LOCAL-DIR.md` in its **restricted mode**: it
+writes only uncommitted things (the shared `info/exclude` and the link), never `.gitignore`, never
+asks, and moves nothing. When `.agent/local` is already linked, it does nothing and says nothing.
+When it cannot share the folder, it gives you one line that names the fix, and you carry on. Say
+that line **once, as the first line of the plan you present in Step 1.4.** That is where the user
+is reading, and the plan is what the defaults changed. Do this before entering plan mode, on every
+run. It is not a migration and stamps nothing.
+
 **Then check for a workflow overlay.** If `.agent/work/workflow.md` exists, read it. It holds a
 **step library** (each injected step defined once) and **scenarios** (each a match
 condition + an ordered step sequence).
@@ -110,7 +121,7 @@ fetch/comment/status step below.
 | `<VCS>` / `<commit workflow>` | `## Version control → Kind` and `Commit workflow`. |
 | `<TRACKER>` | `## Tracker → Kind` and `Access` — which tracker, and the MCP namespace or CLI that reaches it. |
 | `<verification>` | `## Verification → Proven by` — the commands that prove "done" before a step completes. |
-| `<dod>` | `## Verification → Definition of Done` — the project's own bar. `path` ⇒ the whole file. `path#heading` ⇒ **only that section**, resolved by the one rule in `${CLAUDE_PLUGIN_ROOT}/checks/BUS-CHECKS.md` § *`## Verification → Definition of Done` resolves*: the heading whose exact text, or GitHub-style slug, matches (outside fenced code — templates keep headings in fences), to the next heading of the same level. File missing, no match, or more than one ⇒ **stop and say so**, naming the near miss if there is one; never widen to the whole file. Pasted to the Planner and Implementer. Row absent ⇒ `none`: plan against `<verification>` alone, and say so once in the plan. If what you pasted holds more than one checklist — an epic bar and a ticket bar — tell the Planner which applies to a single ticket, and say in the plan that the row should name the section. |
+| `<dod>` | `## Verification → Definition of Done` — the project's own bar. `path` ⇒ the whole file. `path#heading` ⇒ **only that section**, resolved by the one rule in `${CLAUDE_PLUGIN_ROOT}/checks/DOD-ANCHOR.md`: the heading whose exact text, or GitHub-style slug, matches (outside fenced code — templates keep headings in fences), to the next heading of the same level. File missing, no match, or more than one ⇒ **stop and say so**, naming the near miss if there is one; never widen to the whole file. Pasted to the Planner and Implementer. Row absent ⇒ `none`: plan against `<verification>` alone, and say so once in the plan. If what you pasted holds more than one checklist — an epic bar and a ticket bar — tell the Planner which applies to a single ticket, and say in the plan that the row should name the section. |
 
 **Tracker calls are not in the bus.** The bus says *which* tracker and *how it is reached*;
 the operations — fetch, read comments, comment, status, create — are in `tracker-ops.md` (this
@@ -194,6 +205,9 @@ adapter it names:
 1. a project-local adapter at the path the row gives, else
 2. the shipped fallback for that `kind` — `${CLAUDE_PLUGIN_ROOT}/adapters/doc-system/<kind>.md`,
    which for an unbound project is `none.md`.
+3. **neither exists** → the binding is unresolved. Say so once — *"`Doc system | <kind>` has no
+   adapter here; `work doctor` reports it"* — and load `none.md`. Do not read the artifact as a
+   bare path to make up for it: a reading no adapter defines is a reading nobody declared.
 
 **Read its `## Capabilities` block before calling anything.** An operation listed `unsupported`
 is not attempted; one listed `costly` is narrowed first rather than swept. That block is what
@@ -229,13 +243,17 @@ see the *Domain re-check* below.
 ### Step 1.0b — Resolve the intent layer, if this project has one
 
 Load the intent binding the same way — project-local adapter, else
-`${CLAUDE_PLUGIN_ROOT}/adapters/intent/<kind>.md` (`none.md` when unbound) — and read its
-`## Capabilities`: with `locate()` unsupported there is nothing to do here and **nothing to say**,
-which is the normal case.
+`${CLAUDE_PLUGIN_ROOT}/adapters/intent/<kind>.md` (`none.md` when unbound), and a kind with
+neither is unresolved: say so once, naming `work doctor`, and load `none.md` — never fall back to
+reading the folder as a bare path. Then read its `## Capabilities`: with `locate()` unsupported
+there is nothing to do here and **nothing to say**, which is the normal case.
 
 Otherwise read the **`## Artifacts`** table in the bus. If a row's **Owner** is `intent-layer`,
-note its path; the Planner reads it in Step 1.3. Match on the owner role id, not on the artifact's
-name or path — the role id is stable across renames and handovers, and the name is not.
+note its path. Match on the owner role id, not on the artifact's name or path — the role id is
+stable across renames and handovers, and the name is not. Call the adapter's `locate` with the
+ticket's topics (its title, and the systems the analysis names) and, once known, the paths the
+plan will touch; the ranked statements it returns — **attribution markers intact** — are what the
+Planner receives in Step 1.3. With `check()` unsupported, the Planner does the comparison itself.
 
 If the row's path does not exist, treat the intent layer as **absent and say so once**. Do not
 go looking for it: scanning for a likely folder is the coupling this table removes.

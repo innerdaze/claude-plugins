@@ -103,9 +103,9 @@ doc_system: # ⇒ MOVED to the bus's `Doc system` binding row
 
 session_state:
   file: .agent/local/cadence-session-<worktree>.md   # Cadence's OWN scratchpad — LOCAL, ignored
-         # `.agent/local/` is ignored as a directory and is meant to be SHARED across
-         # worktrees (a symlink you create), so the worktree key in the filename is
-         # what stops two checkouts sharing one session
+         # `.agent/local` is ignored as a path (no trailing slash, so a link matches too)
+         # and SHARED across worktrees by a link cadence creates, so the worktree key in
+         # the filename is what stops two checkouts sharing one session
   format: markdown
 
 # --- Models: WHICH tier does WHICH work (a third binding) ---
