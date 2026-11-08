@@ -4,14 +4,22 @@
 consumed seam resolves the same way, and each ships a `none` fallback so a project that has
 bound nothing still works.*
 
-| Seam | Contract owned by | Shipped fallback | With the fallback, `work` |
+| Seam | Contract owned by | Shipped fallbacks | With `none`, `work` |
 |---|---|---|---|
-| **doc-system** | the knowledge tool | [`doc-system/none.md`](doc-system/none.md) | plans from the ticket and the code, and declares `docs: unsupported` |
-| **intent-read** | the intent tool | [`intent/none.md`](intent/none.md) | never checks a plan against stated design |
+| **doc-system** | the knowledge tool | [`doc-system/none.md`](doc-system/none.md), [`doc-system/markdown.md`](doc-system/markdown.md) | plans from the ticket and the code, and declares `docs: unsupported` |
+| **intent-read** | the intent tool | [`intent/none.md`](intent/none.md), [`intent/markdown.md`](intent/markdown.md) | never checks a plan against stated design |
 | **shared-knowledge** | the shared-memory service | [`shared-knowledge/none.md`](shared-knowledge/none.md) | records project memory without checking what is already known elsewhere |
 
-**Resolution order:** project-local adapter → the shipped `none` fallback → never an error. A
-missing binding is a normal project, not a broken one.
+**Resolution order:** project-local adapter → the shipped fallback for the row's kind → `none`,
+never an error. A missing binding is a normal project, not a broken one. A kind with neither is
+said **once** — the binding is unresolved, and `work doctor` reports it — and then behaves as
+`none`.
+
+## A consumer ships its own reading of each published kind
+
+Each kind a provider publishes for a seam `work` consumes — `markdown` for doc-system and for
+intent-read — has a fallback **here**, written against the repo artifact. `work` never borrows the
+provider's adapter: that would be reading another plugin's install path.
 
 ## A `none` fallback is a real implementer
 

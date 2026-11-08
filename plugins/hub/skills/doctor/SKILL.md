@@ -15,5 +15,7 @@ Follow `${CLAUDE_PLUGIN_ROOT}/skills/_shared/doctor.md` exactly.
 **Run no checks of your own.** The shared config-bus checks are vendored identically into every
 plugin in this stack — including `${CLAUDE_PLUGIN_ROOT}/checks/BUS-CHECKS.md` here — so that
 every doctor answers the same questions the same way. Your job is to invoke each role's declared
-doctor, de-duplicate the shared bands, and keep everything else attributed. A second opinion on
+doctor, de-duplicate the shared bands, and keep everything else attributed. The first doctor
+runs the shared checks for the whole report and the others rely on it: you pass the flags in
+`${CLAUDE_PLUGIN_ROOT}/checks/BUS-CHECKS-OWN.md`, and you never run a check yourself. A second opinion on
 files this plugin does not own is worse than no opinion.

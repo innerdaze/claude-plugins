@@ -3,7 +3,7 @@ name: status
 description: >-
   Report what state a project's plugin stack is in — which plugins are installed, enabled and
   current, every component's version from the config bus, which roles own an artifact without
-  being registered, whether each binding resolves, and any knowledge folder nobody registered.
+  being registered, each binding and the kind it names, and any knowledge folder nobody registered.
   Read-only; every finding names the command that would change it. Use when the user runs
   `/hub:status`, asks what is installed or what is out of date, asks what they would need to run
   before migrating, or wants one answer instead of running four plugins' doctors.

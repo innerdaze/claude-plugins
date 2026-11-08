@@ -128,11 +128,15 @@ already exists without the row**, offer it the same way — this is how an exist
 row without a re-scaffold, and it is the one absent row you may ask about on re-run. Set the `## Artifacts` `Ticket flow` row to
 `none` and write no `Ticket flow rules` row (a fresh project has no extracted rules yet).
 
-**Add `.agent/local/` to the project's ignore file** while you are creating `.agent/` — one entry,
-idempotent. It is where anything uncommitted goes: a plugin's runtime state, and the values for
+**Create `.agent/local` while you are creating `.agent/`** by applying
+`${CLAUDE_PLUGIN_ROOT}/checks/LOCAL-DIR.md` — it writes the no-slash ignore entry (in the ignore file and the shared
+`info/exclude`) and makes `.agent/local` a link to the folder every worktree shares. Idempotent.
+It is where anything uncommitted goes: a plugin's runtime state, and the values for
 settings a project's own overlay steps declare. Doing it now costs a line and removes the failure
-where the first tool to need it forgets, and someone commits their local state — that registry row is the *only* place the overlay's path is recorded, so there is no
-`Workflow overlay` row to write; don't create `.agent/work/workflow.md` here either — that's
+where the first tool to need it forgets, and someone commits their local state.
+
+The `## Artifacts` `Ticket flow` row is the *only* place the overlay's path is recorded, so there
+is no `Workflow overlay` row to write. Don't create `.agent/work/workflow.md` here either — that's
 `update-workflow`'s job once a project actually customizes the flow. Delete rows that
 don't apply.
 

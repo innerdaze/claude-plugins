@@ -10,6 +10,11 @@ description: >-
 user-invokable: true
 ---
 
+**Under a caller that collates doctors**, read `${CLAUDE_PLUGIN_ROOT}/checks/BUS-CHECKS-OWN.md`
+first and follow it. That is when this skill's arguments carry `--shared-checks-lead` or
+`--shared-checks-done=<digest>`. The file says when the shared spec below may be skipped and what
+you still check. With neither flag, which is every run a person starts, carry on exactly as below.
+
 Read `${CLAUDE_PLUGIN_ROOT}/checks/BUS-CHECKS.md` and run **every** check in it. Those are the
 shared config-bus checks that all four tools in this stack run identically — do not reinterpret
 them, and do not skip one because it looks like another tool's business.

@@ -5,7 +5,7 @@
 ## Capabilities
 
 ```
-supports:    status, diff, log, add_untracked, checkpoint, ignore
+supports:    status, diff, log, add_untracked, checkpoint, ignore, shared_local_dir
 costly:      —
 unsupported: —
 ```
@@ -27,13 +27,25 @@ vcs:
 - **`add_untracked(paths)`** — `git add -- <paths>` (git needs new files staged before they commit).
 - **`checkpoint(message, item_ref)`** — stage **the paths belonging to this piece of work**, then `git commit -m "<item_ref>: <message>"`. Confirm with `git log -1 --oneline`. **Do not `git push`** unless the user asks.
   Prefer explicit paths over `git add -A`. A blanket add sweeps in whatever else happens to be sitting in the tree — build output, a stray scratch file, another task's half-finished edit — and attributes it to this item's commit. If you do use `-A`, run `status()` first and say what you are about to include. **The session's `## Tree at start` snapshot says which dirty paths were never this session's**; a path that appeared without this session editing it is another writer's and is not staged, however plausible its name. A correct file list is not evidence of correct content.
-- **`shared_local_dir()`** — `git rev-parse --git-common-dir`, then `<that>/cadence/` (create if
-  absent). **Shared by every worktree of this repo and never committed**, which is the pair of
-  properties nothing else has: the working tree is per-worktree, and anything committed is
-  everyone's forever. Used only for cross-worktree coordination — see *Sessions across worktrees*
-  in `ADAPTERS.md`. Never put anything here that matters after today: it is not backed up, not
-  cloned, and a `git worktree prune` may take it.
-- **`ignore(paths)`** — append each path to `.gitignore` if not already present (idempotent; create the file if missing). Used at init to keep Cadence's session-state file (`.agent/cadence/SESSION.local.md`) out of the repo.
+- **`shared_local_dir()`** — `$(git rev-parse --path-format=absolute --git-common-dir)/agent-local/`.
+  **Absolute, always:** in a main checkout `--git-common-dir` prints a relative `.git`, and a link
+  built from a relative target dangles the moment it is read from anywhere else. This only
+  **names** the folder — it does not create it; `${CLAUDE_PLUGIN_ROOT}/checks/LOCAL-DIR.md`
+  creates it and links
+  `.agent/local` to it. **Shared by every worktree of this repo and never committed**, which is
+  the pair of properties nothing else has: the working tree is per-worktree, and anything
+  committed is everyone's forever. The name is role-neutral because the folder holds every tool's
+  local files, not only cadence's. See *Sessions across worktrees* in `ADAPTERS.md`. Never put
+  anything here that matters after today: it is not backed up and not cloned. (`git worktree
+  prune` does not touch it — that only clears stale entries under `.git/worktrees/`.)
+- **`ignore(paths)`** — make git ignore each path, idempotently, in **both** `.gitignore`
+  (created if missing) and the shared exclude file at `git rev-parse --git-path info/exclude`.
+  Write each path **without a trailing slash**: `.agent/local/` matches only a directory, so it
+  stops matching the moment `.agent/local` becomes a symlink, and the first symptom is the link
+  showing up as untracked. Where a line reading `<path>/` is already there, **rewrite that line in
+  place** rather than adding a second one beside it. Leave every other line alone. Confirm with
+  `git check-ignore -q <path>`. Used at init to keep `.agent/local` — Cadence's session state and
+  every other tool's local files — out of the repo.
 
 ## Etiquette
 

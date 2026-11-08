@@ -1,6 +1,6 @@
 # Methodology scaffolding version
 
-**Methodology scaffolding version: 5**
+**Methodology scaffolding version: 6**
 **Minimum supported version: 1**
 
 The canonical version of cadence's own project-local scaffolding — where its config lives, what
@@ -14,5 +14,7 @@ the **`cadence methodology`** row; `/cadence:migrate` reads it back and applies 
 `.agent/local/`, keyed by worktree. v3 = the `project:` block dropped, since its two values are
 the bus's. v4 = the doc-system adapter file named by the bus's `Doc system` kind, never a name
 cadence invented. v5 = the bus's `## Verification → Definition of Done` row, asked for and
-written on a project initialised before 2.0.3. Everything before v1 is pre-versioning: a project with no `cadence methodology` row is
+written on a project initialised before 2.0.3. v6 = `.agent/local` ignored without a trailing
+slash, linked to `<common .git>/agent-local/` so it is shared across worktrees, and the session
+file keyed by worktree where init had left the unkeyed default. Everything before v1 is pre-versioning: a project with no `cadence methodology` row is
 treated as **v0** and gets v1 applied.)

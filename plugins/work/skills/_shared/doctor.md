@@ -130,6 +130,11 @@ placeholder value separately.
 
 ## The shared config-bus checks come first
 
+**Under a caller that collates doctors**, read `${CLAUDE_PLUGIN_ROOT}/checks/BUS-CHECKS-OWN.md`
+first and follow it. That is when this skill's arguments carry `--shared-checks-lead` or
+`--shared-checks-done=<digest>`. The file says when the shared spec below may be skipped and what
+you still check. With neither flag, which is every run a person starts, carry on exactly as below.
+
 Read `${CLAUDE_PLUGIN_ROOT}/checks/BUS-CHECKS.md` and run **every** check in it before anything
 below. Those are the checks all four tools in this stack run **identically** — vendored rather
 than shared, because no plugin may read another's files and this is the only legal way to make

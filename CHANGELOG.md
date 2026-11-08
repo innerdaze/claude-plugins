@@ -24,8 +24,66 @@ field, or config key is *minor*.
   bar. The value is a `path` or `path#heading` (one section, fenced headings ignored, an unresolved
   heading fails loudly); a file holding more than one checklist is a doctor finding; init offers
   the row on re-run.
+- **Cadence creates and shares `.agent/local`.** `/cadence:init` and every
+  `/cadence:session start` apply `checks/LOCAL-DIR.md` to the current worktree: ignore the path, link it to
+  `<common .git>/agent-local/`, and ask only before moving files out of an existing plain folder.
+  The cross-worktree claims file lives beside the session files, at
+  `.agent/local/cadence-claims.md`. **Migration v6** applies the same to an existing project, keys
+  an unkeyed session file by worktree, and reports whether the old `<common .git>/cadence/` folder
+  is still in use. Methodology scaffolding **5 → 6**.
+- **`/cadence:doctor` accepts the once-per-report flags.** Under `/hub:doctor`,
+  `--shared-checks-lead` runs the shared config-bus checks in full and prints a digest of the
+  vendored rules. `--shared-checks-done=<digest> --shared-checks-by=<role>` skips them when its own
+  copy's digest matches, and still checks cadence's own rows. The rules are in the new vendored
+  `checks/BUS-CHECKS-OWN.md`, and `checks/bus_facts.py --digest` prints the digest. Run alone,
+  with no flag, the doctor is unchanged. Optional arguments only, so this is a minor change.
+
+### Changed
+
+- **`shared_local_dir()` names `<common .git>/agent-local/`, absolute, and no longer creates
+  it** — it returned `<common .git>/cadence/` and created that. The VCS contract now lists it as
+  an optional operation. Recorded as minor: no project could have relied on the old value, since
+  the comparison it fed never succeeded (below). `.agent/local` counts as shared when it is a
+  symlink to any existing folder outside the working tree, so a link made by hand to the old
+  folder still counts.
+- **`ignore(paths)` writes paths without a trailing slash**, rewrites an existing `path/` line in
+  place, and for git also writes the shared `info/exclude`. The doctor's "is session state
+  ignored" check asks `git check-ignore` rather than reading the ignore file, and leaves the
+  folder checks to the shared spec's §5b.
+- **The doctor judges only the bindings cadence uses.** The shared spec's check 6 now applies
+  to a seam only when this plugin consumes or provides it, judged against its own payload, so a
+  binding row for another plugin's seam is no longer reported as broken here.
+- **One remedy for a broken `.agent/local`, whichever doctor reports it.** The shared spec's
+  §5b now names the `delivery` or `methodology` role's re-scaffold command from `## Commands`
+  for every doctor, falling back to the hand fix only when neither row exists, so `hub:doctor`
+  no longer sees two doctors disagree. `LOCAL-DIR.md` gains a restricted mode for callers that
+  must not change a committed file.
 
 ### Fixed
+
+- **The `.agent/local` ignore entry missed a symlink.** Every entry cadence wrote read
+  `.agent/local/`, which matches a directory but not a link to one — so linking the folder, as the
+  docs said to, turned it into an untracked file. The entry is now `.agent/local`.
+- **Session start's "is `.agent/local` shared?" check never passed.** It compared the folder
+  against `shared_local_dir()`, which returned a different path from the one every doc said to
+  link to; cross-worktree claims were therefore always off.
+- **`/cadence:init` defaulted to an unkeyed session file**, `.agent/local/cadence-session.md`,
+  which two worktrees collide on once the folder is shared. The default is now
+  `.agent/local/cadence-session-<worktree>.md`.
+- **A second session in one working copy wrote an unkeyed `cadence-session-2.md`**, so two
+  worktrees sharing `.agent/local` that each opened a second session collided on it. The
+  numbered file now keeps the worktree key — `cadence-session-<worktree>-2.md`, then `-3` — each
+  number taken by the same claim rule, and the session's prune and end write go to the file it
+  claimed rather than back to the main one. The doctor checks this worktree's numbered files and
+  reports a leftover unkeyed one as info. Nothing to migrate: the numbered files are per-session
+  scratch.
+- **Session end in a new conversation could not tell which session file was its own.** The claim
+  token lives in the conversation that took it, so after a restart, a `/clear` or a compaction,
+  end saw every claim as foreign and had to stop or guess. Holding no token, end now takes over
+  the one file in this worktree — main or numbered — whose `## Goal` → `current:` id is the item
+  being closed, rewriting `claimed-by` before any other write and saying so in one line; it asks
+  once only when no file matches or several do. A token the conversation does hold still wins.
+  Nothing to migrate.
 
 - **A column the tracker itself classifies terminal — `Canceled`, `Duplicate` — is accounted
   for.** The doctor reported such columns as drifted on every run unless the config repeated what

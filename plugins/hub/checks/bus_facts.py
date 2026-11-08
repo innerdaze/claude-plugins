@@ -7,6 +7,11 @@ ships a byte-identical copy at `checks/bus_facts.py`. It is the executable half 
 knowledge of any plugin's payload.
 
     python3 checks/bus_facts.py [--repo PATH]
+    python3 checks/bus_facts.py --digest
+
+`--digest` prints one hash over the shared rules this copy sits beside — the vendored
+`BUS-CHECKS.md`, this script and `DOD-ANCHOR.md` — so two doctors can tell whether they
+hold the same rules without reading each other's files (`BUS-CHECKS-OWN.md`).
 
 Read-only. It never writes, never fetches, and never decides anything: it reports
 what the file says and which frozen-core rules it breaks. Judgements that need an
@@ -20,6 +25,7 @@ and the caller should fall back to reading the bus itself.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import re
@@ -182,14 +188,50 @@ def analyse(repo):
     return out
 
 
+# The files the digest covers, in order: (name in a plugin's checks/, name in the
+# authority's references/). Content only, so the authority and an in-sync copy hash
+# the same.
+DIGEST_FILES = (
+    ("BUS-CHECKS.md", "bus-checks.md"),
+    ("bus_facts.py", "bus_facts.py"),
+    ("DOD-ANCHOR.md", "dod-anchor.md"),
+)
+
+
+def digest(here=None):
+    """One hash over the shared rules beside this script. Raises when one is missing:
+    a caller that cannot compare must run the shared checks in full."""
+    here = here or os.path.dirname(os.path.abspath(__file__))
+    h = hashlib.sha256()
+    for vendored, authority in DIGEST_FILES:
+        path = next((p for p in (os.path.join(here, vendored), os.path.join(here, authority))
+                     if os.path.isfile(p)), None)
+        if path is None:
+            raise FileNotFoundError("%s not found beside %s" % (vendored, here))
+        with open(path, "rb") as fh:
+            body = fh.read()
+        h.update(b"%d\n" % len(body))
+        h.update(body)
+    return h.hexdigest()[:16]
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--repo", default=".", help="repository root (default: cwd)")
+    ap.add_argument("--digest", action="store_true",
+                    help="print a hash of the vendored shared rules and exit")
     a = ap.parse_args()
+    if a.digest:
+        try:
+            print(digest())
+        except OSError as exc:
+            print("cannot digest: %s" % exc, file=sys.stderr)
+            return 2
+        return 0
     try:
         print(json.dumps(analyse(a.repo), indent=2))
     except Exception as exc:                                  # noqa: BLE001
-        print(json.dumps({"ok": False, "error": "%s: %s" % (type(exc).__name__, exc)}), indent=2)
+        print(json.dumps({"ok": False, "error": "%s: %s" % (type(exc).__name__, exc)}, indent=2))
         return 2
     return 0
 

@@ -22,6 +22,11 @@ If everything passes, say so in one line. Don't pad a clean report.
 
 ## 0. The shared config-bus checks
 
+**Under a caller that collates doctors**, read `${CLAUDE_PLUGIN_ROOT}/checks/BUS-CHECKS-OWN.md`
+first and follow it. That is when this skill's arguments carry `--shared-checks-lead` or
+`--shared-checks-done=<digest>`. The file says when the shared spec below may be skipped and what
+you still check. With neither flag, which is every run a person starts, carry on exactly as below.
+
 Read `${CLAUDE_PLUGIN_ROOT}/checks/BUS-CHECKS.md` and run **every** check in it first. Those are
 the checks all four tools in this stack run **identically** — vendored rather than shared,
 because no plugin may read another's files, and this is the only legal way to make four tools
@@ -160,7 +165,7 @@ The two together answer the question this section exists for: *which of the chec
 project declares could actually stop a session?*
 
 **And the project's own document, when there is one.** Read `## Verification → Definition of
-Done`, and resolve it by the rule in `${CLAUDE_PLUGIN_ROOT}/checks/BUS-CHECKS.md` § *`## Verification → Definition of Done` resolves*. File missing, no heading matching (exact text or
+Done`, and resolve it by the rule in `${CLAUDE_PLUGIN_ROOT}/checks/DOD-ANCHOR.md`. File missing, no heading matching (exact text or
 slug, outside fenced code), or more than one → **broken**: session end stops on it, and so does
 the delivery skill. Name the half that failed and, for a near miss, the heading that was meant. **A named file, or section,
 that holds more than one checklist** — an epic bar written in the same shape as the ticket bar,
@@ -291,11 +296,25 @@ Cheap reads that catch real corruption:
 
 - Does `config.session_state.file` exist, and does it match the schema in
   `${CLAUDE_PLUGIN_ROOT}/adapters/ADAPTERS.md`?
-- Is it **actually ignored**? Check the VCS ignore file, not just the config. If
-  it isn't, that's **broken**: one `git add -A` commits a local scratchpad onto a
-  shared branch. The remedy is the VCS adapter's `ignore()`, via `/cadence:init`.
+- Is it **actually ignored**? Ask the VCS, not the ignore file and not the config:
+  for git, `git check-ignore -q <session_state.file>` — a line that reads right can
+  still fail to match (a `.agent/local/` entry misses a symlinked folder). If it
+  isn't, that's **broken**: one `git add -A` commits a local scratchpad onto a
+  shared branch. The remedy is `/cadence:init`, which re-applies the ignore.
+- The **folder** itself — `.agent/local` ignored, linked, dangling — is
+  `${CLAUDE_PLUGIN_ROOT}/checks/BUS-CHECKS.md` §5b's to check, and step 0 already
+  ran it. Do not repeat it here; report this file only.
 - Is it over budget (~40 lines)? Over-length means `session_state.prune` is
   under-pruning and the file is becoming a stale second copy of the backlog.
+- **This worktree's numbered session files are session files too.** A separate session in the
+  same working copy writes `cadence-session-<worktree>-<n>.md` beside the main one
+  (`${CLAUDE_PLUGIN_ROOT}/adapters/ADAPTERS.md` § *Sessions across worktrees*). Run the three
+  checks above on each that exists; report them by name, and none at all is the normal case.
+  Another worktree's files — a different key — are that worktree's to check, not this one's.
+- **A bare `cadence-session-<n>.md`** in `.agent/local` is an unkeyed second-session file from an
+  earlier release. In a shared folder it belongs to no worktree in particular, and two worktrees
+  would both read it as their own. Report it as **info**, named: safe to delete once no session
+  is using it.
 
 ## 7. Housekeeping
 
